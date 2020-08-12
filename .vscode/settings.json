@@ -1,0 +1,37 @@
+{
+    "files.associations": {
+    
+        "Dockerfile*": "dockerfile",
+        "iris.script": "objectscript"
+      },
+    "objectscript.conn" :{
+      "ns": "FHIRSERVER",
+      "active": true,
+      "username":"_SYSTEM",
+      "password": "SYS",
+      "docker-compose": {
+        "service": "iris",
+        "internalPort": 52773
+      },"links": {
+        "FHIR UI Demo": "http://localhost:${port}/csp/user/fhirUI/FHIRAppDemo.html",
+        "FHIR server test": "http://localhost:${port}/fhir/r4/metadata"
+      }
+    },
+    "sqltools.connections": [
+    
+      {
+        "askForPassword": false,
+        "connectionMethod": "Server and Port",
+        "driver": "InterSystems IRIS",
+        "name": "FHIR",
+        "namespace": "FHIRSERVER",
+        "password": "SYS",
+        "port": 32783,
+        "previewLimit": 50,
+        "server": "localhost",
+        "showSystem": false,
+        "username": "SuperUser"
+      }
+    ]
+
+}
