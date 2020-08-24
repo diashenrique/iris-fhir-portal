@@ -3,7 +3,7 @@ $(document).ready(function () {
 
     // Instantiate a new FHIR client
     var client = fhir({
-        baseUrl: 'http://localhost:32783/fhir/r4',
+        baseUrl: '/fhir/r4',
 
         headers: {
             'Accept': 'application/fhir+json',
