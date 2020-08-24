@@ -1,5 +1,5 @@
 # IRIS FHIR Portal
-The goal is to show how easy we can create an Patient Chart using FHIR capabilities in IRIS For Health and also empower the user with their own data.
+The goal is to show how easy we can create a Patient Chart using FHIR capabilities in IRIS For Health and also empower the user with their own data.
 
 ## Prerequisites
 Make sure you have [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) and [Docker desktop](https://www.docker.com/products/docker-desktop) installed.
