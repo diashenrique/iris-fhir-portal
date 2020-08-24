@@ -7,3 +7,7 @@
     margin-right: .2rem;
     height: 33px;
 }
+
+.app-header .navbar {
+    padding-top: .850rem;
+}

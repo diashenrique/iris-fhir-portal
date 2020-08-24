@@ -22,19 +22,21 @@
 
 <body>
   <!-- .app -->
-  <div class="app">
+  <div class="app has-fullwidth">
     <!-- .app-header -->
     <header class="app-header">
       <!-- .top-bar -->
-      <div class="top-bar navbar-white">
-        <!-- .top-bar-brand -->
-        <div class="top-bar-brand" style="background-color: #ffffff;">
-          <a href="#">
+      <nav class="nav-bar navbar-white navbar navbar-expand-lg my-auto py-auto">
+        <div class="container-fluid">
+          <!-- .top-bar-brand -->
+          <a class="navbar-brand" href="#">
             <img src="resources/img/InterSystemsIRIS_OnFHIR.png" class="brand-image">
           </a>
-        </div><!-- /.top-bar-brand -->
-      </div><!-- /.top-bar -->
+        </div><!-- /.top-bar -->
+      </nav>
+
     </header><!-- /.app-header -->
+
     <!-- .app-main -->
     <main class="app-main">
       <!-- .wrapper -->
@@ -72,12 +74,22 @@
               </div>
             </div><!-- /.page-section -->
           </div><!-- /.page-inner -->
+
           <!-- .page-sidebar -->
           <div class="page-sidebar">
+            <!-- .sidebar-header -->
+            <header class="sidebar-header d-xl-none">
+              <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                  <li class="breadcrumb-item active">
+                    <a href="#" onclick="Looper.toggleSidebar()"><i class="breadcrumb-icon fa fa-angle-left mr-2"></i>Back</a>
+                  </li>
+                </ol>
+              </nav>
+            </header><!-- /.sidebar-header -->
+
             <!-- .sidebar-section -->
             <div class="sidebar-section">
-
-
               <!-- .card -->
               <div class="card">
                 <!-- .card-body -->
@@ -183,10 +195,7 @@
                         </div><!-- /.modal-content -->
                       </div><!-- /.modal-dialog -->
                     </div><!-- /.modal -->
-
-
                   </form><!-- /form .needs-validation -->
-
                 </div><!-- /.card-body -->
               </div><!-- /.card -->
 
