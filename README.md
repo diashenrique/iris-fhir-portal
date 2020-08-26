@@ -57,7 +57,7 @@ Here we have a screenshot of Laboratory Results:
 
 ![Lab Results](https://raw.githubusercontent.com/diashenrique/iris-fhir-portal/master/img/accordionResults.png)
 
-It's possible to edit the Patient Details
+It's possible to update the Patient Details
 ![Updating Patient Details](https://raw.githubusercontent.com/diashenrique/iris-fhir-portal/master/img/updatePatientDetails.gif)
 
 The interface it's totally responsive. Meaning that you can browse the results on mobile devices.
