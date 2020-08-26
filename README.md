@@ -26,7 +26,7 @@ Open URL http://localhost:32783/csp/user/fhirUI/patientlist.html
 
 On the left panel, you have a patient list with a filter bar on top.
 
-![Patient Search list](https://raw.githubusercontent.com/diashenrique/iris-fhir-portal/master/img/search.png)
+![Patient Search list](https://raw.githubusercontent.com/diashenrique/iris-fhir-portal/master/img/search.gif)
 
 Clicking on the patient will give you detailed information on the Patient Details form.
 
@@ -56,6 +56,18 @@ After the Patient Details form, we have an accordion with four blocks of informa
 Here we have a screenshot of Laboratory Results:
 
 ![Lab Results](https://raw.githubusercontent.com/diashenrique/iris-fhir-portal/master/img/accordionResults.png)
+
+It's possible to edit the Patient Details
+![Updating Patient Details](https://raw.githubusercontent.com/diashenrique/iris-fhir-portal/master/img/updatePatientDetails.gif)
+
+The interface it's totally responsive. Meaning that you can browse the results on mobile devices.
+
+Portrait Mode
+
+![Mobile Portrait mode](https://raw.githubusercontent.com/diashenrique/iris-fhir-portal/master/img/mobilePortrait.gif)
+
+Landscape Mode
+![Mobile Portrait mode](https://raw.githubusercontent.com/diashenrique/iris-fhir-portal/master/img/mobileLandscape.gif)
 
 For a transparent approach with patient data, at the end of the page, there is a modal with all the information provided by the FHIR resources.
 
