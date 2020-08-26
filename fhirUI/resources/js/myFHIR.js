@@ -1,6 +1,8 @@
 $(document).ready(function () {
     const divPlist = document.querySelector('#patientlist');
 
+    var objPatient = "";
+
     // Instantiate a new FHIR client
     var client = fhir({
         baseUrl: '/fhir/r4',
@@ -9,6 +11,40 @@ $(document).ready(function () {
             'Accept': 'application/fhir+json',
             'Content-Type': 'application/fhir+json;charset=UTF-8'
         }
+    });
+
+    $("#reloadList").click(function () {
+        location.reload();
+    });
+
+    $("#updateData").prop('disabled', true);
+
+    function Toast(type, css, msg) {
+        this.type = type;
+        this.css = css;
+        this.msg = msg;
+    }
+
+    var toasts = [
+        new Toast('success', 'toast-bottom-center', 'Updating patient successed!'),
+        new Toast('error', 'toast-bottom-center', 'An error happened while updating patient record.')
+    ];
+
+    toastr.options.positionClass = 'toast-top-full-width';
+    toastr.options.extendedTimeOut = 0; //1000;
+    toastr.options.timeOut = 2000;
+    toastr.options.fadeOut = 250;
+    toastr.options.fadeIn = 250;
+
+    function showToast(i) {
+        var t = toasts[i];
+        toastr.options.positionClass = t.css;
+        toastr[t.type](t.msg);
+    }
+
+    $("#updateData").click(function () {
+        $("#updateData").prop('disabled', true);
+        updatePatient($("#fhirId").val());
     });
 
     function getName(r) {
@@ -36,6 +72,7 @@ $(document).ready(function () {
                 const bundle = res.data;
                 bundle.entry.forEach((patient) => {
                     //console.log(patient.resource);
+                    objPatient = patient;
                     $("#fhirId").val(patient.resource.id);
                     $("#SSN").val(patient.resource.identifier[2].value);
                     $("#firstName").val(patient.resource.name[0].given[0]);
@@ -54,6 +91,7 @@ $(document).ready(function () {
                     $("#vitalSignsTable tbody").empty();
                     $("#laboratoryTable tbody").empty();
                     $("#immunizationTable tbody").empty();
+                    $("#updateData").prop('disabled', false);
 
                     allergy(patient.resource.id);
                     vitalsigns(patient.resource.id);
@@ -78,9 +116,7 @@ $(document).ready(function () {
     client.search({
             type: 'Patient',
             query: {
-                $include: {
-                    RelatedPerson: "patient"
-                }
+                _sort: '-_lastUpdated'
             }
         }).then((res) => {
             const bundle = res.data;
@@ -242,6 +278,37 @@ $(document).ready(function () {
                     console.log('Error', err.data);
                 }
             });
+    };
+
+    window.updatePatient = function (patientId) {
+        objPatient.resource.id = $("#fhirId").val();
+        objPatient.resource.identifier[2].value = $("#SSN").val();
+        objPatient.resource.name[0].given[0] = $("#firstName").val();
+        objPatient.resource.name[0].family = $("#lastName").val();
+        objPatient.resource.birthDate = $("#dateofbirth").val();
+        objPatient.resource.gender = $("#gender").val();
+        objPatient.resource.address[0].line[0] = $("#address").val();
+        objPatient.resource.address[0].city = $("#city").val();
+        objPatient.resource.address[0].state = $("#state").val();
+        objPatient.resource.address[0].country = $("#country").val();
+
+        client.update({
+            type: "Patient",
+            id: parseInt(patientId),
+            resource: objPatient.resource
+        }).catch(function (e) {
+            //console.log('An error happened while updating patient: \n' + JSON.stringify(e));
+            showToast(1);
+            $("#updateData").prop('disabled', false);
+            throw e;
+        }).then(function (bundle) {
+            //console.log('Updating patient successed');
+            showToast(0);
+            $("#updateData").prop('disabled', false);
+
+
+            return bundle;
+        });
     };
 
 });

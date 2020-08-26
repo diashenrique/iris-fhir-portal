@@ -12,12 +12,13 @@
   <link href="https://fonts.googleapis.com/css?family=Fira+Sans:400,500,600" rel="stylesheet"><!-- End GOOGLE FONT -->
   <!-- BEGIN PLUGINS STYLES -->
   <link rel="stylesheet" href="assets/vendor/open-iconic/css/open-iconic-bootstrap.min.css">
+  <link rel="stylesheet" href="assets/stylesheets/toastr.min.css">
   <link rel="stylesheet" href="assets/vendor/fontawesome/css/all.css">
   <link rel="stylesheet" href="assets/vendor/flatpickr/flatpickr.min.css">
+  <link rel="stylesheet" href="resources/css/custom.css">
   <!-- END PLUGINS STYLES -->
   <!-- BEGIN THEME STYLES -->
   <link rel="stylesheet" href="assets/stylesheets/theme.min.css" data-skin="default">
-  <link rel="stylesheet" href="resources/css/custom.css">
 </head>
 
 <body>
@@ -64,6 +65,11 @@
                       </span>
                     </label>
                     <input type="text" class="form-control" id="searchClients" data-filter=".board .list-group-item" placeholder="Find Patients">
+                    <div class="float-right">
+                      <button id="reloadList" class="btn btn-primary float-right">
+                        <i class="fas fa-sync-alt"></i>
+                      </button>
+                    </div>
                   </div><!-- /.input-group -->
                 </header>
                 <div class="board p-0 perfect-scrollbar">
@@ -95,18 +101,18 @@
                 <!-- .card-body -->
                 <div class="card-body">
                   <h4 class="card-title"> Patient Details</h4>
-                  <form class="needs-validation" novalidate="">
+                  <form>
                     <!-- .form-row -->
                     <div class="form-row">
                       <!-- grid column -->
                       <div class="col-md-6 mb-3">
                         <label for="fhirId">FHIR Patient ID</label>
-                        <input type="text" class="form-control" id="fhirId" readonly>
+                        <input type="text" class="form-control" id="fhirId" disabled>
                       </div><!-- /grid column -->
                       <!-- grid column -->
                       <div class="col-md-6 mb-3">
                         <label for="SSN">SSN</label>
-                        <input type="text" class="form-control" id="SSN" readonly>
+                        <input type="text" class="form-control" id="SSN">
                       </div><!-- /grid column -->
                     </div><!-- /.form-row -->
 
@@ -115,12 +121,12 @@
                       <!-- grid column -->
                       <div class="col-md-6 mb-3">
                         <label for="firstName">First name</label>
-                        <input type="text" class="form-control" id="firstName" readonly>
+                        <input type="text" class="form-control" id="firstName">
                       </div><!-- /grid column -->
                       <!-- grid column -->
                       <div class="col-md-6 mb-3">
                         <label for="lastName">Last name</label>
-                        <input type="text" class="form-control" id="lastName" readonly>
+                        <input type="text" class="form-control" id="lastName">
                       </div><!-- /grid column -->
                     </div><!-- /.form-row -->
 
@@ -128,12 +134,12 @@
                     <div class="form-row">
                       <div class="col-md-6 mb-3">
                         <label class="control-label" for="dateofbirth">Date of Birth</label>
-                        <input id="dateofbirth" type="text" class="form-control" data-toggle="flatpickr" readonly>
+                        <input id="dateofbirth" type="text" class="form-control" data-toggle="flatpickr">
                       </div>
 
                       <div class="col-md-6 mb-3">
                         <label for="gender">Gender</label>
-                        <select class="custom-select d-block w-100" id="gender" readonly>
+                        <select class="custom-select d-block w-100" id="gender">
                           <option value=""> Choose... </option>
                           <option value="male"> Male </option>
                           <option value="female"> Female </option>
@@ -145,7 +151,7 @@
                     <!-- .form-group -->
                     <div class="form-group">
                       <label for="address">Address</label>
-                      <input type="text" class="form-control" id="address" readonly>
+                      <input type="text" class="form-control" id="address">
                     </div><!-- /.form-group -->
 
                     <!-- .form-row -->
@@ -153,19 +159,26 @@
                       <!-- grid column -->
                       <div class="col-md-3 mb-3">
                         <label for="city">City</label>
-                        <input type="text" class="form-control" id="city" readonly>
+                        <input type="text" class="form-control" id="city">
                       </div><!-- /grid column -->
                       <!-- grid column -->
                       <div class="col-md-4 mb-3">
                         <label for="state">State</label>
-                        <input type="text" class="form-control" id="state" readonly>
+                        <input type="text" class="form-control" id="state">
                       </div><!-- /grid column -->
                       <!-- grid column -->
                       <div class="col-md-5 mb-3">
                         <label for="country">Country</label>
-                        <input type="text" class="form-control" id="country" readonly>
+                        <input type="text" class="form-control" id="country">
                       </div><!-- /grid column -->
                     </div><!-- /.form-row -->
+
+                    <div class="float-right">
+                      <button id="updateData" class="btn btn-primary float-right">Update
+                        <i class="fas fa-save"></i>
+                      </button>
+                    </div>
+
 
                     <!-- .card-body -->
                     <div class="el-example">
@@ -366,6 +379,7 @@
   <script src="assets/vendor/bootstrap/js/popper.min.js"></script>
   <script src="assets/vendor/bootstrap/js/bootstrap.min.js"></script> <!-- END BASE JS -->
   <!-- BEGIN PLUGINS JS -->
+  <script src="assets/javascript/toastr.min.js"></script>
   <script src="assets/vendor/pace/pace.min.js"></script>
   <script src="assets/vendor/stacked-menu/stacked-menu.min.js"></script>
   <script src="assets/vendor/perfect-scrollbar/perfect-scrollbar.min.js"></script>
