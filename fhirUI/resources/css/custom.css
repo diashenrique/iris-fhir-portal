@@ -34,3 +34,9 @@
 #toast-container>.toast-success:before {
     content: "\f00c";
 }
+
+canvas {
+    -moz-user-select: none;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+}
