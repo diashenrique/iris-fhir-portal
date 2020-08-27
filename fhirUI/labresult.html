@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>InterSystems IRIS on FHIR</title>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><!-- End Required meta tags -->
+  <!-- FAVICONS -->
+  <link rel="shortcut icon" href="resources/img/ISC_IRIS_icon.ico"><!-- End FAVICONS -->
+  <!-- GOOGLE FONT -->
+  <link href="https://fonts.googleapis.com/css?family=Fira+Sans:400,500,600" rel="stylesheet"><!-- End GOOGLE FONT -->
+  <!-- BEGIN PLUGINS STYLES -->
+  <link rel="stylesheet" href="assets/vendor/open-iconic/css/open-iconic-bootstrap.min.css">
+  <link rel="stylesheet" href="assets/stylesheets/toastr.min.css">
+  <link rel="stylesheet" href="assets/vendor/fontawesome/css/all.css">
+  <link rel="stylesheet" href="assets/vendor/flatpickr/flatpickr.min.css">
+  <link rel="stylesheet" href="resources/css/custom.css">
+  <!-- END PLUGINS STYLES -->
+  <!-- BEGIN THEME STYLES -->
+  <link rel="stylesheet" href="assets/stylesheets/theme.min.css" data-skin="default">
+</head>
+
+<body>
+  <!-- .app -->
+  <div class="app has-fullwidth">
+    <!-- .app-header -->
+    <header class="app-header">
+      <!-- .top-bar -->
+      <nav class="nav-bar navbar-white navbar navbar-expand-lg my-auto py-auto">
+        <div class="container-fluid">
+          <!-- .top-bar-brand -->
+          <a class="navbar-brand" href="#">
+            <img src="resources/img/InterSystemsIRIS_OnFHIR.png" class="brand-image">
+          </a>
+        </div><!-- /.top-bar -->
+      </nav>
+    </header><!-- /.app-header -->
+
+    <!-- .app-main -->
+    <main class="app-main">
+      <!-- .wrapper -->
+      <div class="wrapper">
+        <!-- .page -->
+        <div class="page">
+          <!-- .page-inner -->
+          <div class="page-inner">
+            <!-- .page-title-bar -->
+            <div class="page-section">
+              <div class="section-block">
+                <div class="col-lg-12">
+                  <!-- .card -->
+                  <div class="card">
+                    <!-- .card-body -->
+                    <div class="card-body">
+                      <h4 class="card-title"> Patient Information</h4>
+                      <form>
+                        <!-- .form-row -->
+                        <div class="form-row">
+                          <!-- grid column -->
+                          <div class="col-md-2 mb-2">
+                            <label for="fhirId">FHIR Patient ID</label>
+                            <input type="text" readonly class="form-control" id="fhirId">
+                          </div><!-- /grid column -->
+                          <!-- grid column -->
+                          <div class="col-md-6 mb-4">
+                            <label for="fullName">Name</label>
+                            <input type="text" readonly class="form-control" id="fullName">
+                          </div><!-- /grid column -->
+                          <!-- grid column -->
+                          <div class="col-md-4 mb-3">
+                            <label class="control-label" for="dateofbirth">Date of Birth</label>
+                            <input id="dateofbirth" type="text" class="form-control" data-toggle="flatpickr">
+                          </div><!-- /grid column -->
+                        </div><!-- /.form-row -->
+                        <div class="form-row">
+                          <!-- grid column -->
+                          <div class="col-md-8 mb-3">
+                            <label for="labtest">Lab Tests</label>
+                            <select class="custom-select d-block w-100" id="labtest"></select>
+                          </div><!-- /grid column -->
+                          <div class="col-md-4 mb-3 align-self-end">
+                            <button id="labSearch" class="btn btn-primary" type="button">Search
+                              <i class="fas fa-search"></i>
+                            </button>
+                          </div><!-- /grid column -->
+                        </div>
+                      </form><!-- /form .needs-validation -->
+                    </div><!-- /.card-body -->
+                  </div><!-- /.card -->
+
+                  <!-- .card -->
+                  <div class="card">
+                    <!-- .card-header -->
+                    <div class="card-header"> Lab Results </div><!-- .card-body -->
+                    <div class="card-body">
+                      <h5 id="testName" class="card-title text-muted"></h5>
+                      <div style="width: 100%;">
+                        <canvas id="myChart"></canvas>
+                      </div>
+                    </div><!-- /.card-body -->
+                  </div><!-- /.card -->
+                </div>
+              </div>
+            </div>
+          </div><!-- /.page-inner -->
+        </div><!-- /.page -->
+      </div><!-- /.wrapper -->
+    </main><!-- /.app-main -->
+  </div><!-- /.app -->
+  <!-- BEGIN BASE JS -->
+  <script src="assets/vendor/jquery/jquery.min.js"></script>
+  <script src="assets/vendor/bootstrap/js/popper.min.js"></script>
+  <script src="assets/vendor/bootstrap/js/bootstrap.min.js"></script> <!-- END BASE JS -->
+  <!-- BEGIN PLUGINS JS -->
+  <script src="assets/javascript/toastr.min.js"></script>
+  <script src="assets/vendor/pace/pace.min.js"></script>
+  <script src="assets/vendor/stacked-menu/stacked-menu.min.js"></script>
+  <script src="assets/vendor/chart.js/Chart.bundle.min.js"></script> <!-- END PLUGINS JS -->
+  <script src="assets/vendor/chart.js/utils.js"></script> <!-- END PLUGINS JS -->
+  <!-- BEGIN THEME JS -->
+  <script src="assets/javascript/theme.min.js"></script> <!-- END THEME JS -->
+  <!-- BEGIN FHIR -->
+  <script src="resources/js/labresult.js"></script><!-- END FHIR -->
+</body>
+
+</html>

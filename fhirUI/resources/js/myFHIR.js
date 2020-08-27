@@ -91,6 +91,7 @@ $(document).ready(function () {
                     $("#vitalSignsTable tbody").empty();
                     $("#laboratoryTable tbody").empty();
                     $("#immunizationTable tbody").empty();
+                    $("#iconChart").empty();
                     $("#updateData").prop('disabled', false);
 
                     allergy(patient.resource.id);
@@ -259,6 +260,11 @@ $(document).ready(function () {
                 const bundle = res.data;
                 $("#badgeLaboratory").html(res.data.total);
 
+                if (res.data.total > 0) {
+                    const icone = '<a target="_blank" href="labresult.html?id=' + patientId + '"><span class="label label-info"><i class="fas fa-chart-line"></i></span></a>';
+                    $("#iconChart").append(icone);
+                }
+
                 var resourceLaboratory = JSON.stringify(bundle, undefined, 4);
                 $('#fhirdatasource').append(resourceLaboratory);
 
@@ -297,15 +303,12 @@ $(document).ready(function () {
             id: parseInt(patientId),
             resource: objPatient.resource
         }).catch(function (e) {
-            //console.log('An error happened while updating patient: \n' + JSON.stringify(e));
             showToast(1);
             $("#updateData").prop('disabled', false);
             throw e;
         }).then(function (bundle) {
-            //console.log('Updating patient successed');
             showToast(0);
             $("#updateData").prop('disabled', false);
-
 
             return bundle;
         });
