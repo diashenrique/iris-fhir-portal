@@ -60,6 +60,8 @@ Here we have a screenshot of Laboratory Results:
 It's possible to update the Patient Details
 ![Updating Patient Details](https://raw.githubusercontent.com/diashenrique/iris-fhir-portal/master/img/updatePatientDetails.gif)
 
+## Interface
+
 The interface it's totally responsive. Meaning that you can browse the results on mobile devices.
 
 Portrait Mode
@@ -69,6 +71,22 @@ Portrait Mode
 Landscape Mode
 ![Mobile Portrait mode](https://raw.githubusercontent.com/diashenrique/iris-fhir-portal/master/img/mobileLandscape.gif)
 
+## Charts for Laboratory Results
+When you realize the same lab tests over time, the best way to compare the results is through charts! They give you a better perspective of your evolution over time. 
+
+Thinking about that, I introduce to you the **chart module for laboratory results**!
+
+Now, when the FHIR Resource gives us lab results an icon/link will appear to let you see the results in a chart format.
+![Chart Icon](https://raw.githubusercontent.com/diashenrique/iris-fhir-portal/master/img/labIconZoom.png)
+
+The lab results will open in a new page.
+
+The selection "Lab Tests" will show all the tests for the patient.
+![Lab Results](https://raw.githubusercontent.com/diashenrique/iris-fhir-portal/master/img/labresultChart.gif)
+
+All information provided on this page was retrieved making usage of _**SQL Schema of FHIR Resources**_.
+
+## FHIR Data Source
 For a transparent approach with patient data, at the end of the page, there is a modal with all the information provided by the FHIR resources.
 
 ![FHIR Resource Data](https://raw.githubusercontent.com/diashenrique/iris-fhir-portal/master/img/FHIR_ResourceData.png)
