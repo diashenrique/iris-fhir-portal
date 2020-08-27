@@ -1,5 +1,11 @@
 zn "%SYS"
 Do ##class(Security.Users).UnExpireUserPasswords("*")
+set props("AutheEnabled") = 64
+set props("NameSpace") = "FHIRSERVER"
+set props("IsNameSpaceDefault") = 0
+set props("DispatchClass") = "User.Dispatch"
+set props("MatchRoles")=":%All"
+zw ##class(Security.Applications).Create("/fhir/api" , .props)
 
 zn "HSLIB"
 set namespace="FHIRSERVER"
@@ -8,14 +14,14 @@ Set strategyClass = "HS.FHIRServer.Storage.Json.InteractionsStrategy"
 Set metadataConfigKey = "HL7v40"
 set importdir="/opt/irisapp/src"
 
-//Install a Foundation namespace and change to it
+    //Install a Foundation namespace and change to it
 Do ##class(HS.HC.Util.Installer).InstallFoundation(namespace)
 zn namespace
 
-// Install elements that are required for a FHIR-enabled namespace
+    // Install elements that are required for a FHIR-enabled namespace
 Do ##class(HS.FHIRServer.Installer).InstallNamespace()
 
-// Install an instance of a FHIR Service into the current namespace
+    // Install an instance of a FHIR Service into the current namespace
 Do ##class(HS.FHIRServer.Installer).InstallInstance(appKey, strategyClass, metadataConfigKey,"",0)
 
 set strategy = ##class(HS.FHIRServer.API.InteractionsStrategy).GetStrategyForEndpoint(appKey)
