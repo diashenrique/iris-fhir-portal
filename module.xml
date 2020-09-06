@@ -1,12 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Export generator="Cache" version="25">
-  <Document name="objectscript-sample.ZPM">
+  <Document name="fhir-portal.ZPM">
     <Module>
-      <Name>objectscript-sample</Name>
-      <Version>0.0.1</Version>
+      <Name>fhir-portal</Name>
+      <Version>1.0.0</Version>
       <Packaging>module</Packaging>
       <SourcesRoot>src</SourcesRoot>
-      <Resource Name="PackageSample.PKG"/>
+      <Resource Name="diashenrique.fhir.portal.PKG"/>
+      <CSPApplication
+        Url="/fhir/portal"
+        SourcePath="/fhirUI"
+        DeployPath="${cspdir}/fhir/portal"
+        ServeFiles="1"
+        Recurse="1"
+        CookiePath="/fhir/portal"
+        UseCookies="2"
+        MatchRoles=":${dbrole}"
+        PasswordAuthEnabled="0"
+        UnauthenticatedEnabled="1"
+       />
+
+       <CSPApplication 
+        Url="/fhir/api"
+        SourcePath="/fhirUI"
+        DeployPath="${cspdir}/fhir/portal"
+        Recurse="1"
+        MatchRoles=":${dbrole}"
+        PasswordAuthEnabled="0"
+        UnauthenticatedEnabled="1"
+        DispatchClass="diashenrique.fhir.portal.Dispatch"
+        ServeFiles="1"
+        CookiePath="/fhir/portal"
+        UseCookies="2"
+       />
     </Module>
   </Document>
 </Export>
