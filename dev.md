@@ -39,4 +39,10 @@ kill ^ISCLOG
 set ^%ISCLOG=3
 
 
+## select zpm test registry
+```
+repo -n registry -r -url https://test.pm.community.intersystems.com/registry/ -user test -pass PassWord42
+```
+
+
 

@@ -1,4 +1,4 @@
-Class User.Dispatch Extends %CSP.REST
+Class diashenrique.fhir.portal.Dispatch Extends %CSP.REST
 {
 
 XData UrlMap [ XMLNamespace = "http://www.intersystems.com/urlmap" ]
