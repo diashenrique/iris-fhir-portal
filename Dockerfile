@@ -4,7 +4,7 @@ ARG IMAGE=intersystemsdc/iris-community:2020.2.0.204.0-zpm
 ARG IMAGE=intersystemsdc/irishealth-community:2020.2.0.204.0-zpm
 ARG IMAGE=intersystemsdc/irishealth-community:2020.3.0.200.0-zpm
 #Replaced with below image to fix Error: Invalid Community Edition license
-ARG IMAGE=intersystemsdc/iris-community:2021.1.0.215.3-zpm
+ARG IMAGE=intersystemsdc/irishealth-community:2021.1.0.215.3-zpm
 FROM $IMAGE
 
 USER root
