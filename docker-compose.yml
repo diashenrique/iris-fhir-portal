@@ -5,11 +5,12 @@ services:
       context: .
       dockerfile: Dockerfile
     restart: always
+    command: --check-caps false
     ports:
       - 32782:1972
       - 32783:52773
       - 32784:53773
     volumes:
       - ./fhirUI:/usr/irissys/csp/user/fhirUI
-      - ~/iris.key:/usr/irissys/mgr/iris.key
+#      - ~/iris.key:/usr/irissys/mgr/iris.key
       - ./:/irisdev/app
