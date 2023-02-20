@@ -18,6 +18,15 @@ Open the terminal in this directory and run:
 $ docker-compose up -d
 ```
 
+## Installation via IPM
+
+```
+zpm "install fhir-portal"
+```
+After installation open the URL:
+
+your-server:port/fhir/portal/patientlist.html
+
 ## Testing the FHIR Application
 
 Open URL http://localhost:32783/csp/user/fhirUI/patientlist.html
