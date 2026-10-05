@@ -1,6 +1,6 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
-const { login } = require('./helpers');
+const { FHIR_JSON, login } = require('./helpers');
 
 // Each payload runs script if the page inserts it as HTML
 const NAME_PAYLOAD = '<img src=x onerror=window.__xss=1>';
@@ -8,8 +8,6 @@ const LAB_PAYLOAD = '<img src=x onerror=alert(document.domain)>';
 const ALLERGY_PAYLOAD = '<img src=x onerror=window.__xss=2>';
 const IMMUNIZATION_PAYLOAD = '<img src=x onerror=window.__xss=3>';
 const VITAL_PAYLOAD = '<img src=x onerror=window.__xss=4>';
-
-const FHIR_JSON = { Accept: 'application/fhir+json', 'Content-Type': 'application/fhir+json' };
 
 test('FHIR data is shown as text in the list, details, tables, modal and chart options', async ({ page, context }) => {
   const dialogs = [];

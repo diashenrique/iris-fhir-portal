@@ -3,7 +3,7 @@ title: 'Chamadas anônimas ao /fhir/r4 geram alertas e deixam o container unheal
 type: 'bugfix'
 ticket: '8'
 created: '2026-10-05'
-status: 'built'
+status: done
 baseline_revision: '14c80f78c19637d357f8a07c87abb9ad40886aa6'
 route: 'oneshot'
 route_source: 'auto'

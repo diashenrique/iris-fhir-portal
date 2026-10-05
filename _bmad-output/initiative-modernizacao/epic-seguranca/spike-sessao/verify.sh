@@ -5,6 +5,7 @@ PAGE="${PAGE:-$B/fhir/portal/Spike.Home.cls}"
 J=$(mktemp); L=$(mktemp); fails=0
 check() { [ "$2" = "$3" ] && echo "PASS  $1 ($2)" || { echo "FAIL  $1 (got $2, want $3)"; fails=$((fails + 1)); }; }
 # The web app refuses anonymous calls with 404 on /fhir/r4 (AutheEnabled=8224) and 401 on /fhir/api: both mean denied
+# Superseded by bug 2.8: the project keeps /fhir/r4 at 8288, where anonymous calls get 401 from the FHIR server.
 denied() { [ "$2" = "401" ] || [ "$2" = "404" ] && echo "PASS  $1 denied ($2)" || { echo "FAIL  $1 (got $2, want 401 or 404)"; fails=$((fails + 1)); }; }
 code() { curl -s -o /dev/null -w '%{http_code}' "$@"; }
 

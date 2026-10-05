@@ -41,6 +41,8 @@ Rota oneshot: investigação sem código entregue; o resultado é este plano. Ri
 | `/fhir/r4` (existente) | `GroupById="fhirportal"`, `CookiePath="/fhir/"`, `UseCookies=2`, **`AutheEnabled=8224`** (8192 + 32: tira o bit 64, que é o anônimo). A recusa ao anônimo passa a vir do próprio web app, não só do FHIR server rejeitando o UnknownUser; a resposta vira **404**, e não 401. A Basic auth segue valendo (checagem de dados do CI) |
 | `/fhir/api` (existente) | `GroupById="fhirportal"`, `CookiePath="/fhir/"`, `UseCookies=2`, `AutheEnabled=32` (sai o anônimo); o papel mínimo é da entrada 3 |
 
+> **Atualização (bug 2.8, 2026-10-05):** o `/fhir/r4` ficou em `AutheEnabled=8288`, não em 8224. Com 8224, cada chamada anônima grava um alerta de severidade 2 e deixa o container unhealthy; com 8288, o servidor FHIR recusa o anônimo com 401.
+
 ### Achados que mudam o desenho
 
 1. **`ServeFiles=1` (o padrão) ignora a segurança para arquivos estáticos.** Com ele, `patientlist.html` saiu 200 para um anônimo mesmo com o app exigindo senha. Com `ServeFiles=3` ("Use CSP security"), o estático só é servido a quem já pode ver páginas CSP do app; um anônimo recebe **404**, não a tela de login.
@@ -48,7 +50,7 @@ Rota oneshot: investigação sem código entregue; o resultado é este plano. Ri
 3. **O app de páginas precisa de `MatchRoles=":%HS_DB_FHIRSERVER"`.** Sem isso, o `fhirportal` (sem papéis) entra, mas a página CSP falha com "An error occurred with the web application", porque o usuário não lê o banco de código do `FHIRSERVER`.
 4. **CSRF:** o cookie de sessão sai `CSPSESSIONID-...` com path `/fhir/`, `SameSite=Strict` (`SessionScope=2`, o padrão) e `HttpOnly`. O `PUT Patient` só leva o cookie em requisições do mesmo site.
 5. **Logout:** `?IRISLogout=end` numa página CSP do app encerra a sessão do grupo. Depois disso, `/fhir/r4` dá 404, `/fhir/api` dá 401 e o estático dá 404.
-7. **Handoff para os testes da entrada 2:** o smoke de hoje espera 401 no `/fhir/r4` anônimo. Com `AutheEnabled=8224`, a resposta é 404, então a checagem deve aceitar 401 ou 404 como negado, como faz o `verify.sh` deste spike.
+7. **Handoff para os testes da entrada 2** (superado pelo bug 2.8, ver a atualização acima: com 8288 a resposta é 401, e os testes exigem 401)**:** o smoke de hoje espera 401 no `/fhir/r4` anônimo. Com `AutheEnabled=8224`, a resposta é 404, então a checagem deve aceitar 401 ou 404 como negado, como faz o `verify.sh` deste spike.
 6. Lembrete do `deferred-work.md`: ao trocar o `fhirUI` em teste manual, reinicie o container por causa do cache gzip do Web Gateway.
 
 ### Artefatos reproduzíveis

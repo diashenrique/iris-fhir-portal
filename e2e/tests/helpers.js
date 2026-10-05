@@ -3,6 +3,9 @@ const { expect } = require('@playwright/test');
 
 const ENTRY_PAGE = '/fhir/portal/diashenrique.fhir.portal.Home.cls';
 
+// Headers for FHIR REST calls made with page.request
+const FHIR_JSON = { Accept: 'application/fhir+json', 'Content-Type': 'application/fhir+json' };
+
 /**
  * Log in through the IRIS login page of the portal. The session cookie then authenticates
  * the pages, /fhir/r4 and /fhir/api; page.request shares it.
@@ -19,4 +22,4 @@ async function login(page, user = 'fhirportal', password = 'fhirportal') {
   await expect(page.locator('#listgroup .list-group-item').first()).toBeVisible();
 }
 
-module.exports = { ENTRY_PAGE, login };
+module.exports = { ENTRY_PAGE, FHIR_JSON, login };
