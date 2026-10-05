@@ -65,6 +65,28 @@ $(document).ready(function () {
         return name;
     }
 
+    // The SSN is protected health information: masked and read-only until the user asks to see it
+    let ssnValue = '';
+    let ssnRevealed = false;
+
+    function maskSSN(value) {
+        const text = value ? String(value) : '';
+        // Keep the last four digits only when there is more than that to hide
+        return text.length > 4 ? '***-**-' + text.slice(-4) : text.replace(/./g, '*');
+    }
+
+    function showMaskedSSN() {
+        ssnRevealed = false;
+        $("#SSN").val(maskSSN(ssnValue)).prop('readonly', true);
+        $("#revealSSN").prop('disabled', false);
+    }
+
+    $("#revealSSN").click(function () {
+        ssnRevealed = true;
+        $("#SSN").val(ssnValue).prop('readonly', false).focus();
+        $("#revealSSN").prop('disabled', true);
+    });
+
     // Build a table row whose cells hold the values as text, never as HTML
     function textRow(values) {
         const row = $('<tr>');
@@ -87,7 +109,8 @@ $(document).ready(function () {
                     //console.log(patient.resource);
                     objPatient = patient;
                     $("#fhirId").val(patient.resource.id);
-                    $("#SSN").val(patient.resource.identifier[2].value);
+                    ssnValue = patient.resource.identifier[2].value;
+                    showMaskedSSN();
                     $("#firstName").val(patient.resource.name[0].given[0]);
                     $("#lastName").val(patient.resource.name[0].family);
                     $("#dateofbirth").val(patient.resource.birthDate);
@@ -97,7 +120,12 @@ $(document).ready(function () {
                     $("#state").val(patient.resource.address[0].state);
                     $("#country").val(patient.resource.address[0].country);
 
-                    var textedJSON = JSON.stringify(patient.resource, undefined, 4);
+                    // The FHIR Data Source modal shows the resource as stored, except the SSN, which stays masked
+                    const shownPatient = JSON.parse(JSON.stringify(patient.resource));
+                    if (shownPatient.identifier && shownPatient.identifier[2]) {
+                        shownPatient.identifier[2].value = maskSSN(shownPatient.identifier[2].value);
+                    }
+                    var textedJSON = JSON.stringify(shownPatient, undefined, 4);
                     $('#fhirdatasource').val(textedJSON);
 
                     $("#allergyTable tbody").empty();
@@ -347,7 +375,11 @@ $(document).ready(function () {
 
     window.updatePatient = function (patientId) {
         objPatient.resource.id = $("#fhirId").val();
-        objPatient.resource.identifier[2].value = $("#SSN").val();
+        // Never save the mask: only a revealed field carries an edited SSN
+        if (ssnRevealed) {
+            ssnValue = $("#SSN").val();
+        }
+        objPatient.resource.identifier[2].value = ssnValue;
         objPatient.resource.name[0].given[0] = $("#firstName").val();
         objPatient.resource.name[0].family = $("#lastName").val();
         objPatient.resource.birthDate = $("#dateofbirth").val();
@@ -367,6 +399,7 @@ $(document).ready(function () {
             throw e;
         }).then(function (bundle) {
             showToast(0);
+            showMaskedSSN();
             $("#updateData").prop('disabled', false);
 
             return bundle;

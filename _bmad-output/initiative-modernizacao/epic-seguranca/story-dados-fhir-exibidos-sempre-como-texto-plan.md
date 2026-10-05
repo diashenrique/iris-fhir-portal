@@ -3,7 +3,7 @@ title: 'Dados FHIR exibidos sempre como texto'
 type: 'bugfix'
 ticket: '4'
 created: '2026-10-05'
-status: 'built'
+status: done
 baseline_revision: 'a9deef326e83b3778ae312fae665c3f2bde66019'
 route: 'full'
 route_source: 'auto'

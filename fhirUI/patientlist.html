@@ -115,7 +115,14 @@
                       <!-- grid column -->
                       <div class="col-md-6 mb-3">
                         <label for="SSN">SSN</label>
-                        <input type="text" class="form-control" id="SSN">
+                        <div class="input-group">
+                          <input type="text" class="form-control" id="SSN" readonly>
+                          <div class="input-group-append">
+                            <button class="btn btn-secondary" type="button" id="revealSSN" disabled>
+                              <i class="fas fa-eye"></i> Show
+                            </button>
+                          </div>
+                        </div>
                       </div><!-- /grid column -->
                     </div><!-- /.form-row -->
 

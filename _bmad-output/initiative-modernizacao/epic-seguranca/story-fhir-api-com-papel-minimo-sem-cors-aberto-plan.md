@@ -3,7 +3,7 @@ title: '/fhir/api com papel mínimo, sem CORS aberto'
 type: 'feature'
 ticket: '3'
 created: '2026-10-05'
-status: 'built'
+status: done
 baseline_revision: 'bf21310afcb487038c7ee9f4fc9c3cb1d6935cf2'
 route: 'oneshot'
 route_source: 'auto'
