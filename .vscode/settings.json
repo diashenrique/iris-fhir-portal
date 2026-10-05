@@ -14,7 +14,7 @@
       "internalPort": 52773
     },
     "links": {
-      "FHIR UI Demo": "http://localhost:${port}/csp/user/fhirUI/FHIRAppDemo.html",
+      "FHIR Portal": "http://localhost:${port}/csp/user/fhirUI/patientlist.html",
       "FHIR server test": "http://localhost:${port}/fhir/r4/metadata"
     }
   },
