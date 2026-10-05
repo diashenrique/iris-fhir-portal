@@ -65,6 +65,15 @@ $(document).ready(function () {
         return name;
     }
 
+    // Build a table row whose cells hold the values as text, never as HTML
+    function textRow(values) {
+        const row = $('<tr>');
+        values.forEach((value) => {
+            row.append($('<td>').text(value));
+        });
+        return row;
+    }
+
     // Perform a search to retrieve patient details for a specific patient
     window.loadForm = function (patientId) {
         client.search({
@@ -89,7 +98,7 @@ $(document).ready(function () {
                     $("#country").val(patient.resource.address[0].country);
 
                     var textedJSON = JSON.stringify(patient.resource, undefined, 4);
-                    $('#fhirdatasource').text(textedJSON);
+                    $('#fhirdatasource').val(textedJSON);
 
                     $("#allergyTable tbody").empty();
                     $("#vitalSignsTable tbody").empty();
@@ -129,8 +138,20 @@ $(document).ready(function () {
             bundle.entry.forEach((patient) => {
                 const patientId = patient.resource.id;
                 const name = getName(patient.resource);
-                const megaDIV = '<div id="' + patientId + '" class="list-group-item" data-toggle="sidebar" data-sidebar="show" onclick="loadForm(' + patientId + ')"><a href="#" class="stretched-link"></a><div class="list-group-item-figure"><div class="tile tile-circle bg-blue">' + name.slice(0, 1) + '</div></div><div class="list-group-item-body"><h4 class="list-group-item-title"> ' + name + '</h4><p class="list-group-item-text"> FHIR Patient ID: ' + patientId + ' </p></div></div>';
-                $("#listgroup").append(megaDIV);
+                const item = $('<div class="list-group-item" data-toggle="sidebar" data-sidebar="show">')
+                    .attr('id', patientId)
+                    .on('click', () => loadForm(patientId))
+                    .append(
+                        $('<a href="#" class="stretched-link"></a>'),
+                        $('<div class="list-group-item-figure">').append(
+                            $('<div class="tile tile-circle bg-blue">').text(name.slice(0, 1))
+                        ),
+                        $('<div class="list-group-item-body">').append(
+                            $('<h4 class="list-group-item-title">').text(' ' + name),
+                            $('<p class="list-group-item-text">').text(' FHIR Patient ID: ' + patientId + ' ')
+                        )
+                    );
+                $("#listgroup").append(item);
             });
         })
         .catch((err) => {
@@ -169,14 +190,16 @@ $(document).ready(function () {
                 }
             }).then((res) => {
                 const bundle = res.data;
-                $("#badgeImmunization").html(res.data.total);
+                $("#badgeImmunization").text(res.data.total);
 
                 var resourceImmunization = JSON.stringify(bundle, undefined, 4);
-                $('#fhirdatasource').append(resourceImmunization);
+                $('#fhirdatasource').val($('#fhirdatasource').val() + resourceImmunization);
 
                 bundle.entry.forEach((immunization) => {
-                    const vaccineRow = '<tr><td>' + immunization.resource.vaccineCode["coding"][0].display + '</td><td>' + immunization.resource.occurrenceDateTime + '</td></tr>';
-                    $("#immunizationTable tbody").append(vaccineRow);
+                    $("#immunizationTable tbody").append(textRow([
+                        immunization.resource.vaccineCode["coding"][0].display,
+                        immunization.resource.occurrenceDateTime
+                    ]));
                 });
             })
             .catch((err) => {
@@ -201,15 +224,19 @@ $(document).ready(function () {
                 }
             }).then((res) => {
                 const bundle = res.data;
-                $("#badgeAllergy").html(res.data.total);
+                $("#badgeAllergy").text(res.data.total);
 
                 if (res.data.total > 0) {
                     var resourceAllergy = JSON.stringify(bundle, undefined, 4);
-                    $('#fhirdatasource').append(resourceAllergy);
+                    $('#fhirdatasource').val($('#fhirdatasource').val() + resourceAllergy);
 
                     bundle.entry.forEach((allergy) => {
-                        const allergyRow = '<tr><td>' + allergy.resource.code.coding[0].display + '</td><td>' + allergy.resource.type + '</td><td>' + allergy.resource.category[0] + '</td><td>' + allergy.resource.criticality + '</td></tr>';
-                        $("#allergyTable tbody").append(allergyRow);
+                        $("#allergyTable tbody").append(textRow([
+                            allergy.resource.code.coding[0].display,
+                            allergy.resource.type,
+                            allergy.resource.category[0],
+                            allergy.resource.criticality
+                        ]));
                     });
                 }
             })
@@ -237,19 +264,27 @@ $(document).ready(function () {
                 }
             }).then((res) => {
                 const bundle = res.data;
-                $("#badgeVitalSigns").html(res.data.total);
+                $("#badgeVitalSigns").text(res.data.total);
 
                 var resourceVitalSigns = JSON.stringify(bundle, undefined, 4);
-                $('#fhirdatasource').append(resourceVitalSigns);
+                $('#fhirdatasource').val($('#fhirdatasource').val() + resourceVitalSigns);
 
                 bundle.entry.forEach((vitalsigns) => {
                     if (vitalsigns.resource.hasOwnProperty('valueQuantity')) {
-                        const vitalsignsRow = '<tr><td>' + vitalsigns.resource.code.coding[0].display + '</td><td>' + vitalsigns.resource.valueQuantity.value + '</td><td>' + vitalsigns.resource.valueQuantity.unit + '</td><td>' + vitalsigns.resource.effectiveDateTime + '</td></tr>';
-                        $("#vitalSignsTable tbody").append(vitalsignsRow);
+                        $("#vitalSignsTable tbody").append(textRow([
+                            vitalsigns.resource.code.coding[0].display,
+                            vitalsigns.resource.valueQuantity.value,
+                            vitalsigns.resource.valueQuantity.unit,
+                            vitalsigns.resource.effectiveDateTime
+                        ]));
                     } else {
                         vitalsigns.resource.component.forEach((bp) => {
-                            const vitalBpRow = '<tr><td>' + bp.code.text + '</td><td>' + bp.valueQuantity.value + '</td><td>' + bp.valueQuantity.unit + '</td><td>' + vitalsigns.resource.effectiveDateTime + '</td></tr>';
-                            $("#vitalSignsTable tbody").append(vitalBpRow);
+                            $("#vitalSignsTable tbody").append(textRow([
+                                bp.code.text,
+                                bp.valueQuantity.value,
+                                bp.valueQuantity.unit,
+                                vitalsigns.resource.effectiveDateTime
+                            ]));
                         });
                     }
                 });
@@ -277,19 +312,24 @@ $(document).ready(function () {
                 }
             }).then((res) => {
                 const bundle = res.data;
-                $("#badgeLaboratory").html(res.data.total);
+                $("#badgeLaboratory").text(res.data.total);
 
                 if (res.data.total > 0) {
-                    const icone = '<a target="_blank" href="labresult.html?id=' + patientId + '"><span class="label label-info"><i class="fas fa-chart-line"></i></span></a>';
+                    const icone = $('<a target="_blank"><span class="label label-info"><i class="fas fa-chart-line"></i></span></a>')
+                        .attr('href', 'labresult.html?id=' + encodeURIComponent(patientId));
                     $("#iconChart").append(icone);
                 }
 
                 var resourceLaboratory = JSON.stringify(bundle, undefined, 4);
-                $('#fhirdatasource').append(resourceLaboratory);
+                $('#fhirdatasource').val($('#fhirdatasource').val() + resourceLaboratory);
 
                 bundle.entry.forEach((laboratory) => {
-                    const laboratoryRow = '<tr><td>' + laboratory.resource.code.coding[0].display + '</td><td>' + laboratory.resource.valueQuantity.value + '</td><td>' + laboratory.resource.valueQuantity.unit + '</td><td>' + laboratory.resource.effectiveDateTime + '</td></tr>';
-                    $("#laboratoryTable tbody").append(laboratoryRow);
+                    $("#laboratoryTable tbody").append(textRow([
+                        laboratory.resource.code.coding[0].display,
+                        laboratory.resource.valueQuantity.value,
+                        laboratory.resource.valueQuantity.unit,
+                        laboratory.resource.effectiveDateTime
+                    ]));
                 });
             })
             .catch((err) => {

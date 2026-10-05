@@ -3,14 +3,14 @@ title: 'Dados FHIR exibidos sempre como texto'
 type: 'bugfix'
 ticket: '4'
 created: '2026-10-05'
-status: 'draft'
+status: 'built'
 baseline_revision: 'a9deef326e83b3778ae312fae665c3f2bde66019'
 route: 'full'
 route_source: 'auto'
 risk: 'medium'
-review: ''
-review_source: ''
-lenses_ran: []
+review: 'quick'
+review_source: 'pinned'
+lenses_ran: ['quick']
 review_loop_iteration: 0
 context: []
 ---
@@ -53,9 +53,9 @@ context: []
 ## Tasks & Acceptance
 
 **Execution:**
-- [ ] `fhirUI/resources/js/myFHIR.js` -- um helper que monta uma linha `<tr>` com `<td>`s via `.text()`; usá-lo nas 5 tabelas; o item da lista criado como elementos (título e iniciais com `.text()`) e com `.on('click', () => loadForm(id))`; badges com `.text()`; modal com `.val()` (o primeiro valor em `loadForm`, depois concatenando); link do gráfico com `.attr('href', ...)` -- fecha todos os sinks.
-- [ ] `fhirUI/resources/js/labresult.js` -- `<option>` com `$('<option>').val(code).text(name)`.
-- [ ] `e2e/tests/xss.spec.js` (novo) -- cria o Patient (com os campos que o `loadForm` lê: `identifier[0..2]`, `name[0].given[0]`, `family`, `address[0].line[0]`, `city`, `state`, `country`) e o Observation laboratory (com `valueQuantity` e `effectiveDateTime`) pelo `page.request` logado; cobre as linhas da matriz; apaga os dois num `finally`.
+- [x] `fhirUI/resources/js/myFHIR.js` -- um helper que monta uma linha `<tr>` com `<td>`s via `.text()`; usá-lo nas 5 tabelas; o item da lista criado como elementos (título e iniciais com `.text()`) e com `.on('click', () => loadForm(id))`; badges com `.text()`; modal com `.val()` (o primeiro valor em `loadForm`, depois concatenando); link do gráfico com `.attr('href', ...)` -- fecha todos os sinks.
+- [x] `fhirUI/resources/js/labresult.js` -- `<option>` com `$('<option>').val(code).text(name)`.
+- [x] `e2e/tests/xss.spec.js` (novo) -- cria o Patient (com os campos que o `loadForm` lê: `identifier[0..2]`, `name[0].given[0]`, `family`, `address[0].line[0]`, `city`, `state`, `country`) e o Observation laboratory (com `valueQuantity` e `effectiveDateTime`) pelo `page.request` logado; cobre as linhas da matriz; apaga os dois num `finally`.
 
 **Acceptance Criteria:**
 - Given o container no ar, when o e2e roda, then o teste de XSS e os 4 testes da story 2.2 passam.
@@ -74,6 +74,24 @@ O `onclick` inline vira listener porque o id do paciente vem do servidor; mesmo 
 
 ## Implementation Notes
 
+- `myFHIR.js`: helper `textRow(values)` monta `<tr>`/`<td>` com `.text()` e substitui as 5 linhas concatenadas; o item da lista é montado com elementos jQuery (`.attr('id')`, `.text()` no título e nas iniciais, `.on('click', () => loadForm(patientId))`), sem `onclick` inline; badges com `.text()`; `#fhirdatasource` recebe `.val()` em `loadForm` e depois `.val(atual + json)`; link do gráfico com `.attr('href', 'labresult.html?id=' + encodeURIComponent(patientId))`.
+- `labresult.js`: `$('<option>').val(obj.code).text(obj.name)`.
+- `e2e/tests/xss.spec.js`: payloads distintos para o nome (`window.__xss=1`) e para o `display` do exame (`alert(...)`), para que o flag e o `dialog` sejam ambos exercitados; os recursos criados são apagados no `finally` (Observation antes do Patient).
+- Verificação local: `docker compose restart` + `npx playwright test` -> 5 passed. Mutação 1 (linha do laboratório concatenada) -> xss.spec falha na célula. Mutação 2 (modal com `.append()`) -> xss.spec falha no valor do modal. Após as mutações o arquivo foi restaurado e a suíte voltou a 5 passed; nenhum paciente `Xss` sobrou no servidor.
+- Pendente: CI do PR (não houve push).
+
+- Depois da revisão (patches aplicados pelo mesmo implementador): o `finally` tenta apagar todos os recursos, junta as falhas e só as afirma quando o `try` passou; o teste cria também alergia, imunização e sinal vital com payload e checa cada tabela.
+- Reverificado do meu lado: mutação na linha de imunização (de volta à concatenação), o `xss.spec.js` falha em `#immunizationTable`; restaurado, 5 testes passam; a busca `family=Xss` volta `total 0`.
+- Mudança de comportamento aceita: com `.text()`, um campo ausente vira célula vazia em vez do texto "undefined"; o tratamento de campos ausentes é do epic-robustez-fhir.
+
 ## Plan Change Log
 
 ## Review Triage Log
+
+Revisão `quick`, passada 1: 0 high, 1 medium, 2 low, 1 false, 1 verificação pendente.
+
+- false — célula vazia em vez de "undefined" em campo ausente: não há resultado ruim (o texto "undefined" era o defeito antigo); registrado nas notas.
+- medium → patch — o `finally` parava na primeira exclusão com falha e trocava o erro original: tenta todas, junta as falhas e só afirma quando o `try` passou.
+- low → rejeitado — um `Location` ausente vazaria o recurso criado: raro, e a correção não evita o vazamento sem outra fonte de id.
+- verificação pendente — CI do PR.
+- low → patch — o teste só cobria a tabela de laboratório: alergia, imunização e sinal vital com payload; a mutação na imunização falha o teste.
