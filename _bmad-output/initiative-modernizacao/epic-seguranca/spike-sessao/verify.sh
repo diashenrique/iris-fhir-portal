@@ -1,7 +1,7 @@
 #!/bin/bash
 # Spike 2.1: proves the shared IRIS session. Run after setup.script on a fresh container.
 B="${BASE_URL:-http://localhost:32783}"
-PAGE="$B/fhir/portal/Spike.Home.cls"
+PAGE="${PAGE:-$B/fhir/portal/Spike.Home.cls}"
 J=$(mktemp); L=$(mktemp); fails=0
 check() { [ "$2" = "$3" ] && echo "PASS  $1 ($2)" || { echo "FAIL  $1 (got $2, want $3)"; fails=$((fails + 1)); }; }
 # The web app refuses anonymous calls with 404 on /fhir/r4 (AutheEnabled=8224) and 401 on /fhir/api: both mean denied

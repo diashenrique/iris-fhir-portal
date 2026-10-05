@@ -37,11 +37,11 @@ jobs:
       - name: Start container
         run: docker compose up -d
 
-      # metadata answers anonymously once the FHIR endpoint is up
+      # The FHIR endpoint refuses anonymous calls (404), so the wait uses the demo user
       - name: Wait for FHIR server
         run: |
           for i in $(seq 1 60); do
-            code=$(curl -s --max-time 10 -o /dev/null -w '%{http_code}' "$BASE_URL/fhir/r4/metadata" || true)
+            code=$(curl -s --max-time 10 -u fhirportal:fhirportal -o /dev/null -w '%{http_code}' "$BASE_URL/fhir/r4/metadata" || true)
             [ "$code" = "200" ] && echo "FHIR server up after $((i * 5))s" && exit 0
             sleep 5
           done

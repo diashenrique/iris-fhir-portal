@@ -76,7 +76,7 @@ http://localhost:32783/fhir/r4/Patient/1
 
 Patient と Observation の FHIR リソースを検索し、結果を参照する非常に基本的なフロントエンドアプリは、以下 URL で参照できます。
 
-http://localhost:32783/csp/user/fhirUI/FHIRAppDemo.html
+http://localhost:32783/fhir/portal/diashenrique.fhir.portal.Home.cls
 
 VSCode ObjectScript メニューからも開くことができます:
 <img width="616" alt="Screenshot 2020-08-07 at 17 34 49" src="https://user-images.githubusercontent.com/2781759/89657546-ea5fc500-d8d5-11ea-97ed-6fbbf84da655.png">
