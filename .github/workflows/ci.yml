@@ -56,6 +56,9 @@ jobs:
           echo "Patients loaded: $total"
           [ "$total" -gt 0 ]
 
+      - name: Smoke test
+        run: bash scripts/smoke.sh
+
       - name: Container logs
         if: failure()
         run: docker compose logs --tail=200
