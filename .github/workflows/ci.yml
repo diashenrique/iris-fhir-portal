@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+# A new push to a PR replaces its running build; runs on master always finish
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build:
+    name: Build image and check FHIR data
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      BASE_URL: http://localhost:32783
+    defaults:
+      run:
+        shell: bash  # -eo pipefail: a failing curl fails the step instead of feeding jq empty input
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # The IRIS for Health image alone is ~6 GB; drop preinstalled toolchains the build does not use
+      - name: Free disk space
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          df -h /
+
+      - name: Build image
+        run: docker compose build --progress=plain
+
+      - name: Start container
+        run: docker compose up -d
+
+      # metadata answers anonymously once the FHIR endpoint is up
+      - name: Wait for FHIR server
+        run: |
+          for i in $(seq 1 60); do
+            code=$(curl -s --max-time 10 -o /dev/null -w '%{http_code}' "$BASE_URL/fhir/r4/metadata" || true)
+            [ "$code" = "200" ] && echo "FHIR server up after $((i * 5))s" && exit 0
+            sleep 5
+          done
+          echo "FHIR server did not answer 200 on /fhir/r4/metadata (last: $code)"
+          exit 1
+
+      # iris session exits 0 even when a line of iris.script fails, so the build result alone proves nothing
+      - name: Check FHIR data was loaded
+        run: |
+          total=$(curl -sSf --max-time 30 -u fhirportal:fhirportal -H 'Accept: application/fhir+json' \
+            "$BASE_URL/fhir/r4/Patient?_summary=count" | jq -r '.total // 0')
+          echo "Patients loaded: $total"
+          [ "$total" -gt 0 ]
+
+      - name: Container logs
+        if: failure()
+        run: docker compose logs --tail=200
