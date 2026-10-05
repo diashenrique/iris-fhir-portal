@@ -199,6 +199,33 @@ $(document).ready(function () {
         return [row(resource)];
     }
 
+    // The HTTP status of a failed FHIR request, if it has one. The jQuery adapter of fhir.js
+    // rejects with { error: jqXHR }, so the status is on err.error; 0 means no answer from the server.
+    function httpStatus(err) {
+        const status = err && err.error && err.error.status;
+        return typeof status === 'number' ? status : null;
+    }
+
+    // Requests cancelled because the page is going away fail with status 0: nothing to tell then
+    let unloading = false;
+    window.addEventListener('beforeunload', () => { unloading = true; });
+    window.addEventListener('pagehide', () => { unloading = true; });
+
+    // Tell the user that a search failed: "Could not load <what> (HTTP <status>)".
+    // An error without an HTTP status is a bug in the code (an exception in a .then): it is logged too.
+    function showError(what, err) {
+        if (unloading) return;
+        const status = httpStatus(err);
+        if (status === 0) {
+            toastr.error('Could not load ' + what + ' (no response from the server)');
+        } else if (status) {
+            toastr.error('Could not load ' + what + ' (HTTP ' + status + ')');
+        } else {
+            console.error('Could not load ' + what, err);
+            toastr.error('Could not load ' + what);
+        }
+    }
+
     // The patient whose details are shown: results that arrive for another one are dropped
     let selectedPatientId = null;
 
@@ -260,15 +287,7 @@ $(document).ready(function () {
                 });
             })
             .catch((err) => {
-                // Error responses
-                if (err.status) {
-                    console.log(err);
-                    console.log('Error', err.status);
-                }
-                // Errors
-                if (err.data && err.data) {
-                    console.log('Error', err.data);
-                }
+                if (isSelected(patientId)) showError('patient', err);
             });
     };
 
@@ -304,10 +323,8 @@ $(document).ready(function () {
             // The jQuery adapter of fhir.js rejects with { error: jqXHR }, so the status is on err.error.
             // Only the first request tells about the session: a next page that fails (an expired
             // queryId answers 404) goes to the normal error handling, never to the login.
-            const status = err.error && err.error.status;
-            if (err.nextPage) {
-                console.log('Error on a next page of the patient list', status);
-            } else if (status === 401 || status === 404) {
+            const status = httpStatus(err);
+            if (!err.nextPage && (status === 401 || status === 404)) {
                 // Redirect once: a refusal right after a redirect means the session is fine but the
                 // FHIR endpoint refuses it (configuration), and redirecting again would loop forever
                 if (!sessionStorage.getItem(redirectKey)) {
@@ -317,16 +334,9 @@ $(document).ready(function () {
                 }
                 sessionStorage.removeItem(redirectKey);
                 toastr.error('The FHIR server refused the request (HTTP ' + status + '). Check the /fhir/r4 configuration.');
+                return;
             }
-            // Error responses
-            if (err.status) {
-                console.log(err);
-                console.log('Error', err.status);
-            }
-            // Errors
-            if (err.data && err.data) {
-                console.log('Error', err.data);
-            }
+            showError('the patient list', err);
         });
 
 
@@ -354,15 +364,7 @@ $(document).ready(function () {
                 });
             })
             .catch((err) => {
-                // Error responses
-                if (err.status) {
-                    console.log(err);
-                    console.log('Error', err.status);
-                }
-                // Errors
-                if (err.data && err.data) {
-                    console.log('Error', err.data);
-                }
+                if (isSelected(patientId)) showError('immunizations', err);
             });
     };
 
@@ -393,15 +395,7 @@ $(document).ready(function () {
                 }
             })
             .catch((err) => {
-                // Error responses
-                if (err.status) {
-                    console.log(err);
-                    console.log('Error', err.status);
-                }
-                // Errors
-                if (err.data && err.data) {
-                    console.log('Error', err.data);
-                }
+                if (isSelected(patientId)) showError('allergies', err);
             });
     };
 
@@ -430,15 +424,7 @@ $(document).ready(function () {
                 });
             })
             .catch((err) => {
-                // Error responses
-                if (err.status) {
-                    console.log(err);
-                    console.log('Error', err.status);
-                }
-                // Errors
-                if (err.data && err.data) {
-                    console.log('Error', err.data);
-                }
+                if (isSelected(patientId)) showError('vital signs', err);
             });
     };
 
@@ -472,15 +458,7 @@ $(document).ready(function () {
                 });
             })
             .catch((err) => {
-                // Error responses
-                if (err.status) {
-                    console.log(err);
-                    console.log('Error', err.status);
-                }
-                // Errors
-                if (err.data && err.data) {
-                    console.log('Error', err.data);
-                }
+                if (isSelected(patientId)) showError('laboratory results', err);
             });
     };
 

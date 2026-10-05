@@ -201,12 +201,11 @@ for (const status of [500, 404]) {
     await page.route(/\/fhir\/r4\/Patient\?.*queryId=/, (route) =>
       route.fulfill({ status, contentType: 'application/fhir+json', body: '{"resourceType":"OperationOutcome","issue":[]}' }));
 
-    // The .catch of the list logs this message when it handles a failed next page
-    const handled = page.waitForEvent('console', (m) => m.text().startsWith('Error on a next page of the patient list'));
+    // The .catch of the list shows the error toast of a failed search with the status of the next page
     const failedPage = page.waitForResponse((r) => r.url().includes('queryId=') && r.status() === status);
     await page.reload();
     await failedPage;
-    expect((await handled).text()).toContain(String(status));
+    await expect(page.locator('.toast-error')).toHaveText(`Could not load the patient list (HTTP ${status})`);
 
     // As for a failed search: no list, and no redirect to the login page
     await expect(page.locator('#listgroup .list-group-item')).toHaveCount(0);

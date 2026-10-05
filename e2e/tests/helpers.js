@@ -67,4 +67,30 @@ function fixtures(page) {
   };
 }
 
-module.exports = { ENTRY_PAGE, FHIR_JSON, fixtures, login, logout };
+/**
+ * Record the text of every error toast the page shows, across reloads. An exception inside a
+ * .then is caught by the .catch of the search and becomes an error toast, never a pageerror:
+ * a test that expects no errors checks this list too. Call before login (it registers an init script).
+ * @param {import('@playwright/test').Page} page
+ * @returns {Promise<string[]>} the list, filled while the test runs
+ */
+async function watchErrorToasts(page) {
+  /** @type {string[]} */
+  const toasts = [];
+  await page.exposeFunction('__e2eErrorToast', (text) => { toasts.push(text); });
+  await page.addInitScript(() => {
+    new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        for (const node of m.addedNodes) {
+          if (node instanceof Element && node.matches('.toast-error')) {
+            // @ts-ignore
+            window.__e2eErrorToast(node.textContent);
+          }
+        }
+      }
+    }).observe(document, { childList: true, subtree: true });
+  });
+  return toasts;
+}
+
+module.exports = { ENTRY_PAGE, FHIR_JSON, fixtures, login, logout, watchErrorToasts };

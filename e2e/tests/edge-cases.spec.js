@@ -1,6 +1,6 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
-const { FHIR_JSON, fixtures, login, logout } = require('./helpers');
+const { FHIR_JSON, fixtures, login, logout, watchErrorToasts } = require('./helpers');
 
 // End the session after each test: every login holds an IRIS license until its session ends
 test.afterEach(async ({ page }) => {
@@ -11,6 +11,7 @@ test('a minimal patient without clinical records opens, shows empty tables and s
   // Any uncaught error on the page fails the test
   const pageErrors = [];
   page.on('pageerror', (e) => pageErrors.push(e.message));
+  const errorToasts = await watchErrorToasts(page);
 
   await login(page);
   const { create, cleanup } = fixtures(page);
@@ -63,6 +64,7 @@ test('a minimal patient without clinical records opens, shows empty tables and s
     expect(saved.birthDate).toBeUndefined();
 
     expect(pageErrors, 'errors on the page').toEqual([]);
+    expect(errorToasts, 'error toasts').toEqual([]);
   } catch (e) {
     failed = true;
     throw e;
@@ -76,6 +78,7 @@ test('a minimal patient without clinical records opens, shows empty tables and s
 test('saving removes what the user cleared and never writes an empty SSN', async ({ page }) => {
   const pageErrors = [];
   page.on('pageerror', (e) => pageErrors.push(e.message));
+  const errorToasts = await watchErrorToasts(page);
 
   await login(page);
   const { create, cleanup } = fixtures(page);
@@ -125,6 +128,7 @@ test('saving removes what the user cleared and never writes an empty SSN', async
     expect(saved.identifier[2]).toEqual({ system: 'http://hl7.org/fhir/sid/us-ssn' });
 
     expect(pageErrors, 'errors on the page').toEqual([]);
+    expect(errorToasts, 'error toasts').toEqual([]);
   } catch (e) {
     failed = true;
     throw e;

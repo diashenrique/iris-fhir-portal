@@ -1,6 +1,6 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
-const { fixtures, login, logout } = require('./helpers');
+const { fixtures, login, logout, watchErrorToasts } = require('./helpers');
 
 // End the session after each test: every login holds an IRIS license until its session ends
 test.afterEach(async ({ page }) => {
@@ -25,6 +25,7 @@ test('observations without valueQuantity show their value, one row per component
   // Any uncaught error on the page fails the test
   const pageErrors = [];
   page.on('pageerror', (e) => pageErrors.push(e.message));
+  const errorToasts = await watchErrorToasts(page);
 
   await login(page);
   const { create, cleanup } = fixtures(page);
@@ -93,6 +94,13 @@ test('observations without valueQuantity show their value, one row per component
     ]);
 
     expect(pageErrors, 'errors on the page').toEqual([]);
+    // Every search has finished once its badge is filled: only then can no error toast be late
+    for (const badge of ['#badgeAllergy', '#badgeVitalSigns', '#badgeLaboratory', '#badgeImmunization']) {
+      await expect(page.locator(badge), badge).toHaveText(/^\d+$/);
+    }
+    // A toast on screen is in the DOM right away; the recorder reports through an async binding
+    await expect(page.locator('.toast-error'), 'error toasts on screen').toHaveCount(0);
+    await expect.poll(() => errorToasts, { message: 'error toasts' }).toEqual([]);
   } catch (e) {
     failed = true;
     throw e;
