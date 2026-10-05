@@ -1,6 +1,6 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
-const { FHIR_JSON, login } = require('./helpers');
+const { fixtures, login } = require('./helpers');
 
 // Each payload runs script if the page inserts it as HTML
 const NAME_PAYLOAD = '<img src=x onerror=window.__xss=1>';
@@ -17,18 +17,7 @@ test('FHIR data is shown as text in the list, details, tables, modal and chart o
   await login(page);
 
   // Create the resources through FHIR with the session of the login
-  const created = [];
-  const create = async (resource) => {
-    const res = await page.request.post(`/fhir/r4/${resource.resourceType}`, {
-      headers: FHIR_JSON,
-      data: JSON.stringify(resource),
-    });
-    expect(res.status(), `create ${resource.resourceType}`).toBe(201);
-    // Location: <base>/fhir/r4/<type>/<id>/_history/<version>
-    const id = new RegExp(`/${resource.resourceType}/([^/]+)`).exec(res.headers()['location'])[1];
-    created.unshift(`/fhir/r4/${resource.resourceType}/${id}`);
-    return id;
-  };
+  const { create, cleanup } = fixtures(page);
 
   let failed = false;
   try {
@@ -141,12 +130,8 @@ test('FHIR data is shown as text in the list, details, tables, modal and chart o
     failed = true;
     throw e;
   } finally {
-    // Try every delete; report a failed cleanup only when it is not hiding the test's own error
-    const notDeleted = [];
-    for (const url of created) {
-      const res = await page.request.delete(url, { headers: FHIR_JSON }).catch(() => null);
-      if (!res || !res.ok()) notDeleted.push(url);
-    }
+    // Report a failed cleanup only when it is not hiding the test's own error
+    const notDeleted = await cleanup();
     if (!failed) expect(notDeleted, 'resources left behind').toEqual([]);
   }
 });
