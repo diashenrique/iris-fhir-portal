@@ -54,4 +54,4 @@ Revisão `quick`, passada 1: 0 high, 3 medium, 2 low, 0 false, 1 sem veredito (v
 - medium → patch — sem limpeza em caso de falha: `try/finally` com restore pela API e remoção do sufixo herdado.
 - low → patch — o teste não escolhia um exame: `selectOption` da última opção e checagem de `#testName`.
 - low → mantido — `.dockerignore` exclui `e2e/` inteiro: registrado nas notas, sem efeito no build.
-- verificação pendente — passo E2E verde no CI do PR.
+- verificação concluída — PR #10, run 37303290055 verde em 5min34s, com os passos Smoke test e E2E.
