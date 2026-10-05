@@ -1,0 +1,11 @@
+{
+  "name": "iris-fhir-portal-e2e",
+  "private": true,
+  "description": "End-to-end tests of the IRIS FHIR Portal pages",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0"
+  }
+}

@@ -9,8 +9,8 @@ services:
     # keep the runtime cwd off it so iris-main.log is writable.
     working_dir: /home/irisowner
     ports:
-      - 32782:1972
-      - 32783:52773
+      - 127.0.0.1:32782:1972
+      - 127.0.0.1:32783:52773
     volumes:
       - ./fhirUI:/usr/irissys/csp/user/fhirUI
 #      - ~/iris.key:/usr/irissys/mgr/iris.key

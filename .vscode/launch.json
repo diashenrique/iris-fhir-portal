@@ -1,12 +1,6 @@
 {
     "version": "0.2.0",
-    "configurations": [    
-      {
-        "type": "objectscript",
-        "request": "launch",
-        "name": "ObjectScript Debug Class", 
-        "program": "##class(PackageSample.ObjectScript).Test()",
-      },
+    "configurations": [
       {
         "type": "objectscript",
         "request": "attach",
