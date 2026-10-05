@@ -3,3 +3,4 @@
 *.mac text eol=lf
 *.int text eol=lf
 Dockerfil* text eol=lf
+*.script text eol=lf

@@ -24,20 +24,23 @@ ClassMethod getPatient(pPatientId) As %Status
 
         Set oRS = ##class(%SQL.Statement).%New()
 
-        Set sql = "SELECT %external(name) as name, birthdate FROM HSFHIR_I0001_S.Patient WHERE _id = "_pPatientId
+        // JsonAdvSQL storage: the Patient search table has no "name" column, so read the resource itself
+        Set sql = "SELECT ResourceString FROM HSFHIR_X0001_R.Rsrc WHERE ResourceType = 'Patient' AND ResourceId = ? AND Deleted = 0"
 
         Set tSC = oRS.%Prepare(sql)
 
         Quit:$System.Status.IsError(tSC)
 
-        Set result = oRS.%Execute()
+        Set result = oRS.%Execute(pPatientId)
 
         If (result.%SQLCODE '< 0) {
 
             While result.%Next() {
+                Set patient = {}.%FromJSON(result.ResourceString)
+                Set name = patient.name.%Get(0)
                 Set json = { }
-                Do json.%Set("name",result.name)
-                Do json.%Set("birthdate",result.birthdate)
+                Do json.%Set("name",$ZStrip(name.given.%Get(0)_" "_name.family,"<>W"))
+                Do json.%Set("birthdate",patient.birthDate)
                 Do arrPatient.%Push(json)
             }
         }
@@ -70,16 +73,17 @@ ClassMethod getOptions(pPatientId) As %Status
         Set sql = "SELECT DISTINCT "_
                   "GetProp(GetJSON(GetAtJSON(GetJSON(GetJSON(ResourceString,'code'),'coding'),0),'code'),'code') as testCode, "_
                   "GetProp(GetJSON(GetAtJSON(GetJSON(GetJSON(ResourceString,'code'),'coding'),0),'display'),'display') as testName "_
-                  "FROM HSFHIR_I0001_R.Rsrc "_ 
-                  "WHERE GetProp(GetJSON(GetAtJSON(GetJSON(GetJSON(ResourceString,'category'),'code'),0),'code'),'code') = 'laboratory' "_
-                  "AND GetProp(GetJSON(ResourceString,'subject'),'reference') = 'Patient/"_pPatientId_"'"_
+                  "FROM HSFHIR_X0001_R.Rsrc "_
+                  "WHERE ResourceType = 'Observation' AND Deleted = 0 "_
+                  "AND GetProp(GetJSON(GetAtJSON(GetJSON(GetJSON(ResourceString,'category'),'code'),0),'code'),'code') = 'laboratory' "_
+                  "AND GetProp(GetJSON(ResourceString,'subject'),'reference') = ? "_
                   "Order By GetProp(GetJSON(GetAtJSON(GetJSON(GetJSON(ResourceString,'code'),'coding'),0),'display'),'display')"
 
         Set tSC = oRS.%Prepare(sql)
 
         Quit:$System.Status.IsError(tSC)
 
-        Set result = oRS.%Execute()
+        Set result = oRS.%Execute("Patient/"_pPatientId)
 
         If (result.%SQLCODE '< 0) {
 
@@ -121,17 +125,18 @@ ClassMethod getLabResult(pPatientId, pLabCode) As %Status
             "GetProp(GetJSON(GetAtJSON(GetJSON(GetJSON(ResourceString,'code'),'coding'),0),'display'),'display') as testName, "_
             "GetProp(GetJSON(ResourceString,'effectiveDateTime'),'effectiveDateTime') as effectiveDateTimeValue, "_
             "GetProp(GetJSON(ResourceString,'valueQuantity'),'value') as valueQuant "_
-            "FROM HSFHIR_I0001_R.Rsrc "_
-            "WHERE GetProp(GetJSON(GetAtJSON(GetJSON(GetJSON(ResourceString,'category'),'code'),0),'code'),'code') = 'laboratory' "_
-            "AND GetProp(GetJSON(ResourceString,'subject'),'reference') = 'Patient/"_pPatientId_"' "_
-            "AND GetProp(GetJSON(GetAtJSON(GetJSON(GetJSON(ResourceString,'code'),'coding'),0),'code'),'code') = '"_pLabCode_"'"_
+            "FROM HSFHIR_X0001_R.Rsrc "_
+            "WHERE ResourceType = 'Observation' AND Deleted = 0 "_
+            "AND GetProp(GetJSON(GetAtJSON(GetJSON(GetJSON(ResourceString,'category'),'code'),0),'code'),'code') = 'laboratory' "_
+            "AND GetProp(GetJSON(ResourceString,'subject'),'reference') = ? "_
+            "AND GetProp(GetJSON(GetAtJSON(GetJSON(GetJSON(ResourceString,'code'),'coding'),0),'code'),'code') = ? "_
             "ORDER BY GetProp(GetJSON(ResourceString,'effectiveDateTime'),'effectiveDateTime')"
 
         Set tSC = oRS.%Prepare(sql)
 
         Quit:$System.Status.IsError(tSC)
 
-        Set result = oRS.%Execute()
+        Set result = oRS.%Execute("Patient/"_pPatientId, pLabCode)
 
         If (result.%SQLCODE '< 0) {
 

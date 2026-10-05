@@ -1,0 +1,85 @@
+# Breakdown do epic-plataforma-ci, aprovado pelo usuário em 2026-10-05. A ordem das tabelas é a ordem de build.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Workflow de CI que builda a imagem e prova o FHIR carregado"
+description = "Cria .github/workflows/ci.yml (push e pull_request) que faz docker compose build e up a partir do checkout, espera /fhir/r4/metadata responder 200 em http://localhost:32783 (anônimo) e exige Patient com fhirportal/fhirportal e total > 0, falhando se o build, a espera ou a carga falharem; deixa o container no ar e exporta BASE_URL=http://localhost:32783 para as entradas 2 e 3 (handoff)."
+verify = "Num PR, o workflow fica verde; num branch de teste em que o iris.script aponta SubmitResourceFiles para uma pasta vazia, ele fica vermelho na checagem de Patient."
+covers = ["E1"]
+after = []
+hitl = true                 # uma pessoa faz push do branch e abre o PR para disparar o workflow pela primeira vez
+risk = "medium"
+uncertainty = "Disco do runner ubuntu-latest para a imagem de ~6 GB mais as camadas (liberar espaço se faltar); `iris session < iris.script` sai com 0 mesmo com erro numa linha, por isso a falha vem da checagem de dados, não do código de saída do build."
+
+[[entry]]
+id = 2
+type = "story"
+title = "Smoke test HTTP do portal"
+description = "Adiciona scripts/smoke.sh, que lê BASE_URL da entrada 1 (padrão http://localhost:32783) e verifica: metadata 200; /fhir/r4/Patient com 401 sem credencial e total > 0 com fhirportal; um paciente com dados de laboratório (o primeiro cujo /fhir/api/laboptions/:id não vem vazio, já que os ids mudam a cada build); /fhir/api/patient/:id, laboptions e /patient/:id/lab/:code (code tirado de laboptions) devolvendo arrays não vazios; e as duas páginas com 200. Roda como passo do ci.yml."
+verify = "scripts/smoke.sh contra o container local sai com 0; trocar HSFHIR_X0001 por HSFHIR_I0001 no Dispatch.cls (que devolve [] com 200 quando falha) faz o script e o passo de CI falharem."
+covers = ["E2"]
+after = [1]
+hitl = false
+risk = "low"
+uncertainty = "O Dispatch engole erros e devolve [] com HTTP 200, então só a checagem de conteúdo detecta quebras; /fhir/api é anônimo (AutheEnabled=64) e não deve ser testado com credencial."
+
+[[entry]]
+id = 3
+type = "story"
+title = "E2E Playwright do tracer: lista, detalhe, edição e gráfico"
+description = "Cria e2e/ (package.json, Playwright, lendo o BASE_URL da entrada 1) com um teste em viewport desktop que abre patientlist.html, escolhe um paciente com exames, confere os detalhes e os badges, edita a cidade, salva, confere o toast de sucesso e restaura o valor, depois segue o link do gráfico (que abre em nova aba, target=_blank), escolhe um exame, clica em Search e confere que o canvas renderiza; adiciona e2e/node_modules ao .gitignore e ao .dockerignore (o build monta o checkout inteiro) e roda no ci.yml depois do smoke."
+verify = "npx playwright test passa localmente e no CI; remover o bloco auth do myFHIR.js num branch de teste deixa o e2e vermelho."
+covers = ["E3"]
+after = [2]                 # ambos editam ci.yml; o e2e entra depois do passo de smoke
+hitl = false
+risk = "medium"
+uncertainty = "O onclick inline e o sidebar podem exigir seletores frágeis; a nova aba precisa de context.waitForEvent('page')."
+
+[[entry]]
+id = 4
+type = "story"
+title = "Remover o hook objectscript-quality não fixado"
+description = "Remove .github/workflows/objectscript-quality.yml, que baixa e executa iris-community-hook.sh de terceiros sem versão fixa a cada push (decisão do usuário, 2026-10-05); a checagem de build passa a ser o ci.yml."
+verify = "Nenhum arquivo em .github/workflows executa script remoto sem versão fixa (grep por wget/curl seguido de sh)."
+covers = ["E4"]
+after = []
+hitl = false
+risk = "low"
+uncertainty = "Nenhuma; a análise ObjectScript Quality pode voltar depois com o script fixado num commit."
+
+[[entry]]
+id = 5
+type = "story"
+title = "Portas em loopback e limpeza das sobras de template"
+description = "Publica 32782/32783 só em 127.0.0.1 no docker-compose.yml; remove src/PackageSample/ e src/fhirtemplate/ (fora do module.xml e do fhirUI, carregadas só pelo LoadDir); remove a configuração 'ObjectScript Debug Class' do .vscode/launch.json (mantém o attach) e troca o link 'FHIR UI Demo' do .vscode/settings.json para /csp/user/fhirUI/patientlist.html."
+verify = "docker compose ps num clone limpo mostra as portas ligadas só a 127.0.0.1, o log do build não lista PackageSample nem fhirtemplate, e o CI (build e smoke) segue verde."
+covers = ["E5"]
+after = [1, 2]
+hitl = false
+risk = "low"
+uncertainty = "O README-JP cita fhirtemplate.Setup e PackageSample: fica para o epic-docs-demo, e o _SYSTEM/SYS do .vscode fica para o épico de segurança."
+
+[[entry]]
+id = 6
+type = "story"
+title = "Refactor sweep"
+description = "Limpeza deixada para depois pelas entradas 1 a 5, com escopo definido ao começar, a partir dos planos e dos achados de revisão; só limpeza, nenhum escopo novo."
+verify = "O CI segue verde e cada item de limpeza listado no plano está resolvido ou explicitamente adiado."
+covers = ["E1", "E2", "E3", "E4", "E5"]
+after = [1, 2, 3, 4, 5]
+hitl = false
+risk = "low"
+uncertainty = "O escopo só é conhecido ao fim das entradas anteriores."
+
+[[entry]]
+id = 7
+type = "story"
+title = "Badge do CI e merge em master"
+description = "Adiciona ao README o badge do workflow ci.yml e o comando do smoke test, e faz o merge do branch modernizacao-iris-2026 em master."
+verify = "O workflow roda verde em master depois do merge e o badge no README mostra passing."
+covers = ["E1"]
+after = [6]
+hitl = true                 # uma pessoa aprova e faz o merge
+risk = "low"
+uncertainty = "Nenhuma; o resto do README é do epic-docs-demo."

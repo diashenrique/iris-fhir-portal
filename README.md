@@ -15,8 +15,12 @@ $ git clone https://github.com/diashenrique/iris-fhir-portal.git
 Open the terminal in this directory and run:
 
 ```
-$ docker-compose up -d
+$ docker compose up -d
 ```
+
+The image is built on `intersystems/irishealth-community:latest-cd` (InterSystems IRIS for Health 2026.2), the same release channel used by [sentai-task](https://github.com/musketeers-br/sentai-task). The FHIR R4 server uses the JsonAdvSQL storage strategy, so its SQL schemas are `HSFHIR_X0001_R` and `HSFHIR_X0001_S`.
+
+The FHIR server no longer accepts anonymous requests: the portal signs in as the demo user `fhirportal` / `fhirportal` (no roles), created during the build. Do not expose this container outside your machine.
 
 ## Installation via IPM
 

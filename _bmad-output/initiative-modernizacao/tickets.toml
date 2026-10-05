@@ -1,0 +1,65 @@
+# Épicos da iniciativa, em ordem de build. PROPOSTA: falta a confirmação do usuário antes da
+# inception de cada épico (bmad-ticket "incept epic-<slug>"). Os ids nunca são reutilizados.
+
+[[epic]]
+id = 1
+slug = "epic-plataforma-ci"
+title = "Base de plataforma e CI no IRIS 2026.2"
+covers = ["R1"]
+description = "Upgrade 2026.2 já aplicado; imagem fica em latest-cd (decisão 2026-10-05). Falta: CI no GitHub Actions que builda a imagem e roda smoke test (FHIR, /fhir/api, páginas); harness e2e (Playwright) com o tracer 'lista -> detalhe -> editar -> gráfico'; trocar o hook objectscript-quality por versão fixa ou removê-lo; portas em 127.0.0.1; remover PackageSample/fhirtemplate e corrigir .vscode."
+
+[[epic]]
+id = 2
+slug = "epic-seguranca"
+title = "Portal sem XSS, sem %All e sem credencial embutida"
+covers = ["R2"]
+after = [{ epic = 1, needs = "smoke test e harness e2e no CI para provar as correções" }]
+description = "Escapar toda saída (textContent/DOM em vez de concatenação); papel mínimo com SELECT em HSFHIR_X0001_R para /fhir/api; tela de login simples com sessão do IRIS (decisão 2026-10-05), compartilhada entre o portal, /fhir/r4 e /fhir/api, substituindo o usuário fhirportal embutido no JS; logout; tratamento explícito do SSN/PHI; fim de _SYSTEM/SYS em arquivos versionados."
+
+[[epic]]
+id = 3
+slug = "epic-robustez-fhir"
+title = "Prontuário que não quebra com dados FHIR reais"
+covers = ["R3"]
+after = [{ epic = 1, needs = "harness e2e para os casos de borda" }]
+description = "SSN por identifier.system em vez de identifier[2]; checagens de name/address/entry/valueQuantity; paginação via link[next]; Chart.destroy(); erros visíveis (toast) e Dispatch respondendo 4xx/5xx; spike: FHIR SQL Builder ou JSON_TABLE no lugar de GetJSON/GetProp/GetAtJSON, sem perder o valor didático do artigo 4."
+
+[[epic]]
+id = 4
+slug = "epic-ipm-paridade"
+title = "zpm install fhir-portal funcional no IRIS atual"
+covers = ["R4"]
+after = [{ epic = 2, needs = "o modelo de autenticação que o module.xml vai configurar" }, { epic = 3, needs = "o Dispatch sem esquema físico fixo" }]
+description = "Docker passa a usar zpm load do próprio module.xml (um único caminho de instalação, como no sentai-task); web apps e papéis declarados no módulo; resolver o esquema SQL pelo endpoint; teste de instalação no iris-fhir-template; publicar a versão 1.1.0 no registro."
+
+[[epic]]
+id = 5
+slug = "epic-frontend-deps"
+title = "Dependências de frontend mantidas e inventariadas"
+covers = ["R5"]
+after = [{ epic = 3, needs = "a lógica de tela estabilizada, para não reescrever duas vezes" }]
+description = "Decidir: manter jQuery atualizado ou migrar para JS puro/ES modules; trocar fhir.js (sem manutenção) por fhirclient.js ou fetch; Chart.js 4; enxugar os 11 MB de vendor (locales, fontes, .map); inventário com versões e checagem de CVE no CI; acessibilidade básica (lista navegável por teclado, alternativa textual ao gráfico)."
+
+[[epic]]
+id = 8
+slug = "epic-layout-prontuario"
+title = "Layout de prontuário, legível e mobile-first"
+covers = ["R8"]
+after = [{ epic = 5, needs = "a base de frontend escolhida" }, { epic = 2, needs = "a tela de login, que o cabeçalho do app passa a exibir" }]
+description = "Corrigir o overflow horizontal em 390px; estado vazio 'Selecione um paciente'; cabeçalho de resumo (nome sem sufixos Synthea, idade, sexo, alerta de alergia) com edição em modo ou modal separado; trocar o acordeão recolhido por cards ou abas com os resultados recentes à vista; datas legíveis, valores arredondados, exames agrupados por data, faixa de referência e destaque de valor alterado; gráfico de laboratório inline, que renderiza ao trocar de exame e mostra unidade; lista com idade e sexo e feedback de busca vazia; cabeçalho do app com usuário logado e logout, identidade 'IRIS for Health' e loader discreto. Começar com bmad-ux (DESIGN.md e EXPERIENCE.md) antes da inception."
+
+[[epic]]
+id = 6
+slug = "epic-prontuario-ampliado"
+title = "Prontuário mostra condições, medicações, encontros e linha do tempo"
+covers = ["R6"]
+after = [{ epic = 8, needs = "o layout de cards e abas onde as novas seções entram" }]
+description = "Condition, MedicationRequest, Encounter e CarePlan, já presentes nos dados Synthea; linha do tempo do paciente; uso de Patient/$everything quando fizer sentido; i18n com pt-BR."
+
+[[epic]]
+id = 7
+slug = "epic-docs-demo"
+title = "Documentação e demo refletem o portal atual"
+covers = ["R7"]
+after = [{ epic = 4, needs = "os dois caminhos de instalação finais" }]
+description = "README, README-JP e dev.md atualizados; screenshots novos; errata ou novo artigo na Developer Community sobre a migração para JsonAdvSQL/2026.2; regenerar dados Synthea com script atual; decidir sobre demo pública."
