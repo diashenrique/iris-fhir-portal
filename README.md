@@ -1,4 +1,7 @@
 # IRIS FHIR Portal
+
+[![CI](https://github.com/diashenrique/iris-fhir-portal/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/diashenrique/iris-fhir-portal/actions/workflows/ci.yml)
+
 The goal is to show how easy we can create a Patient Chart using FHIR capabilities in IRIS For Health and also empower the user with their own data.
 
 ## Prerequisites
@@ -21,6 +24,25 @@ $ docker compose up -d
 The image is built on `intersystems/irishealth-community:latest-cd` (InterSystems IRIS for Health 2026.2), the same release channel used by [sentai-task](https://github.com/musketeers-br/sentai-task). The FHIR R4 server uses the JsonAdvSQL storage strategy, so its SQL schemas are `HSFHIR_X0001_R` and `HSFHIR_X0001_S`.
 
 The FHIR server no longer accepts anonymous requests: the portal signs in as the demo user `fhirportal` / `fhirportal` (no roles), created during the build. Do not expose this container outside your machine.
+
+## Checking your Docker installation
+
+CI runs these checks on every pull request and push to master. To run them against your local container (Docker Compose setup only; set `BASE_URL` for both if you changed the port, default `http://localhost:32783`):
+
+```
+$ bash scripts/smoke.sh
+```
+
+checks the FHIR server, the `/fhir/api` REST routes and both pages. The browser test needs [Node.js](https://nodejs.org/) 22 or later and walks through the patient list, details, an update and the lab chart. It changes one patient's city and restores it at the end:
+
+```
+$ cd e2e
+$ npm ci
+$ npx playwright install chromium
+$ npx playwright test
+```
+
+On a fresh Linux machine, use `npx playwright install --with-deps chromium` to also get the browser's system libraries.
 
 ## Installation via IPM
 
