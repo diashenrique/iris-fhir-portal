@@ -1,0 +1,3 @@
+- source_plan: `_bmad-output/initiative-modernizacao/epic-plataforma-ci/story-e2e-playwright-do-tracer-lista-detalhe-edicao-e-grafico-plan.md`
+  summary: O Web Gateway do container guarda em cache a versão gzip dos arquivos estáticos do fhirUI (Expires de 1 hora), então editar o JS ou o HTML com o container no ar não chega ao navegador até reiniciar o container ou o cache expirar.
+  evidence: Com o myFHIR.js alterado no disco, `curl` sem compressão recebia a versão nova e `curl --compressed` a antiga; o Chromium seguia enviando Basic auth até `docker compose restart`. Não afeta o CI, que builda do zero. Candidato para o epic-docs-demo (nota no dev.md) ou para a configuração do web app em dev.
