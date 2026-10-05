@@ -1,6 +1,11 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
-const { FHIR_JSON, fixtures, login } = require('./helpers');
+const { FHIR_JSON, fixtures, login, logout } = require('./helpers');
+
+// End the session after each test: every login holds an IRIS license until its session ends
+test.afterEach(async ({ page }) => {
+  await logout(page);
+});
 
 const US_SSN = 'http://hl7.org/fhir/sid/us-ssn';
 

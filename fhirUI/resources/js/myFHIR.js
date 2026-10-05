@@ -113,6 +113,48 @@ $(document).ready(function () {
         return (bundle && bundle.entry) || [];
     }
 
+    // The link of a bundle with this relation, if any
+    function bundleLink(bundle, relation) {
+        const link = ((bundle && bundle.link) || []).find((l) => l && l.relation === relation);
+        return link && link.url;
+    }
+
+    // Run a search and follow every link[next] the server returns, in order.
+    // Resolves to { first, bundles, entries }: the first bundle (its total feeds the badges),
+    // every bundle fetched, and the entries of all pages together. A failed page rejects;
+    // when it is a next page (not the first request), the error carries nextPage: true.
+    function searchAll(params) {
+        const bundles = [];
+        const seen = new Set();
+        const collect = (res) => {
+            const bundle = res.data;
+            bundles.push(bundle);
+            const next = bundleLink(bundle, 'next');
+            // A next link already followed would loop forever: stop there
+            if (next && !seen.has(next)) {
+                seen.add(next);
+                return client.nextPage({ bundle: bundle }).then(collect, (err) => {
+                    const failure = err && typeof err === 'object' ? err : { error: err };
+                    failure.nextPage = true;
+                    throw failure;
+                });
+            }
+            return {
+                first: bundles[0],
+                bundles: bundles,
+                entries: bundles.reduce((all, b) => all.concat(entries(b)), [])
+            };
+        };
+        return client.search(params).then(collect);
+    }
+
+    // Append the JSON of every page to the FHIR Data Source modal
+    function appendBundles(bundles) {
+        bundles.forEach((bundle) => {
+            $('#fhirdatasource').val($('#fhirdatasource').val() + JSON.stringify(bundle, undefined, 4));
+        });
+    }
+
     // The value[x] element name of an Observation or of a component, if it has one
     function valueKey(item) {
         return Object.keys(item || {}).find((key) => /^value[A-Z]/.test(key));
@@ -157,14 +199,23 @@ $(document).ready(function () {
         return [row(resource)];
     }
 
+    // The patient whose details are shown: results that arrive for another one are dropped
+    let selectedPatientId = null;
+
+    function isSelected(patientId) {
+        return String(patientId) === String(selectedPatientId);
+    }
+
     // Perform a search to retrieve patient details for a specific patient
     window.loadForm = function (patientId) {
+        selectedPatientId = patientId;
         client.search({
                 type: 'Patient',
                 query: {
                     _id: patientId
                 }
             }).then((res) => {
+                if (!isSelected(patientId)) return;
                 const bundle = res.data;
                 entries(bundle).forEach((patient) => {
                     //console.log(patient.resource);
@@ -221,16 +272,15 @@ $(document).ready(function () {
             });
     };
 
-    // Perform a search to retrieve patient list
-    client.search({
+    // Perform a search to retrieve patient list, every page of it
+    searchAll({
             type: 'Patient',
             query: {
                 _sort: '-_lastUpdated'
             }
-        }).then((res) => {
+        }).then((result) => {
             sessionStorage.removeItem(redirectKey);
-            const bundle = res.data;
-            entries(bundle).forEach((patient) => {
+            result.entries.forEach((patient) => {
                 const patientId = patient.resource.id;
                 const name = getName(patient.resource).trim();
                 const item = $('<div class="list-group-item" data-toggle="sidebar" data-sidebar="show">')
@@ -252,8 +302,12 @@ $(document).ready(function () {
         .catch((err) => {
             // No session (logged out or expired): the FHIR endpoint answers 401 (404 if the web app ever refuses it first).
             // The jQuery adapter of fhir.js rejects with { error: jqXHR }, so the status is on err.error.
+            // Only the first request tells about the session: a next page that fails (an expired
+            // queryId answers 404) goes to the normal error handling, never to the login.
             const status = err.error && err.error.status;
-            if (status === 401 || status === 404) {
+            if (err.nextPage) {
+                console.log('Error on a next page of the patient list', status);
+            } else if (status === 401 || status === 404) {
                 // Redirect once: a refusal right after a redirect means the session is fine but the
                 // FHIR endpoint refuses it (configuration), and redirecting again would loop forever
                 if (!sessionStorage.getItem(redirectKey)) {
@@ -278,22 +332,21 @@ $(document).ready(function () {
 
     // Perform a search to Immunization list for a specific patient
     window.immunization = function (patientId) {
-        client.search({
+        searchAll({
                 type: 'Immunization',
                 query: {
                     patient: patientId
                 }
-            }).then((res) => {
-                const bundle = res.data;
-                $("#badgeImmunization").text(bundle.total || 0);
+            }).then((result) => {
+                if (!isSelected(patientId)) return;
+                $("#badgeImmunization").text(result.first.total || 0);
 
-                var resourceImmunization = JSON.stringify(bundle, undefined, 4);
-                $('#fhirdatasource').val($('#fhirdatasource').val() + resourceImmunization);
+                appendBundles(result.bundles);
 
-                if (entries(bundle).length === 0) {
+                if (result.entries.length === 0) {
                     $("#immunizationTable tbody").append(noRecordsRow(2));
                 }
-                entries(bundle).forEach((immunization) => {
+                result.entries.forEach((immunization) => {
                     $("#immunizationTable tbody").append(textRow([
                         immunization.resource.vaccineCode["coding"][0].display,
                         immunization.resource.occurrenceDateTime
@@ -315,22 +368,21 @@ $(document).ready(function () {
 
     // Perform a search to Allergy list for a specific patient
     window.allergy = function (patientId) {
-        client.search({
+        searchAll({
                 type: 'AllergyIntolerance',
                 query: {
                     patient: patientId
                 }
-            }).then((res) => {
-                const bundle = res.data;
-                $("#badgeAllergy").text(bundle.total || 0);
+            }).then((result) => {
+                if (!isSelected(patientId)) return;
+                $("#badgeAllergy").text(result.first.total || 0);
 
-                if (entries(bundle).length === 0) {
+                if (result.entries.length === 0) {
                     $("#allergyTable tbody").append(noRecordsRow(4));
                 } else {
-                    var resourceAllergy = JSON.stringify(bundle, undefined, 4);
-                    $('#fhirdatasource').val($('#fhirdatasource').val() + resourceAllergy);
+                    appendBundles(result.bundles);
 
-                    entries(bundle).forEach((allergy) => {
+                    result.entries.forEach((allergy) => {
                         $("#allergyTable tbody").append(textRow([
                             allergy.resource.code.coding[0].display,
                             allergy.resource.type,
@@ -355,24 +407,23 @@ $(document).ready(function () {
 
     // Perform a search to Vital Signs list for a specific patient
     window.vitalsigns = function (patientId) {
-        client.search({
+        searchAll({
                 type: 'Observation',
                 query: {
                     patient: patientId,
                     category: 'vital-signs',
                     _sort: 'date'
                 }
-            }).then((res) => {
-                const bundle = res.data;
-                $("#badgeVitalSigns").text(bundle.total || 0);
+            }).then((result) => {
+                if (!isSelected(patientId)) return;
+                $("#badgeVitalSigns").text(result.first.total || 0);
 
-                var resourceVitalSigns = JSON.stringify(bundle, undefined, 4);
-                $('#fhirdatasource').val($('#fhirdatasource').val() + resourceVitalSigns);
+                appendBundles(result.bundles);
 
-                if (entries(bundle).length === 0) {
+                if (result.entries.length === 0) {
                     $("#vitalSignsTable tbody").append(noRecordsRow(4));
                 }
-                entries(bundle).forEach((vitalsigns) => {
+                result.entries.forEach((vitalsigns) => {
                     observationRows(vitalsigns.resource).forEach((values) => {
                         $("#vitalSignsTable tbody").append(textRow(values));
                     });
@@ -392,30 +443,29 @@ $(document).ready(function () {
     };
 
     window.laboratory = function (patientId) {
-        client.search({
+        searchAll({
                 type: 'Observation',
                 query: {
                     patient: patientId,
                     category: 'laboratory',
                     _sort: 'date'
                 }
-            }).then((res) => {
-                const bundle = res.data;
-                $("#badgeLaboratory").text(bundle.total || 0);
+            }).then((result) => {
+                if (!isSelected(patientId)) return;
+                $("#badgeLaboratory").text(result.first.total || 0);
 
-                if (entries(bundle).length > 0) {
+                if (entries(result.first).length > 0) {
                     const icone = $('<a target="_blank"><span class="label label-info"><i class="fas fa-chart-line"></i></span></a>')
                         .attr('href', 'labresult.html?id=' + encodeURIComponent(patientId));
                     $("#iconChart").append(icone);
                 }
 
-                var resourceLaboratory = JSON.stringify(bundle, undefined, 4);
-                $('#fhirdatasource').val($('#fhirdatasource').val() + resourceLaboratory);
+                appendBundles(result.bundles);
 
-                if (entries(bundle).length === 0) {
+                if (result.entries.length === 0) {
                     $("#laboratoryTable tbody").append(noRecordsRow(4));
                 }
-                entries(bundle).forEach((laboratory) => {
+                result.entries.forEach((laboratory) => {
                     observationRows(laboratory.resource).forEach((values) => {
                         $("#laboratoryTable tbody").append(textRow(values));
                     });

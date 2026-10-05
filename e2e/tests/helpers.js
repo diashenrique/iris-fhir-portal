@@ -23,6 +23,15 @@ async function login(page, user = 'fhirportal', password = 'fhirportal') {
 }
 
 /**
+ * End the IRIS session of the page, so it stops holding a license (the community license is small).
+ * Never throws: a page that never logged in or already logged out is fine.
+ * @param {import('@playwright/test').Page} page
+ */
+async function logout(page) {
+  await page.request.get(`${ENTRY_PAGE}?IRISLogout=end`).catch(() => null);
+}
+
+/**
  * Test data created through FHIR with the session of the login, and removed afterwards.
  * Call cleanup() in a finally: it tries every delete, newest first, and returns what it could not delete.
  * @param {import('@playwright/test').Page} page
@@ -58,4 +67,4 @@ function fixtures(page) {
   };
 }
 
-module.exports = { ENTRY_PAGE, FHIR_JSON, fixtures, login };
+module.exports = { ENTRY_PAGE, FHIR_JSON, fixtures, login, logout };
