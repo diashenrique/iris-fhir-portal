@@ -14,7 +14,7 @@ concurrency:
 jobs:
   build:
     name: Build image and check FHIR data
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04  # pinned: the IRIS latest-cd image is the only intended moving part
     timeout-minutes: 45
     env:
       BASE_URL: http://localhost:32783
@@ -23,7 +23,7 @@ jobs:
         shell: bash  # -eo pipefail: a failing curl fails the step instead of feeding jq empty input
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # The IRIS for Health image alone is ~6 GB; drop preinstalled toolchains the build does not use
       - name: Free disk space
@@ -59,7 +59,7 @@ jobs:
       - name: Smoke test
         run: bash scripts/smoke.sh
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -74,7 +74,7 @@ jobs:
 
       - name: E2E report
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-report
           path: |
