@@ -52,4 +52,12 @@ A lógica do portal: `fhirUI/resources/js/myFHIR.js`, `fhirUI/resources/js/labre
 ## Notes
 
 - Decision (autonomia): o usuário concedeu autonomia total em 2026-10-05. A quebra e as escolhas deste épico são minhas e ficam registradas aqui.
+- Decision (autonomia): breakdown de 9 entradas aprovado depois da validação, com as correções dela.
+- Tracer bullet: entrada 1, um paciente mínimo e sem registros clínicos atravessando e2e (fixtures) → FHIR → myFHIR.js → tela. O backend não entra no tracer porque espera o spike (entrada 6).
+- Sequenciamento: trilha A no myFHIR.js 1 → 2 → 3 → 4 → 5; trilha B no Dispatch 6 → 7, em paralelo à A; 8 (labresult.js) depois da 7; 9 fecha. O spike vem logo após o tracer na ordem, por ser o item de que menos se sabe.
+- Decision (autonomia): a entrada 7 resolve o esquema também nos GRANTs do iris.script; o epic-ipm-paridade espera a entrada 3.7 e reaproveita a resolução no module.xml.
+- Decision (autonomia): o `User.SQLvar` (GetJSON, GetProp, GetAtJSON) fica no projeto em qualquer resultado do spike, porque é o exemplo do artigo 4 e o `misc/sql/example.sql` o usa.
+- Decision (autonomia): o gráfico plota só valores numéricos (`valueQuantity`); Observations com outro tipo de valor ficam fora dele (o B5 cobre as tabelas).
+- Decision (autonomia): a entrada 4 força páginas pequenas reescrevendo a busca com `page.route` (`_count=5`), sem parâmetro novo no portal.
+- Contrato entre as entradas 5 e 8: toast "Could not load <what> (HTTP <status>)".
 - Unknown: se `JSON_TABLE` ou o FHIR SQL Builder do IRIS 2026.2 substituem bem as funções do artigo 4 e como descobrir o esquema do endpoint; o spike (entrada 6) responde antes da entrada 7.
