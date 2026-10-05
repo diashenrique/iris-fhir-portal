@@ -1,8 +1,6 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
-const { login } = require('./helpers');
-
-const FHIR_JSON = { Accept: 'application/fhir+json', 'Content-Type': 'application/fhir+json' };
+const { FHIR_JSON, login } = require('./helpers');
 
 test('the SSN is masked, revealed on request, and the mask is never saved', async ({ page }) => {
   await login(page);

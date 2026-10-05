@@ -1,7 +1,8 @@
     // Spike 2.1: run in %SYS of a fresh container, after loading Home.cls into FHIRSERVER
     // docker compose exec -T iris iris session iris -U %SYS < setup.script
 kill p set p("NameSpace")="FHIRSERVER",p("Path")="/home/irisowner/dev/fhirUI/",p("ServeFiles")=3,p("Recurse")=1,p("AutheEnabled")=32,p("CookiePath")="/fhir/",p("GroupById")="fhirportal",p("UseCookies")=2,p("MatchRoles")=":%HS_DB_FHIRSERVER" w "portal ",##class(Security.Applications).Create("/fhir/portal",.p),!
-    // 8224 = 8192 + 32: drops bit 64 (unauthenticated) so the web app itself refuses anonymous calls
+    // 8224 = 8192 + 32: drops bit 64 (unauthenticated) so the web app itself refuses anonymous calls.
+    // Superseded by bug 2.8: with 8224 each anonymous call logs a severity-2 alert; the project uses 8288.
 kill p set s=##class(Security.Applications).Get("/fhir/r4",.p) set p("GroupById")="fhirportal",p("CookiePath")="/fhir/",p("UseCookies")=2,p("AutheEnabled")=8224 w "r4 ",##class(Security.Applications).Modify("/fhir/r4",.p),!
 kill p set s=##class(Security.Applications).Get("/fhir/api",.p) set p("GroupById")="fhirportal",p("CookiePath")="/fhir/",p("UseCookies")=2,p("AutheEnabled")=32 w "api ",##class(Security.Applications).Modify("/fhir/api",.p),!
 halt
