@@ -40,6 +40,8 @@ Rota oneshot: cerca de 25 linhas em 3 arquivos. Risco médio: um privilégio a m
 - `Security.Applications.Get("/fhir/api")` -- expected: `MatchRoles` sem `%All`.
 - CI do PR -- expected: verde.
 
+- Verificado no GitHub: PR #13, run 37322708909 verde em 6min15s (smoke, E2E com 5 testes e o passo "No CSP login-page alerts").
+
 ## Review Triage Log
 
 Revisão `quick`, passada 1: 0 high, 0 medium, 4 low, 1 false.

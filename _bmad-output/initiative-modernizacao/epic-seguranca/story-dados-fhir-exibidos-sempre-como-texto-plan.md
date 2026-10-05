@@ -86,6 +86,8 @@ O `onclick` inline vira listener porque o id do paciente vem do servidor; mesmo 
 
 ## Plan Change Log
 
+- Verificado no GitHub: PR #13, run 37322708909 verde em 6min15s (smoke, E2E com 5 testes e o passo "No CSP login-page alerts").
+
 ## Review Triage Log
 
 Revisão `quick`, passada 1: 0 high, 1 medium, 2 low, 1 false, 1 verificação pendente.

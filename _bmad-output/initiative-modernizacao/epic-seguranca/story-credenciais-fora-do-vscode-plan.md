@@ -40,6 +40,8 @@ Rota oneshot: 4 linhas em um arquivo. Risco baixo.
 - `git grep -nE '"password"[[:space:]]*:|:[[:space:]]*"SYS"' -- . ':(exclude)_bmad-output' ':(exclude)_bmad' ':(exclude).claude'` -- expected: nenhuma senha.
 - Manual (hitl): abrir o projeto no VS Code com o container no ar -- expected: a extensão ObjectScript e o SQLTools pedem a senha e conectam.
 
+- Verificado no GitHub: PR #13, run 37322708909 verde em 6min15s (smoke, E2E com 5 testes e o passo "No CSP login-page alerts").
+
 ## Review Triage Log
 
 Revisão `quick`, passada 1: 0 high, 1 medium, 1 low, 0 false, 1 verificação humana pendente.

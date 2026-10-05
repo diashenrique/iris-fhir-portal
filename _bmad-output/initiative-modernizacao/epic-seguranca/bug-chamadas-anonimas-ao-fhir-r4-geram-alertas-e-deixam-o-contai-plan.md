@@ -41,6 +41,8 @@ Rota oneshot: cerca de 25 linhas em 4 arquivos. Risco médio: a recusa do anôni
 - `grep -c "Error displaying login page" /usr/irissys/mgr/messages.log` no container depois dos testes -- expected: 0.
 - CI do PR -- expected: verde, com o passo de log.
 
+- Verificado no GitHub: PR #13, run 37322708909 verde em 6min15s (smoke, E2E com 5 testes e o passo "No CSP login-page alerts").
+
 ## Review Triage Log
 
 Revisão `quick`, passada 1: 0 high, 1 medium, 4 low, 0 false.
