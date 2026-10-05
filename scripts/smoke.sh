@@ -21,8 +21,10 @@ session_code() { session -o /dev/null -w '%{http_code}' "$@"; }
 # Anonymous and logged-out calls are refused with 401: by the FHIR server on /fhir/r4, by the web app on /fhir/api
 denied() { [ "$2" = "401" ] && pass "$1 answers 401" || fail "$1 answers 401 (got $2)"; }
 
-# Dispatch answers [] with HTTP 200 when its SQL fails, so the API checks look at the content
+# The API checks also look at the content: an id without data answers 200 with []
 non_empty_array() { [[ "$1" == "[{"* ]]; }
+# Body and HTTP status of a session call: the status is the last 3 characters
+session_body_code() { session -w '%{http_code}' "$@"; }
 
 # Login through the IRIS login page of the portal; the session cookie then authenticates
 # the pages, /fhir/r4 and /fhir/api (one GroupById)
@@ -89,10 +91,25 @@ else
     && pass "REST /fhir/api/patient/$lab_patient/lab/$code returns results" || fail "REST /fhir/api/patient/$lab_patient/lab/$code returns results"
 fi
 
-# SQL injection probes: Dispatch binds the path values as parameters, so these match nothing
-for probe in "patient/1%20OR%201=1" "laboptions/1'%20OR%20'1'='1" "patient/${first_id:-1}/lab/x'%20OR%20'1'='1"; do
-  [ "$(session "$BASE_URL/fhir/api/$probe")" = "[]" ] && pass "REST /fhir/api/$probe returns nothing" || fail "REST /fhir/api/$probe returns nothing"
+# SQL injection probes. Patient ids outside the FHIR id pattern are refused with 400; lab codes are only
+# checked for length and control characters, and every path value is bound as a parameter, so a probe
+# that passes validation matches nothing (never 5xx or rows)
+for probe in "patient/1%20OR%201=1" "laboptions/1'%20OR%20'1'='1"; do
+  response=$(session_body_code "$BASE_URL/fhir/api/$probe")
+  [ "${response: -3}" = "400" ] \
+    && pass "REST /fhir/api/$probe answers 400" || fail "REST /fhir/api/$probe answers 400 (got $response)"
 done
+# A valid id or code without data answers 200 with []
+for probe in "patient/${first_id:-1}/lab/x'%20OR%20'1'='1" "patient/does-not-exist"; do
+  response=$(session_body_code "$BASE_URL/fhir/api/$probe")
+  [ "$response" = "[]200" ] \
+    && pass "REST /fhir/api/$probe answers 200 with []" || fail "REST /fhir/api/$probe answers 200 with [] (got $response)"
+done
+
+response=$(session_body_code "$BASE_URL/fhir/api/patient/1'x")
+[ "${response: -3}" = "400" ] && [[ "$response" == *'"error":'* ]] \
+  && pass "REST /fhir/api/patient/1'x answers 400 (invalid id)" || fail "REST /fhir/api/patient/1'x answers 400 (invalid id, got $response)"
+[ "$(session_code "$BASE_URL/fhir/api/")" = "404" ] && pass "REST /fhir/api/ answers 404 (no root route)" || fail "REST /fhir/api/ answers 404 (no root route)"
 
 # No CORS for a foreign origin: the API is same-origin only. The web app's empty CorsAllowlist
 # is what refuses it today; this guards that setting (the routes no longer declare Cors either).

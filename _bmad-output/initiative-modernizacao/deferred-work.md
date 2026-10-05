@@ -13,3 +13,6 @@
 - source_plan: `_bmad-output/initiative-modernizacao/epic-robustez-fhir/spike-spike-consultas-do-dispatch-e-esquema-do-endpoint-plan.md`
   summary: O papel `%HS_DB_FHIRSERVER`, que o `/fhir/api` recebe, permite SQL dinâmico de leitura e escrita nas tabelas FHIR (UPDATE e DELETE com SQLCODE 100); o papel mínimo só restringe de fato o EXECUTE das funções.
   evidence: Rota `/spike/privileges` do `spike-consultas/Rest.cls`, rodando como `fhirportal` com `%HS_DB_FHIRSERVER,FHIRPortalAPI`. Hoje o código do `Dispatch` só lê e é parametrizado; endurecer pede SQL com checagem de privilégio ou um papel de banco próprio. Candidato ao epic-ipm-paridade, que declara os papéis no `module.xml`.
+- source_plan: `_bmad-output/initiative-modernizacao/epic-robustez-fhir/story-dispatch-com-esquema-do-endpoint-status-http-corretos-e-cons-plan.md`
+  summary: Os testes e2e que fazem login e não fazem logout deixam sessões do IRIS abertas por 15 minutos (Timeout 900); com rodadas repetidas, a instância Community chega a `<LICENSE LIMIT EXCEEDED>`.
+  evidence: Visto pelo implementador da 3.7 ao rodar smoke e e2e várias vezes (`iris session` falhou; `docker restart` liberou). Só o tracer faz logout. Para o sweep do epic-robustez-fhir (3.9): logout ao fim de cada teste (afterEach no helper) e Timeout menor no grupo de sessão, se fizer sentido.

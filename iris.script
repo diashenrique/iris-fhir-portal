@@ -4,7 +4,7 @@ Do ##class(Security.Users).UnExpireUserPasswords("*")
 zn "HSLIB"
 set namespace="FHIRSERVER"
 Set appKey = "/fhir/r4"
-    // JsonAdvSQL replaces the legacy HS.FHIRServer.Storage.Json strategy; its SQL schemas are HSFHIR_X0001_*
+    // JsonAdvSQL replaces the legacy HS.FHIRServer.Storage.Json strategy; Dispatch asks it for its SQL tables
 Set strategyClass = "HS.FHIRServer.Storage.JsonAdvSQL.InteractionsStrategy"
 Set metadataPackages = $lb("hl7.fhir.r4.core@4.0.1")
 set appdir="/home/irisowner/dev"
@@ -30,10 +30,10 @@ do $System.OBJ.LoadDir(appdir_"/src","ck",,1)
 
     // REST API used by labresult.html (FHIR SQL schema)
 zn "%SYS"
-    // Least privilege of /fhir/api: read the FHIR resource table and run the JSON SQL functions, nothing else
-zw ##class(Security.Roles).Create("FHIRPortalAPI", "Least privilege of /fhir/api", "", "")
+    // Access of /fhir/api: the FHIR SQL tables (read and also write, see deferred-work.md) come from %HS_DB_FHIRSERVER;
+    // FHIRPortalAPI only adds EXECUTE on the JSON SQL functions. Dispatch itself only reads, with bound parameters.
+zw ##class(Security.Roles).Create("FHIRPortalAPI", "JSON SQL functions of /fhir/api", "", "")
 zn "FHIRSERVER"
-zw ##class(%SQL.Statement).%ExecDirect(, "GRANT SELECT ON HSFHIR_X0001_R.Rsrc TO FHIRPortalAPI").%SQLCODE
 zw ##class(%SQL.Statement).%ExecDirect(, "GRANT EXECUTE ON SQLUser.GetJSON, SQLUser.GetProp, SQLUser.GetAtJSON TO FHIRPortalAPI").%SQLCODE
 zn "%SYS"
     // Login required, in the same session group as the portal pages and /fhir/r4 (below)
