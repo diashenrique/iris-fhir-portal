@@ -6,7 +6,7 @@
   },
   "objectscript.conn": {
     "ns": "FHIRSERVER",
-    "active": false,
+    "active": true,
     "username": "_SYSTEM",
     "docker-compose": {
       "service": "iris",
