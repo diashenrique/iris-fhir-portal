@@ -73,13 +73,25 @@ risk = "low"
 uncertainty = "O SSN ainda vem de identifier[2]; buscar por system é do epic-robustez-fhir, então a entrada mantém o índice atual."
 
 [[entry]]
+id = 8
+type = "bug"
+title = "Chamadas anônimas ao /fhir/r4 geram alertas e deixam o container unhealthy"
+description = "Volta o AutheEnabled do /fhir/r4 de 8224 para 8288 no iris.script (decisão do usuário, 2026-10-05): com 8224, cada chamada anônima faz o IRIS tentar mostrar uma página de login num app REST, grava um alerta de severidade 2 e responde 404; com 8288 o servidor FHIR recusa o UnknownUser com 401 e nada é gravado. O smoke e o e2e passam a exigir 401, e o CI falha se o messages.log tiver 'Error displaying login page' depois dos testes."
+verify = "No CI: smoke e e2e com 401 no /fhir/r4 anônimo, e o passo que procura 'Error displaying login page' no messages.log encontra 0."
+covers = ["S1"]
+after = [2]
+hitl = false
+risk = "medium"
+uncertainty = "A recusa do anônimo passa a depender do servidor FHIR rejeitar o UnknownUser; os testes de recusa anônima vigiam isso."
+
+[[entry]]
 id = 7
 type = "story"
 title = "Refactor sweep"
 description = "Limpeza deixada para depois pelas entradas 1 a 6, com escopo definido ao começar, a partir dos planos e das revisões; só limpeza."
 verify = "O CI segue verde e cada item de limpeza do plano está resolvido ou explicitamente adiado."
 covers = ["S1", "S2", "S3", "S4", "S5", "S6"]
-after = [1, 2, 3, 4, 5, 6]
+after = [1, 2, 3, 4, 5, 6, 8]
 hitl = false
 risk = "low"
 uncertainty = "O escopo só é conhecido ao fim das entradas anteriores."

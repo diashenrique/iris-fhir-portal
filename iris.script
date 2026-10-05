@@ -53,10 +53,12 @@ set props("NameSpace")="FHIRSERVER",props("Path")="/home/irisowner/dev/fhirUI/",
 set props("GroupById")="fhirportal",props("CookiePath")="/fhir/",props("UseCookies")=2,props("MatchRoles")=":%HS_DB_FHIRSERVER"
 zw ##class(Security.Applications).Create("/fhir/portal", .props)
 
-    // 8224 = 8192 + 32: no unauthenticated access on the FHIR endpoint; Basic auth keeps working
+    // Keep 8288 (unauthenticated allowed on the web app): the FHIR server itself refuses UnknownUser with 401.
+    // Without the unauthenticated bit (8224) every anonymous call makes CSP look for a login page this REST app
+    // does not have, logs a severity-2 alert and leaves the container unhealthy.
 kill props
 set sc=##class(Security.Applications).Get("/fhir/r4",.props)
-set props("GroupById")="fhirportal",props("CookiePath")="/fhir/",props("UseCookies")=2,props("AutheEnabled")=8224
+set props("GroupById")="fhirportal",props("CookiePath")="/fhir/",props("UseCookies")=2,props("AutheEnabled")=8288
 zw ##class(Security.Applications).Modify("/fhir/r4", .props)
 
 kill props

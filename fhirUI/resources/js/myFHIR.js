@@ -155,7 +155,7 @@ $(document).ready(function () {
             });
         })
         .catch((err) => {
-            // No session (logged out or expired): the FHIR endpoint answers 401 or 404.
+            // No session (logged out or expired): the FHIR endpoint answers 401 (404 if the web app ever refuses it first).
             // The jQuery adapter of fhir.js rejects with { error: jqXHR }, so the status is on err.error.
             const status = err.error && err.error.status;
             if (status === 401 || status === 404) {
