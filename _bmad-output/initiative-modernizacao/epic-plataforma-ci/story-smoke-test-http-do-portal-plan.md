@@ -35,6 +35,7 @@ Rota oneshot: um script de cerca de 80 linhas e um passo no `ci.yml`. Risco baix
 - Verificado localmente: 8 PASS, exit 0 (paciente 4, exame 49765-1). Com `HSFHIR_I0001` no `Dispatch.cls` recompilado no container, a checagem de laboptions falhou e o exit foi 1; depois de restaurar e recompilar, tudo voltou a passar.
 - Após a revisão: a checagem de `/fhir/api/patient` roda sempre sobre o primeiro paciente, independente de laboptions; sem paciente com exames, a checagem de lab vira um FAIL explícito; o loop para no primeiro timeout ou recusa de conexão (`--max-time 10`); o arquivo tem bit de execução (100755) e o comentário de uso indica `bash scripts/smoke.sh`.
 - Reverificado: 8 PASS no container; com a mutação, 3 FAIL (patient, laboptions, lab) e exit 1; com `BASE_URL=http://localhost:1`, 8 FAIL e exit 1 em segundos.
+- Verificado no GitHub: PR #9, run 37299800134 verde, com o passo "Smoke test" e as 8 checagens PASS no runner.
 
 ## Verification
 
@@ -51,4 +52,4 @@ Revisão `quick`, passada 1: 0 high, 2 medium, 1 low, 1 false, 1 sem veredito (v
 - medium → patch — o loop podia levar 100 × 30 s com a API travada, além do timeout do job: `--max-time 10` e `|| break` no primeiro erro de curl.
 - low → patch — o comentário de uso pedia execução direta sem bit de execução: modo 100755 e comentário com `bash`.
 - false — arquivos só com intent-to-add: o commit usa `git add -A`.
-- verificação pendente — passo "Smoke test" verde no CI do PR.
+- verificação concluída — passo "Smoke test" verde no PR #9 (run 37299800134).

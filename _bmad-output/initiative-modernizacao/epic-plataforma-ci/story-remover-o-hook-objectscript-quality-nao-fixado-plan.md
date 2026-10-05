@@ -43,3 +43,4 @@ Revisão `quick`, passada 1: 0 high, 0 medium, 1 low, 1 false.
 
 - false — o plano não entraria no commit (só intent-to-add): o commit usa `git add -A`, como na story 1.1.
 - low → patch — o grep de verificação só pegava `| sh`, `&& sh` e `sh ./`: ampliado para `| bash`, `| sudo sh`, `bash <(curl …)`, `&& bash x.sh` e `-c/eval $(curl …)`; uma primeira versão casava com `code=$(curl …)` do `ci.yml` e foi restringida; roda limpo em `.github/workflows`.
+- verificação — no PR #9 só o workflow CI rodou; o objectscriptquality não disparou mais.
