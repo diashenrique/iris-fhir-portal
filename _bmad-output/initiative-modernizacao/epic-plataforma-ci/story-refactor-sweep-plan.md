@@ -41,3 +41,4 @@ Rota oneshot: 4 linhas no `ci.yml`. Risco baixo: o CI do PR prova a mudança.
 ## Review Triage Log
 
 Revisão `quick`, passada 1: nenhum achado. O revisor confirmou as tags v7 (`git ls-remote`), `using: node24` e os inputs; e confirmou que `deferred-work.md` só tem o cache gzip, atribuído ao epic-docs-demo.
+- verificação concluída — PR #11, run 37305111686 verde em 7min11s, com 0 anotações (sem o aviso de Node.js 20 e sem o da migração do ubuntu-latest).

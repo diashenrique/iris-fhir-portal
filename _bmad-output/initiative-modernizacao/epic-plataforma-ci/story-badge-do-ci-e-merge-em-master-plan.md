@@ -49,4 +49,4 @@ Revisão `quick`, passada 1: 0 high, 0 medium, 6 low, 0 false, 1 sem veredito.
 - low → patch — o README não dizia que o e2e grava no FHIR: avisa que altera e restaura a cidade.
 - low → patch — "every pull request" incompleto: PR e push em master.
 - low → patch — a seção parecia valer para o IPM: título e texto restritos ao setup Docker.
-- verificação pendente — CI verde em master depois do merge (feito pelo usuário).
+- verificação — PR #11, run 37305111686 verde; o run de push em master do merge do #10 (37304614809) também está verde. Falta só o run de master depois do merge do #11, feito pelo usuário.
