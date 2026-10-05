@@ -35,6 +35,8 @@ Rota oneshot: um arquivo novo de cerca de 60 linhas, sem mudança de código da 
 - Decisão: a checagem de dados usa `Patient?_summary=count` com `jq` (pré-instalado no runner). `curl -sf` faz um 401 ou 5xx falhar o passo.
 - Os passos de espera e de checagem rodaram localmente contra o container 2026.2: servidor no ar e `total` 18. O teste negativo (carga vazia → `[ 0 -gt 0 ]` falha) e o run real no GitHub ficam para o PR.
 - Em caso de falha, o passo final despeja `docker compose logs`.
+- Verificado no GitHub: o PR #8 (run 37294703116) ficou verde em 4min13s (build 3min18s, servidor no ar em 11s). Com a limpeza, o disco do runner bastou.
+- Verificado localmente o teste negativo: com `SubmitResourceFiles` apontando para uma pasta vazia, o `docker build` terminou com sucesso (confirma a premissa) e os mesmos passos do workflow falharam com `Patients loaded: 0` e exit 1. Foi feito localmente para não publicar um branch de teste.
 
 ## Verification
 
