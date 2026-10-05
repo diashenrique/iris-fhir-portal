@@ -113,6 +113,50 @@ $(document).ready(function () {
         return (bundle && bundle.entry) || [];
     }
 
+    // The value[x] element name of an Observation or of a component, if it has one
+    function valueKey(item) {
+        return Object.keys(item || {}).find((key) => /^value[A-Z]/.test(key));
+    }
+
+    // The text of a CodeableConcept: its text, or the display of its first coding
+    function conceptText(concept) {
+        if (!concept) return '';
+        if (concept.text) return concept.text;
+        return (concept.coding && concept.coding[0] && concept.coding[0].display) || '';
+    }
+
+    // Value and unit of an Observation or of a component, for any value[x]; empty when there is none
+    function observationValue(item) {
+        const key = valueKey(item);
+        if (!key) return { value: '', unit: '' };
+        const value = item[key];
+        if (key === 'valueQuantity') {
+            const number = value.value == null ? '' : String(value.value);
+            return {
+                // A comparator such as "<" belongs to the value: "< 0.5"
+                value: value.comparator && number !== '' ? value.comparator + ' ' + number : number,
+                unit: value.unit || value.code || ''
+            };
+        }
+        if (key === 'valueCodeableConcept') return { value: conceptText(value), unit: '' };
+        // valueString, valueBoolean, valueInteger, valueDateTime, valueTime...: shown as text
+        if (value !== null && typeof value !== 'object') return { value: String(value), unit: '' };
+        return { value: '', unit: '' };
+    }
+
+    // The rows of an Observation: [name, value, unit, date], one per component when it has no value[x]
+    function observationRows(resource) {
+        const date = resource.effectiveDateTime || '';
+        const row = (item) => {
+            const v = observationValue(item);
+            return [conceptText(item.code), v.value, v.unit, date];
+        };
+        if (!valueKey(resource) && resource.component && resource.component.length > 0) {
+            return resource.component.map(row);
+        }
+        return [row(resource)];
+    }
+
     // Perform a search to retrieve patient details for a specific patient
     window.loadForm = function (patientId) {
         client.search({
@@ -329,23 +373,9 @@ $(document).ready(function () {
                     $("#vitalSignsTable tbody").append(noRecordsRow(4));
                 }
                 entries(bundle).forEach((vitalsigns) => {
-                    if (vitalsigns.resource.hasOwnProperty('valueQuantity')) {
-                        $("#vitalSignsTable tbody").append(textRow([
-                            vitalsigns.resource.code.coding[0].display,
-                            vitalsigns.resource.valueQuantity.value,
-                            vitalsigns.resource.valueQuantity.unit,
-                            vitalsigns.resource.effectiveDateTime
-                        ]));
-                    } else {
-                        vitalsigns.resource.component.forEach((bp) => {
-                            $("#vitalSignsTable tbody").append(textRow([
-                                bp.code.text,
-                                bp.valueQuantity.value,
-                                bp.valueQuantity.unit,
-                                vitalsigns.resource.effectiveDateTime
-                            ]));
-                        });
-                    }
+                    observationRows(vitalsigns.resource).forEach((values) => {
+                        $("#vitalSignsTable tbody").append(textRow(values));
+                    });
                 });
             })
             .catch((err) => {
@@ -386,12 +416,9 @@ $(document).ready(function () {
                     $("#laboratoryTable tbody").append(noRecordsRow(4));
                 }
                 entries(bundle).forEach((laboratory) => {
-                    $("#laboratoryTable tbody").append(textRow([
-                        laboratory.resource.code.coding[0].display,
-                        laboratory.resource.valueQuantity.value,
-                        laboratory.resource.valueQuantity.unit,
-                        laboratory.resource.effectiveDateTime
-                    ]));
+                    observationRows(laboratory.resource).forEach((values) => {
+                        $("#laboratoryTable tbody").append(textRow(values));
+                    });
                 });
             })
             .catch((err) => {
