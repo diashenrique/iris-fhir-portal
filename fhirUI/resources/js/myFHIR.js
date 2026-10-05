@@ -75,6 +75,13 @@ $(document).ready(function () {
         return text.length > 4 ? '***-**-' + text.slice(-4) : text.replace(/./g, '*');
     }
 
+    // The SSN is the identifier with this system, wherever it sits in the list
+    const SSN_SYSTEM = 'http://hl7.org/fhir/sid/us-ssn';
+
+    function findSSN(resource) {
+        return (resource.identifier || []).find((id) => id && id.system === SSN_SYSTEM);
+    }
+
     function showMaskedSSN() {
         ssnRevealed = false;
         $("#SSN").val(maskSSN(ssnValue)).prop('readonly', true);
@@ -120,7 +127,7 @@ $(document).ready(function () {
                     objPatient = patient;
                     const r = patient.resource;
                     // Any of these may be missing in a valid Patient: show an empty field
-                    const ssn = (r.identifier && r.identifier[2]) || {};
+                    const ssn = findSSN(r) || {};
                     const name = (r.name && r.name[0]) || {};
                     const address = (r.address && r.address[0]) || {};
                     $("#fhirId").val(r.id);
@@ -137,8 +144,9 @@ $(document).ready(function () {
 
                     // The FHIR Data Source modal shows the resource as stored, except the SSN, which stays masked
                     const shownPatient = JSON.parse(JSON.stringify(patient.resource));
-                    if (shownPatient.identifier && shownPatient.identifier[2]) {
-                        shownPatient.identifier[2].value = maskSSN(shownPatient.identifier[2].value);
+                    const shownSSN = findSSN(shownPatient);
+                    if (shownSSN && shownSSN.value) {
+                        shownSSN.value = maskSSN(shownSSN.value);
                     }
                     var textedJSON = JSON.stringify(shownPatient, undefined, 4);
                     $('#fhirdatasource').val(textedJSON);
@@ -446,9 +454,13 @@ $(document).ready(function () {
         if (ssnRevealed) {
             ssnValue = $("#SSN").val();
         }
-        // The SSN lives in identifier[2] in the Synthea data; it is not created in that position
-        if (r.identifier && r.identifier[2]) {
-            setOrRemove(r.identifier[2], 'value', ssnValue);
+        // Update the us-ssn identifier; a patient without one gains it at the end only when there is a value
+        const ssn = findSSN(r);
+        if (ssn) {
+            setOrRemove(ssn, 'value', ssnValue);
+        } else if (ssnValue) {
+            r.identifier = r.identifier || [];
+            r.identifier.push({ system: SSN_SYSTEM, value: ssnValue });
         }
 
         const firstName = $("#firstName").val();
