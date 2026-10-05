@@ -93,6 +93,7 @@ Implementado direto a partir do plano: o subagente de implementação caiu duas 
 - Matriz: entrada anônima, estático anônimo e API anônima (smoke e e2e 1); login certo (e2e 4, sem credencial no JS, com edição, gráfico e logout); login errado (e2e 2); sessão encerrada com a página aberta (e2e 3, servindo do cache as respostas estáticas recebidas no login, como faria o navegador com o `Expires` de 1 hora).
 - Verificado com rebuild do zero (`--no-cache`): build com exit 0 (compila `Home` e `Dispatch`); smoke com 15 PASS; e2e com 4 testes passando; `verify.sh` do spike com `PAGE` na entrada real, 13 PASS.
 - Depois dos patches da revisão, reverificado: smoke todo PASS, com o `/fhir/api` estrito em 401; e2e com 4 testes passando.
+- Verificado no GitHub: PR #12, run 37313237882 verde em 6min08s (build, espera com Basic auth, dados, smoke com login e E2E com 4 testes).
 
 ## Plan Change Log
 
