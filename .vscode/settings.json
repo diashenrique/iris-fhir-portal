@@ -8,23 +8,20 @@
     "ns": "FHIRSERVER",
     "active": true,
     "username": "_SYSTEM",
-    "password": "SYS",
     "docker-compose": {
       "service": "iris",
       "internalPort": 52773
     },
     "links": {
-      "FHIR Portal": "http://localhost:${port}/fhir/portal/diashenrique.fhir.portal.Home.cls",
-      "FHIR server test": "http://localhost:${port}/fhir/r4/metadata"
+      "FHIR Portal": "http://localhost:${port}/fhir/portal/diashenrique.fhir.portal.Home.cls"
     }
   },
   "sqltools.connections": [{
-    "askForPassword": false,
+    "askForPassword": true,
     "connectionMethod": "Server and Port",
     "driver": "InterSystems IRIS",
     "name": "FHIR",
     "namespace": "FHIRSERVER",
-    "password": "SYS",
     "port": 32783,
     "previewLimit": 50,
     "server": "localhost",
