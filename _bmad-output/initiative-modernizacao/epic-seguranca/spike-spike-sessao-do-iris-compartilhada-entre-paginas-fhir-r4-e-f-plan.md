@@ -3,7 +3,7 @@ title: 'Spike: sessão do IRIS compartilhada entre páginas, /fhir/r4 e /fhir/ap
 type: 'chore'
 ticket: '1'
 created: '2026-10-05'
-status: 'built'
+status: done
 baseline_revision: '9be108cd2fcf4b21bb3c48ee4d7629973491c840'
 route: 'oneshot'
 route_source: 'auto'

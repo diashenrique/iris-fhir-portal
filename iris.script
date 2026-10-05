@@ -30,11 +30,17 @@ do $System.OBJ.LoadDir(appdir_"/src","ck",,1)
 
     // REST API used by labresult.html (FHIR SQL schema)
 zn "%SYS"
+    // Least privilege of /fhir/api: read the FHIR resource table and run the JSON SQL functions, nothing else
+zw ##class(Security.Roles).Create("FHIRPortalAPI", "Least privilege of /fhir/api", "", "")
+zn "FHIRSERVER"
+zw ##class(%SQL.Statement).%ExecDirect(, "GRANT SELECT ON HSFHIR_X0001_R.Rsrc TO FHIRPortalAPI").%SQLCODE
+zw ##class(%SQL.Statement).%ExecDirect(, "GRANT EXECUTE ON SQLUser.GetJSON, SQLUser.GetProp, SQLUser.GetAtJSON TO FHIRPortalAPI").%SQLCODE
+zn "%SYS"
 set props("AutheEnabled") = 64
 set props("NameSpace") = "FHIRSERVER"
 set props("IsNameSpaceDefault") = 0
 set props("DispatchClass") = "diashenrique.fhir.portal.Dispatch"
-set props("MatchRoles")=":%All"
+set props("MatchRoles")=":%HS_DB_FHIRSERVER:FHIRPortalAPI"
 zw ##class(Security.Applications).Create("/fhir/api" , .props)
 
     // Demo login of the portal (no roles), documented in the README

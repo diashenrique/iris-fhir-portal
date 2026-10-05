@@ -88,6 +88,21 @@ else
     && pass "REST /fhir/api/patient/$lab_patient/lab/$code returns results" || fail "REST /fhir/api/patient/$lab_patient/lab/$code returns results"
 fi
 
+# SQL injection probes: Dispatch binds the path values as parameters, so these match nothing
+for probe in "patient/1%20OR%201=1" "laboptions/1'%20OR%20'1'='1" "patient/${first_id:-1}/lab/x'%20OR%20'1'='1"; do
+  [ "$(session "$BASE_URL/fhir/api/$probe")" = "[]" ] && pass "REST /fhir/api/$probe returns nothing" || fail "REST /fhir/api/$probe returns nothing"
+done
+
+# No CORS for a foreign origin: the API is same-origin only. The web app's empty CorsAllowlist
+# is what refuses it today; this guards that setting (the routes no longer declare Cors either).
+headers=$(session -D - -o /dev/null -H 'Origin: https://evil.example' "$BASE_URL/fhir/api/patient/${first_id:-1}")
+preflight=$(session -D - -o /dev/null -X OPTIONS -H 'Origin: https://evil.example' -H 'Access-Control-Request-Method: GET'   "$BASE_URL/fhir/api/patient/${first_id:-1}")
+if [[ "$headers" == *" 200"* ]] && ! grep -qi '^access-control-allow-origin' <<< "$headers$preflight"; then
+  pass "REST /fhir/api sends no CORS headers to a foreign origin (GET and preflight)"
+else
+  fail "REST /fhir/api sends no CORS headers to a foreign origin (GET and preflight)"
+fi
+
 # Portal pages
 for name in patientlist.html labresult.html; do
   [ "$(session_code "$BASE_URL/fhir/portal/$name")" = "200" ] && pass "Page $name answers 200" || fail "Page $name answers 200"
