@@ -44,7 +44,7 @@ $(document).ready(function () {
             function (responseData) {
                 var jsonData = JSON.stringify(responseData);
                 $.each(JSON.parse(jsonData), function (idx, obj) {
-                    $("#labtest").append('<option value="' + obj.code + '">' + obj.name + '</option>');
+                    $("#labtest").append($('<option>').val(obj.code).text(obj.name));
                 });
 
             });

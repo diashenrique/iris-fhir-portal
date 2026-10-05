@@ -3,7 +3,7 @@ title: 'Tracer: login simples, sessão e logout de ponta a ponta'
 type: 'feature'
 ticket: '2'
 created: '2026-10-05'
-status: 'built'
+status: done
 baseline_revision: '3590afa3d82a54f0a00c4343bce7505cf65165a5'
 route: 'full'
 route_source: 'auto'

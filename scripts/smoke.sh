@@ -18,8 +18,8 @@ http_code() { curl -s --max-time 30 -o /dev/null -w '%{http_code}' "$@"; }
 session() { curl -s --max-time 30 -b "$jar" -c "$jar" "$@"; }
 session_code() { session -o /dev/null -w '%{http_code}' "$@"; }
 
-# /fhir/r4 refuses anonymous calls with 401 or 404 (no unauthenticated access on the web app); /fhir/api answers 401
-denied() { [ "$2" = "401" ] || [ "$2" = "404" ] && pass "$1 is denied ($2)" || fail "$1 is denied (got $2)"; }
+# Anonymous and logged-out calls are refused with 401: by the FHIR server on /fhir/r4, by the web app on /fhir/api
+denied() { [ "$2" = "401" ] && pass "$1 answers 401" || fail "$1 answers 401 (got $2)"; }
 
 # Dispatch answers [] with HTTP 200 when its SQL fails, so the API checks look at the content
 non_empty_array() { [[ "$1" == "[{"* ]]; }
@@ -41,6 +41,7 @@ grep -q 'name="IRISUsername"' "$page" && pass "Portal entry asks for login" || f
 [ "$(http_code "$BASE_URL/fhir/portal/patientlist.html")" = "404" ] \
   && pass "Page patientlist.html without login answers 404" || fail "Page patientlist.html without login answers 404"
 denied "FHIR Patient search without login" "$(http_code -H 'Accept: application/fhir+json' "$BASE_URL/fhir/r4/Patient")"
+denied "FHIR Patient search without login or Accept header" "$(http_code "$BASE_URL/fhir/r4/Patient")"
 [ "$(http_code "$BASE_URL/fhir/api/laboptions/1")" = "401" ] && pass "REST /fhir/api without login answers 401" || fail "REST /fhir/api without login answers 401"
 [ "$(http_code "$BASE_URL/csp/user/fhirUI/patientlist.html")" = "404" ] \
   && pass "Old anonymous /csp/user/fhirUI is gone" || fail "Old anonymous /csp/user/fhirUI is gone"
@@ -86,6 +87,21 @@ else
   body=$(session "$BASE_URL/fhir/api/patient/$lab_patient/lab/$code")
   non_empty_array "$body" \
     && pass "REST /fhir/api/patient/$lab_patient/lab/$code returns results" || fail "REST /fhir/api/patient/$lab_patient/lab/$code returns results"
+fi
+
+# SQL injection probes: Dispatch binds the path values as parameters, so these match nothing
+for probe in "patient/1%20OR%201=1" "laboptions/1'%20OR%20'1'='1" "patient/${first_id:-1}/lab/x'%20OR%20'1'='1"; do
+  [ "$(session "$BASE_URL/fhir/api/$probe")" = "[]" ] && pass "REST /fhir/api/$probe returns nothing" || fail "REST /fhir/api/$probe returns nothing"
+done
+
+# No CORS for a foreign origin: the API is same-origin only. The web app's empty CorsAllowlist
+# is what refuses it today; this guards that setting (the routes no longer declare Cors either).
+headers=$(session -D - -o /dev/null -H 'Origin: https://evil.example' "$BASE_URL/fhir/api/patient/${first_id:-1}")
+preflight=$(session -D - -o /dev/null -X OPTIONS -H 'Origin: https://evil.example' -H 'Access-Control-Request-Method: GET'   "$BASE_URL/fhir/api/patient/${first_id:-1}")
+if [[ "$headers" == *" 200"* ]] && ! grep -qi '^access-control-allow-origin' <<< "$headers$preflight"; then
+  pass "REST /fhir/api sends no CORS headers to a foreign origin (GET and preflight)"
+else
+  fail "REST /fhir/api sends no CORS headers to a foreign origin (GET and preflight)"
 fi
 
 # Portal pages

@@ -9,7 +9,7 @@ test('without login the portal shows the login page and no patient data', async 
   const listPage = await page.request.get('/fhir/portal/patientlist.html');
   expect(listPage.status()).toBe(404);
   const fhir = await page.request.get('/fhir/r4/Patient', { headers: { Accept: 'application/fhir+json' } });
-  expect([401, 404]).toContain(fhir.status());
+  expect(fhir.status()).toBe(401);
   const api = await page.request.get('/fhir/api/laboptions/1');
   expect(api.status()).toBe(401);
 });
@@ -136,4 +136,6 @@ test('patient chart: login, list, details, update, lab chart and logout', async 
   await expect(page.locator('input[name=IRISUsername]')).toBeVisible();
   const afterLogout = await page.request.get(`/fhir/api/laboptions/${patientId}`);
   expect(afterLogout.status()).toBe(401);
+  const fhirAfterLogout = await page.request.get('/fhir/r4/Patient', { headers: { Accept: 'application/fhir+json' } });
+  expect(fhirAfterLogout.status()).toBe(401);
 });

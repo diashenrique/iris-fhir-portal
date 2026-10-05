@@ -56,6 +56,7 @@ A segurança do portal no caminho Docker: `fhirUI/` (páginas e JS), `src/diashe
 - Decision: o portal passa para a URL `/fhir/portal/`, a mesma do `module.xml`; o `/csp/user/fhirUI` anônimo deixa de existir (usuário, 2026-10-05).
 - Decision: se o spike mostrar que o FHIR server não aceita a sessão por cookie, a alternativa é decidida com o usuário depois do spike, com a evidência dele (usuário, 2026-10-05).
 - Decision: breakdown de 7 entradas aprovado (usuário, 2026-10-05).
+- Decision: o `/fhir/r4` volta a `AutheEnabled=8288` (anônimo recusado pelo servidor FHIR com 401) em vez de 8224, porque com 8224 cada chamada anônima gera um alerta de severidade 2 e deixa o container unhealthy (usuário, 2026-10-05; bug 8).
 - Tracer bullet: entrada 2, login → sessão → lista → `/fhir/r4` e `/fhir/api` → logout, precedida pelo spike (entrada 1), porque o desenho depende da resposta dele.
 - Sequenciamento: 1 → 2; depois 3, 4 e 5 em paralelo (3 mexe em `iris.script`, `Dispatch.cls` e smoke; 4 em `myFHIR.js`, `labresult.js` e e2e; 5 em `.vscode`, depois da 2, que também mexe nele); 6 depois da 4 (mesmo `myFHIR.js` e e2e); 7 fecha.
 - Handoff para o epic-ipm-paridade: o modelo de autenticação daqui (web apps, papel mínimo, login) é o que o `module.xml` vai declarar.
