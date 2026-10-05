@@ -38,6 +38,8 @@ Rota oneshot: cerca de 25 linhas. Risco baixo, com rebuild, smoke e e2e como pro
 - Rebuild do zero, `bash scripts/smoke.sh` e `npx playwright test` -- expected: tudo passa, sem alertas no `messages.log`.
 - CI do PR -- expected: verde.
 
+- Verificado no GitHub: PR #14, run 37348509388 verde em 6min06s.
+
 ## Review Triage Log
 
 Revisão `quick`, passada 1: 0 high, 0 medium, 3 low, 0 false.

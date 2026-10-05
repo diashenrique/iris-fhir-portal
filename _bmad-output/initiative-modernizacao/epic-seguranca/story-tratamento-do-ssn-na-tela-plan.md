@@ -39,6 +39,8 @@ Rota oneshot: cerca de 70 linhas em `patientlist.html`, `myFHIR.js` e num teste 
 - `docker compose restart` e `npx playwright test` -- expected: os testes antigos e o novo passam.
 - CI do PR -- expected: verde.
 
+- Verificado no GitHub: PR #14, run 37348509388 verde em 6min06s.
+
 ## Review Triage Log
 
 Revisão `quick`, passada 1: 0 high, 1 medium (intent gap), 2 low, 1 rejeitado.
