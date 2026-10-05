@@ -37,6 +37,24 @@ set props("DispatchClass") = "diashenrique.fhir.portal.Dispatch"
 set props("MatchRoles")=":%All"
 zw ##class(Security.Applications).Create("/fhir/api" , .props)
 
-    // The FHIR server no longer accepts UnknownUser; the portal signs in as this demo user (no roles)
+    // Demo login of the portal (no roles), documented in the README
 zw ##class(Security.Users).Create("fhirportal", "", "fhirportal", "FHIR Portal demo user")
+
+    // Portal pages: password login, one session shared with /fhir/r4 and /fhir/api (same GroupById and cookie path)
+    // ServeFiles=3 serves the static files only to an authenticated session; the role lets the entry page run
+kill props
+set props("NameSpace")="FHIRSERVER",props("Path")="/home/irisowner/dev/fhirUI/",props("Recurse")=1,props("AutheEnabled")=32,props("ServeFiles")=3
+set props("GroupById")="fhirportal",props("CookiePath")="/fhir/",props("UseCookies")=2,props("MatchRoles")=":%HS_DB_FHIRSERVER"
+zw ##class(Security.Applications).Create("/fhir/portal", .props)
+
+    // 8224 = 8192 + 32: no unauthenticated access on the FHIR endpoint; Basic auth keeps working
+kill props
+set sc=##class(Security.Applications).Get("/fhir/r4",.props)
+set props("GroupById")="fhirportal",props("CookiePath")="/fhir/",props("UseCookies")=2,props("AutheEnabled")=8224
+zw ##class(Security.Applications).Modify("/fhir/r4", .props)
+
+kill props
+set sc=##class(Security.Applications).Get("/fhir/api",.props)
+set props("GroupById")="fhirportal",props("CookiePath")="/fhir/",props("UseCookies")=2,props("AutheEnabled")=32
+zw ##class(Security.Applications).Modify("/fhir/api", .props)
 halt

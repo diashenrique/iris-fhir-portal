@@ -3,7 +3,7 @@ title: 'Workflow de CI que builda a imagem e prova o FHIR carregado'
 type: 'chore'
 ticket: '1'
 created: '2026-10-05'
-status: 'built'
+status: done
 baseline_revision: '5b18e7ea1088a912565b9270116b9f0bd4c31de2'
 route: 'oneshot'
 route_source: 'auto'

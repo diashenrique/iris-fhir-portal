@@ -3,7 +3,7 @@ title: 'Remover o hook objectscript-quality não fixado'
 type: 'chore'
 ticket: '4'
 created: '2026-10-05'
-status: 'built'
+status: done
 baseline_revision: '8efe5d038cbf9d48e0da2d968ea14f28da67d629'
 route: 'oneshot'
 route_source: 'auto'

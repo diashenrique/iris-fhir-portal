@@ -14,7 +14,7 @@
       "internalPort": 52773
     },
     "links": {
-      "FHIR Portal": "http://localhost:${port}/csp/user/fhirUI/patientlist.html",
+      "FHIR Portal": "http://localhost:${port}/fhir/portal/diashenrique.fhir.portal.Home.cls",
       "FHIR server test": "http://localhost:${port}/fhir/r4/metadata"
     }
   },

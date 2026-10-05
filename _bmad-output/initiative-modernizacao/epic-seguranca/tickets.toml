@@ -1,0 +1,85 @@
+# Breakdown do epic-seguranca, aprovado pelo usuário em 2026-10-05. A ordem das tabelas é a ordem de build.
+
+[[entry]]
+id = 1
+type = "spike"
+title = "Spike: sessão do IRIS compartilhada entre páginas, /fhir/r4 e /fhir/api"
+description = "Descobre, num container local, a configuração mínima para que um login com senha num web app de páginas (/fhir/portal, servindo fhirUI, com página de login) autentique por cookie as chamadas do navegador a /fhir/r4 (HS.FHIRServer.RestHandler) e a /fhir/api, sem cabeçalho Authorization (candidatos: GroupById, cookie path, UseSessionCookie), e como um cliente HTTP (curl com cookie jar, Playwright) faz esse login; a resposta, com os comandos que a provam, fica no plano para a entrada 2 (handoff)."
+verify = "O plano registra a configuração e um roteiro curl reproduzível em que /fhir/r4/Patient e /fhir/api/laboptions/:id respondem 401 sem cookie e 200 com o cookie obtido no login, ou registra que não é possível e qual alternativa a entrada 2 deve usar."
+covers = ["S1"]
+after = []
+hitl = false
+risk = "high"
+uncertainty = "O RestHandler do FHIR pode exigir autenticação por requisição e ignorar a sessão de outro app; nesse caso a alternativa é o login validar a senha e a página guardar a credencial só em memória (sessionStorage), e o usuário decide a alternativa com a evidência do spike antes da entrada 2 (decisão do usuário, 2026-10-05)."
+
+[[entry]]
+id = 2
+type = "story"
+title = "Tracer: login simples, sessão e logout de ponta a ponta"
+description = "Seguindo a resposta da entrada 1: cria no iris.script o web app /fhir/portal (fhirUI, autenticação por senha, página de login simples no visual do portal) agrupado com /fhir/r4 e /fhir/api; remove o bloco auth do myFHIR.js; adiciona logout; marca o cookie da sessão como SameSite (contra CSRF no PUT Patient) se o web app permitir, ou registra a alternativa; remove do docker-compose o mount ./fhirUI em /csp/user/fhirUI (o /fhir/portal serve o checkout montado em /home/irisowner/dev/fhirUI, sem cópia anônima); passa o README e o link do .vscode/settings.json para /fhir/portal/patientlist.html; troca a checagem de dados do ci.yml para usar o login; e entrega os helpers de login que as entradas 3, 4 e 6 usam: uma função login com cookie jar no smoke.sh e um login(page) no e2e, além das checagens de acesso anônimo negado."
+verify = "No CI: o smoke confirma 401/redirect sem login nas páginas, em /fhir/r4 e em /fhir/api e 200 com login; o e2e entra pela tela de login, percorre o tracer, sai pelo logout e volta à tela de login; git grep não encontra fhirportal no fhirUI nem /csp/user/fhirUI no repositório fora de _bmad-output."
+covers = ["S1", "S2"]
+after = [1, "1.2", "1.3"]       # estende o smoke (1.2) e o e2e (1.3) do epic-plataforma-ci
+hitl = false
+risk = "high"
+uncertainty = "Formato exato depende do spike; a troca de URL quebra links e screenshots antigos (o README é atualizado aqui, os screenshots ficam com o epic-docs-demo)."
+
+[[entry]]
+id = 3
+type = "story"
+title = "/fhir/api com papel mínimo, sem CORS aberto"
+description = "Cria no iris.script um papel FHIRPortalAPI com só o necessário (leitura nos bancos do FHIRSERVER, SELECT em HSFHIR_X0001_R.Rsrc, EXECUTE nos procedimentos de User.SQLvar), usa-o no MatchRoles do /fhir/api no lugar de %All, remove Cors=\"true\" das rotas do Dispatch.cls e adiciona ao smoke (com o helper de login da entrada 2) as sondas de SQL injection e uma checagem de que uma origem estranha não recebe Access-Control-Allow-Origin."
+verify = "No CI o smoke passa com as três rotas do /fhir/api cheias, as sondas de injeção vazias e sem cabeçalho CORS para Origin: https://evil.example; no container, Security.Applications.Get(\"/fhir/api\") não contém %All."
+covers = ["S4"]
+after = [2]
+hitl = false
+risk = "medium"
+uncertainty = "O conjunto exato de privilégios SQL e de recursos de banco que os procedimentos precisam só aparece testando; um privilégio a menos devolve [] com 200, o que o smoke detecta."
+
+[[entry]]
+id = 4
+type = "story"
+title = "Dados FHIR exibidos sempre como texto"
+description = "Troca toda montagem de HTML com dados em myFHIR.js (item da lista com onclick inline na linha 133, tabelas de alergia, sinais vitais, laboratório e imunização, badges .html(), e os .append(JSON.stringify(bundle)) no #fhirdatasource nas linhas 162, 195, 230 e 275, que o jQuery interpreta como HTML) e em labresult.js (o <option> da linha 47; #fullName já usa .val()) por criação de elementos com .text()/textContent e listeners em vez de onclick, e adiciona ao e2e (com o login da entrada 2) um teste que cria via FHIR um paciente com nome <img src=x onerror=...> e um Observation com display malicioso, confere que aparecem como texto na lista, nos detalhes, nas tabelas e no modal sem disparar dialog, e apaga esses recursos ao final."
+verify = "No CI o novo teste e2e passa; trocar um .text() de volta por concatenação HTML num branch local faz o teste falhar."
+covers = ["S3"]
+after = [2]
+hitl = false
+risk = "medium"
+uncertainty = "Os recursos criados no teste precisam ser apagados mesmo se ele falhar (finally); o Patient malicioso precisa de identifier[2], name[0].given[0] e address[0].line[0], e o Observation de valueQuantity, senão o myFHIR.js (linhas 83 e 278) quebra antes de exibir algo, o que é bug do epic-robustez-fhir."
+
+[[entry]]
+id = 5
+type = "story"
+title = "Credenciais fora do .vscode"
+description = "Remove as senhas SYS de .vscode/settings.json (a extensão ObjectScript pede a senha quando o campo falta; a conexão SQLTools passa a askForPassword true) e confere com git grep que nenhum arquivo versionado guarda _SYSTEM/SYS como credencial."
+verify = "git grep -nE '\"password\"|SYS\"' -- . ':!_bmad-output' ':!_bmad' ':!.claude' não encontra credencial (o username _SYSTEM pode ficar); abrir o projeto no VS Code com o container no ar pede a senha e conecta."
+covers = ["S5"]
+after = [2]                 # a entrada 2 também edita .vscode/settings.json (link do portal)
+hitl = true                 # uma pessoa confere no VS Code que o prompt de senha conecta
+risk = "low"
+uncertainty = "Nenhuma conhecida."
+
+[[entry]]
+id = 6
+type = "story"
+title = "Tratamento do SSN na tela"
+description = "Mostra o SSN mascarado (***-**-1234) na tela de detalhes, com um botão que revela o valor para ler ou editar (decisão do usuário, 2026-10-05); o update do myFHIR.js grava o valor real, nunca a máscara; e o e2e, com o login da entrada 2, cobre máscara, revelar e salvar."
+verify = "O e2e prova que o SSN abre mascarado, que revelar mostra o valor e que salvar sem revelar não grava a máscara no FHIR."
+covers = ["S6"]
+after = [4]                 # ambos mexem no myFHIR.js e no e2e
+hitl = false
+risk = "low"
+uncertainty = "O SSN ainda vem de identifier[2]; buscar por system é do epic-robustez-fhir, então a entrada mantém o índice atual."
+
+[[entry]]
+id = 7
+type = "story"
+title = "Refactor sweep"
+description = "Limpeza deixada para depois pelas entradas 1 a 6, com escopo definido ao começar, a partir dos planos e das revisões; só limpeza."
+verify = "O CI segue verde e cada item de limpeza do plano está resolvido ou explicitamente adiado."
+covers = ["S1", "S2", "S3", "S4", "S5", "S6"]
+after = [1, 2, 3, 4, 5, 6]
+hitl = false
+risk = "low"
+uncertainty = "O escopo só é conhecido ao fim das entradas anteriores."

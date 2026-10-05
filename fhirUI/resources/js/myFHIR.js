@@ -3,15 +3,13 @@ $(document).ready(function () {
 
     var objPatient = "";
 
+    // Login page of the portal; the IRIS session cookie authenticates /fhir/r4 and /fhir/api
+    const entryPage = 'diashenrique.fhir.portal.Home.cls';
+    const redirectKey = 'fhirPortalLoginRedirect';
+
     // Instantiate a new FHIR client
     var client = fhir({
         baseUrl: '/fhir/r4',
-
-        // Demo user created by iris.script: the FHIR server rejects unauthenticated requests
-        auth: {
-            user: 'fhirportal',
-            pass: 'fhirportal'
-        },
 
         headers: {
             'Accept': 'application/fhir+json',
@@ -126,6 +124,7 @@ $(document).ready(function () {
                 _sort: '-_lastUpdated'
             }
         }).then((res) => {
+            sessionStorage.removeItem(redirectKey);
             const bundle = res.data;
             bundle.entry.forEach((patient) => {
                 const patientId = patient.resource.id;
@@ -135,6 +134,20 @@ $(document).ready(function () {
             });
         })
         .catch((err) => {
+            // No session (logged out or expired): the FHIR endpoint answers 401 or 404.
+            // The jQuery adapter of fhir.js rejects with { error: jqXHR }, so the status is on err.error.
+            const status = err.error && err.error.status;
+            if (status === 401 || status === 404) {
+                // Redirect once: a refusal right after a redirect means the session is fine but the
+                // FHIR endpoint refuses it (configuration), and redirecting again would loop forever
+                if (!sessionStorage.getItem(redirectKey)) {
+                    sessionStorage.setItem(redirectKey, '1');
+                    window.location.href = entryPage;
+                    return;
+                }
+                sessionStorage.removeItem(redirectKey);
+                toastr.error('The FHIR server refused the request (HTTP ' + status + '). Check the /fhir/r4 configuration.');
+            }
             // Error responses
             if (err.status) {
                 console.log(err);

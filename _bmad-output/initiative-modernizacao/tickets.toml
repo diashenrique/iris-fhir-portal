@@ -21,7 +21,7 @@ id = 3
 slug = "epic-robustez-fhir"
 title = "Prontuário que não quebra com dados FHIR reais"
 covers = ["R3"]
-after = [{ epic = 1, needs = "harness e2e para os casos de borda" }]
+after = [{ epic = 1, needs = "harness e2e para os casos de borda" }, { epic = 2, needs = "myFHIR.js reescrito sem HTML concatenado e Dispatch.cls com papel mínimo, que este épico volta a editar" }]
 description = "SSN por identifier.system em vez de identifier[2]; checagens de name/address/entry/valueQuantity; paginação via link[next]; Chart.destroy(); erros visíveis (toast) e Dispatch respondendo 4xx/5xx; spike: FHIR SQL Builder ou JSON_TABLE no lugar de GetJSON/GetProp/GetAtJSON, sem perder o valor didático do artigo 4."
 
 [[epic]]

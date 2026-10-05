@@ -4,26 +4,54 @@
 # Needs only curl, grep and sed. Exits non-zero when any check fails.
 
 BASE_URL="${BASE_URL:-http://localhost:32783}"
-FHIR_AUTH="fhirportal:fhirportal"
+ENTRY="$BASE_URL/fhir/portal/diashenrique.fhir.portal.Home.cls"
 failures=0
+jar=$(mktemp)
+page=$(mktemp)
+trap 'rm -f "$jar" "$page"' EXIT
 
 pass() { echo "PASS  $1"; }
 fail() { echo "FAIL  $1"; failures=$((failures + 1)); }
 
 http_code() { curl -s --max-time 30 -o /dev/null -w '%{http_code}' "$@"; }
+# Calls with the session cookie of the login below
+session() { curl -s --max-time 30 -b "$jar" -c "$jar" "$@"; }
+session_code() { session -o /dev/null -w '%{http_code}' "$@"; }
+
+# /fhir/r4 refuses anonymous calls with 401 or 404 (no unauthenticated access on the web app); /fhir/api answers 401
+denied() { [ "$2" = "401" ] || [ "$2" = "404" ] && pass "$1 is denied ($2)" || fail "$1 is denied (got $2)"; }
 
 # Dispatch answers [] with HTTP 200 when its SQL fails, so the API checks look at the content
 non_empty_array() { [[ "$1" == "[{"* ]]; }
 
-# FHIR server
-[ "$(http_code "$BASE_URL/fhir/r4/metadata")" = "200" ] && pass "FHIR metadata answers 200" || fail "FHIR metadata answers 200"
-[ "$(http_code -H 'Accept: application/fhir+json' "$BASE_URL/fhir/r4/Patient")" = "401" ] \
-  && pass "FHIR Patient search without credentials answers 401" || fail "FHIR Patient search without credentials answers 401"
+# Login through the IRIS login page of the portal; the session cookie then authenticates
+# the pages, /fhir/r4 and /fhir/api (one GroupById)
+login() {
+  curl -s --max-time 30 -c "$jar" -b "$jar" -o "$page" "$ENTRY"
+  local token
+  token=$(grep -o 'name="IRISSessionToken" value="[^"]*"' "$page" | sed 's/.*value="//; s/"$//')
+  [ -n "$token" ] || return 1
+  [ "$(session_code --data-urlencode "IRISSessionToken=$token" --data-urlencode "IRISUsername=${PORTAL_USER:-fhirportal}" \
+    --data-urlencode "IRISPassword=${PORTAL_PASSWORD:-fhirportal}" --data-urlencode "IRISLogin=Login" "$ENTRY")" = "302" ]
+}
 
-patients=$(curl -s --max-time 30 -u "$FHIR_AUTH" -H 'Accept: application/fhir+json' \
-  "$BASE_URL/fhir/r4/Patient?_count=100&_elements=id")
+# Without a session
+curl -s --max-time 30 -o "$page" "$ENTRY"
+grep -q 'name="IRISUsername"' "$page" && pass "Portal entry asks for login" || fail "Portal entry asks for login"
+[ "$(http_code "$BASE_URL/fhir/portal/patientlist.html")" = "404" ] \
+  && pass "Page patientlist.html without login answers 404" || fail "Page patientlist.html without login answers 404"
+denied "FHIR Patient search without login" "$(http_code -H 'Accept: application/fhir+json' "$BASE_URL/fhir/r4/Patient")"
+[ "$(http_code "$BASE_URL/fhir/api/laboptions/1")" = "401" ] && pass "REST /fhir/api without login answers 401" || fail "REST /fhir/api without login answers 401"
+[ "$(http_code "$BASE_URL/csp/user/fhirUI/patientlist.html")" = "404" ] \
+  && pass "Old anonymous /csp/user/fhirUI is gone" || fail "Old anonymous /csp/user/fhirUI is gone"
+
+if login; then pass "Login as demo user"; else fail "Login as demo user"; fi
+
+# FHIR server, with the session
+[ "$(session_code "$BASE_URL/fhir/r4/metadata")" = "200" ] && pass "FHIR metadata answers 200" || fail "FHIR metadata answers 200"
+patients=$(session -H 'Accept: application/fhir+json' "$BASE_URL/fhir/r4/Patient?_count=100&_elements=id")
 total=$(echo "$patients" | grep -o '"total":[0-9]*' | head -1 | cut -d: -f2)
-[ "${total:-0}" -gt 0 ] && pass "FHIR Patient search as demo user returns $total patients" || fail "FHIR Patient search as demo user returns patients"
+[ "${total:-0}" -gt 0 ] && pass "FHIR Patient search returns $total patients" || fail "FHIR Patient search returns patients"
 
 patient_ids=$(echo "$patients" | grep -o '"fullUrl":"[^"]*/Patient/[^"]*"' | sed 's#.*/Patient/##; s#"$##')
 first_id=$(echo "$patient_ids" | head -1)
@@ -31,7 +59,7 @@ first_id=$(echo "$patient_ids" | head -1)
 if [ -z "$first_id" ]; then
   fail "REST /fhir/api/patient returns the patient (no patient id to test)"
 else
-  body=$(curl -s --max-time 30 "$BASE_URL/fhir/api/patient/$first_id")
+  body=$(session "$BASE_URL/fhir/api/patient/$first_id")
   non_empty_array "$body" && [[ "$body" == *'"name":'* ]] \
     && pass "REST /fhir/api/patient/$first_id returns the patient" || fail "REST /fhir/api/patient/$first_id returns the patient"
 fi
@@ -41,7 +69,7 @@ fi
 lab_patient=""
 lab_options=""
 for id in $patient_ids; do
-  lab_options=$(curl -s --max-time 10 "$BASE_URL/fhir/api/laboptions/$id") || break
+  lab_options=$(session --max-time 10 "$BASE_URL/fhir/api/laboptions/$id") || break
   if non_empty_array "$lab_options"; then
     lab_patient=$id
     break
@@ -55,15 +83,20 @@ else
   pass "REST /fhir/api/laboptions/$lab_patient returns tests"
 
   code=$(echo "$lab_options" | grep -o '"code":"[^"]*"' | head -1 | cut -d'"' -f4)
-  body=$(curl -s --max-time 30 "$BASE_URL/fhir/api/patient/$lab_patient/lab/$code")
+  body=$(session "$BASE_URL/fhir/api/patient/$lab_patient/lab/$code")
   non_empty_array "$body" \
     && pass "REST /fhir/api/patient/$lab_patient/lab/$code returns results" || fail "REST /fhir/api/patient/$lab_patient/lab/$code returns results"
 fi
 
 # Portal pages
-for page in patientlist.html labresult.html; do
-  [ "$(http_code "$BASE_URL/csp/user/fhirUI/$page")" = "200" ] && pass "Page $page answers 200" || fail "Page $page answers 200"
+for name in patientlist.html labresult.html; do
+  [ "$(session_code "$BASE_URL/fhir/portal/$name")" = "200" ] && pass "Page $name answers 200" || fail "Page $name answers 200"
 done
+
+# Logout ends the shared session
+session -o /dev/null "$ENTRY?IRISLogout=end"
+denied "FHIR Patient search after logout" "$(session_code -H 'Accept: application/fhir+json' "$BASE_URL/fhir/r4/Patient")"
+[ "$(session_code "$BASE_URL/fhir/api/laboptions/${first_id:-1}")" = "401" ] && pass "REST /fhir/api after logout answers 401" || fail "REST /fhir/api after logout answers 401"
 
 if [ "$failures" -gt 0 ]; then
   echo "$failures check(s) failed against $BASE_URL"

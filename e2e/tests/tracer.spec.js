@@ -1,16 +1,65 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
+const { ENTRY_PAGE, login } = require('./helpers');
 
-test('patient chart: list, details, update and lab chart', async ({ page, context, request }) => {
-  await page.goto('/csp/user/fhirUI/patientlist.html');
+test('without login the portal shows the login page and no patient data', async ({ page }) => {
+  await page.goto(ENTRY_PAGE);
+  await expect(page.locator('input[name=IRISUsername]')).toBeVisible();
+
+  const listPage = await page.request.get('/fhir/portal/patientlist.html');
+  expect(listPage.status()).toBe(404);
+  const fhir = await page.request.get('/fhir/r4/Patient', { headers: { Accept: 'application/fhir+json' } });
+  expect([401, 404]).toContain(fhir.status());
+  const api = await page.request.get('/fhir/api/laboptions/1');
+  expect(api.status()).toBe(401);
+});
+
+test('a wrong password stays on the login page', async ({ page }) => {
+  await page.goto(ENTRY_PAGE);
+  await page.fill('input[name=IRISUsername]', 'fhirportal');
+  await page.fill('input[name=IRISPassword]', 'wrong-password');
+  await Promise.all([
+    page.waitForResponse((r) => r.request().method() === 'POST' && r.url().includes('diashenrique.fhir.portal.Home.cls')),
+    page.click('input[name=IRISLogin]'),
+  ]);
+  await expect(page.getByText('Access Denied')).toBeVisible();
+  await expect(page.locator('input[name=IRISUsername]')).toBeVisible();
+  await expect(page).not.toHaveURL(/patientlist.html/);
+});
+
+test('a page kept open after the session ends sends the browser back to the login', async ({ page }) => {
+  // The server sends the static files with a one-hour Expires, so a browser can show the list
+  // from its cache after the session is gone. Keep what the logged-in session received and
+  // serve it again after logout to reproduce that.
+  const cached = new Map();
+  page.on('response', async (r) => {
+    const url = r.url();
+    if (url.includes('/fhir/portal/') && !url.includes('.cls') && r.ok()) {
+      cached.set(url, { body: await r.body(), headers: r.headers() });
+    }
+  });
+  await login(page);
+
+  await page.request.get(`${ENTRY_PAGE}?IRISLogout=end`);
+  await page.route('**/fhir/portal/**', (route) => {
+    const hit = cached.get(route.request().url());
+    return hit ? route.fulfill({ body: hit.body, headers: hit.headers }) : route.continue();
+  });
+
+  await page.goto('/fhir/portal/patientlist.html');
+  await expect(page.locator('input[name=IRISUsername]')).toBeVisible();
+});
+
+test('patient chart: login, list, details, update, lab chart and logout', async ({ page, context }) => {
+  await login(page);
 
   const items = page.locator('#listgroup .list-group-item');
-  await expect(items.first()).toBeVisible();
 
-  // Ids change on every build: use the first patient that has laboratory results
+  // Ids change on every build: use the first patient that has laboratory results.
+  // page.request carries the session cookie of the login.
   let patientId;
   for (const id of await items.evaluateAll((els) => els.map((el) => el.id))) {
-    const options = await (await request.get(`/fhir/api/laboptions/${id}`)).json();
+    const options = await (await page.request.get(`/fhir/api/laboptions/${id}`)).json();
     if (options.length > 0) {
       patientId = id;
       break;
@@ -52,18 +101,17 @@ test('patient chart: list, details, update and lab chart', async ({ page, contex
     await expect(city).toHaveValue(editedCity);
   } finally {
     // Restore through the FHIR API so a failed assertion above cannot leave test data behind
-    const auth = { Authorization: `Basic ${Buffer.from('fhirportal:fhirportal').toString('base64')}` };
     const url = `/fhir/r4/Patient/${patientId}`;
-    const patient = await (await request.get(url, { headers: { ...auth, Accept: 'application/fhir+json' } })).json();
+    const patient = await (await page.request.get(url, { headers: { Accept: 'application/fhir+json' } })).json();
     patient.address[0].city = originalCity;
-    const restored = await request.put(url, {
-      headers: { ...auth, 'Content-Type': 'application/fhir+json' },
+    const restored = await page.request.put(url, {
+      headers: { 'Content-Type': 'application/fhir+json' },
       data: JSON.stringify(patient),
     });
     expect(restored.ok(), 'restore the original city').toBeTruthy();
   }
 
-  // Lab chart opens in a new tab
+  // Lab chart opens in a new tab of the same session
   const [labPage] = await Promise.all([
     context.waitForEvent('page'),
     page.locator('#iconChart a').click(),
@@ -82,4 +130,10 @@ test('patient chart: list, details, update and lab chart', async ({ page, contex
       return chart ? chart.data.datasets[0].data.length : 0;
     }))
     .toBeGreaterThan(0);
+
+  // Logout ends the session for the pages and the APIs
+  await page.locator('#logout').click();
+  await expect(page.locator('input[name=IRISUsername]')).toBeVisible();
+  const afterLogout = await page.request.get(`/fhir/api/laboptions/${patientId}`);
+  expect(afterLogout.status()).toBe(401);
 });

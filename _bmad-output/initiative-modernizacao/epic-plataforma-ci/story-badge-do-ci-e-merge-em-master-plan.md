@@ -3,7 +3,7 @@ title: 'Badge do CI e merge em master'
 type: 'chore'
 ticket: '7'
 created: '2026-10-05'
-status: 'built'
+status: done
 baseline_revision: 'b3153aa59afd8149abe79aed0e871a2377a180bd'
 route: 'oneshot'
 route_source: 'auto'

@@ -23,7 +23,7 @@ $ docker compose up -d
 
 The image is built on `intersystems/irishealth-community:latest-cd` (InterSystems IRIS for Health 2026.2), the same release channel used by [sentai-task](https://github.com/musketeers-br/sentai-task). The FHIR R4 server uses the JsonAdvSQL storage strategy, so its SQL schemas are `HSFHIR_X0001_R` and `HSFHIR_X0001_S`.
 
-The FHIR server no longer accepts anonymous requests: the portal signs in as the demo user `fhirportal` / `fhirportal` (no roles), created during the build. Do not expose this container outside your machine.
+The portal requires a login. Open http://localhost:32783/fhir/portal/diashenrique.fhir.portal.Home.cls and sign in as the demo user `fhirportal` / `fhirportal` (no roles), created during the build. One IRIS session then covers the pages, the FHIR endpoint `/fhir/r4` and the REST API `/fhir/api`; the Logout link at the top ends it. Do not expose this container outside your machine.
 
 ## Checking your Docker installation
 
@@ -33,7 +33,7 @@ CI runs these checks on every pull request and push to master. To run them again
 $ bash scripts/smoke.sh
 ```
 
-checks the FHIR server, the `/fhir/api` REST routes and both pages. The browser test needs [Node.js](https://nodejs.org/) 22 or later and walks through the patient list, details, an update and the lab chart. It changes one patient's city and restores it at the end:
+signs in and checks the FHIR server, the `/fhir/api` REST routes, both pages, and that nothing answers without a login or after logout. The browser test needs [Node.js](https://nodejs.org/) 22 or later and signs in and walks through the patient list, details, an update, the lab chart and logout. It changes one patient's city and restores it at the end:
 
 ```
 $ cd e2e
@@ -55,7 +55,7 @@ your-server:port/fhir/portal/patientlist.html
 
 ## Testing the FHIR Application
 
-Open URL http://localhost:32783/csp/user/fhirUI/patientlist.html
+Open URL http://localhost:32783/fhir/portal/diashenrique.fhir.portal.Home.cls and sign in as `fhirportal` / `fhirportal`.
 
 ![FHIR Portal](https://raw.githubusercontent.com/diashenrique/iris-fhir-portal/master/img/fhirPortal.png)
 
