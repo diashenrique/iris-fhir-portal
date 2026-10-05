@@ -7,6 +7,12 @@ $(document).ready(function () {
     var client = fhir({
         baseUrl: '/fhir/r4',
 
+        // Demo user created by iris.script: the FHIR server rejects unauthenticated requests
+        auth: {
+            user: 'fhirportal',
+            pass: 'fhirportal'
+        },
+
         headers: {
             'Accept': 'application/fhir+json',
             'Content-Type': 'application/fhir+json;charset=UTF-8'

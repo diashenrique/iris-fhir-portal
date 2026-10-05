@@ -1,0 +1,185 @@
+{
+  "version": 1,
+  "skills": {
+    "bmad": {
+      "source": "bmad-code-org/BMAD-METHOD",
+      "sourceType": "github",
+      "skillPath": "skills/bmad/SKILL.md",
+      "computedHash": "5bc23cf125a65f6bd98fe5dbf8d8d9a63c734c5949a7748d37ae6c925b4a892b"
+    },
+    "bmad-advanced-elicitation": {
+      "source": "bmad-code-org/BMAD-METHOD",
+      "sourceType": "github",
+      "skillPath": "skills/bmad-advanced-elicitation/SKILL.md",
+      "computedHash": "43deec65852d36a6dff9f22f10b41d1f6d8e704090d0f3fd01dd8299e15de68c"
+    },
+    "bmad-agent-analyst": {
+      "source": "bmad-code-org/BMAD-METHOD",
+      "sourceType": "github",
+      "skillPath": "skills/bmad-agent-analyst/SKILL.md",
+      "computedHash": "619a29327cb3e8a89aa984feee79b3be516a887d53353abfdb03b03006a351f9"
+    },
+    "bmad-agent-architect": {
+      "source": "bmad-code-org/BMAD-METHOD",
+      "sourceType": "github",
+      "skillPath": "skills/bmad-agent-architect/SKILL.md",
+      "computedHash": "4cdb4c30428a1ac89ea21d44b0b54f872cc1dcb2def9751a7e05e58145778802"
+    },
+    "bmad-agent-dev": {
+      "source": "bmad-code-org/BMAD-METHOD",
+      "sourceType": "github",
+      "skillPath": "skills/bmad-agent-dev/SKILL.md",
+      "computedHash": "626d84c8027672ae89b1059da61c848ede9835403133bb688eb6308b4f20e2c3"
+    },
+    "bmad-agent-pm": {
+      "source": "bmad-code-org/BMAD-METHOD",
+      "sourceType": "github",
+      "skillPath": "skills/bmad-agent-pm/SKILL.md",
+      "computedHash": "7440d10f9137e2f4e814c05b8d79b056d099483eefc1f6367f58ffa355d8afa5"
+    },
+    "bmad-agent-ux-designer": {
+      "source": "bmad-code-org/BMAD-METHOD",
+      "sourceType": "github",
+      "skillPath": "skills/bmad-agent-ux-designer/SKILL.md",
+      "computedHash": "873afe4ebd5cbdfa6f15423bf3ea44e015fcdfda6b09915f12b4b2e73dc0ef0b"
+    },
+    "bmad-architecture": {
+      "source": "bmad-code-org/BMAD-METHOD",
+      "sourceType": "github",
+      "skillPath": "skills/bmad-architecture/SKILL.md",
+      "computedHash": "71521732183112e82b89330ad148260dab8bb0167b40cea22ac45ae77c1b68cf"
+    },
+    "bmad-brainstorming": {
+      "source": "bmad-code-org/BMAD-METHOD",
+      "sourceType": "github",
+      "skillPath": "skills/bmad-brainstorming/SKILL.md",
+      "computedHash": "2340cb91cdac9cf40b3f02cc3dab60e43a488428a74d75120f19f2df8a17d7ff"
+    },
+    "bmad-build": {
+      "source": "bmad-code-org/BMAD-METHOD",
+      "sourceType": "github",
+      "skillPath": "skills/bmad-build/SKILL.md",
+      "computedHash": "dcf27330d03105d748f1c2b2979ca134fe6022ae67d7deb0b238e123f68ceabb"
+    },
+    "bmad-build-auto": {
+      "source": "bmad-code-org/BMAD-METHOD",
+      "sourceType": "github",
+      "skillPath": "skills/bmad-build-auto/SKILL.md",
+      "computedHash": "cf1da4e7ecf5b801539e0b855cb8a8f98b8e99a9f47b2a30dccee6297de60fdd"
+    },
+    "bmad-code-review": {
+      "source": "bmad-code-org/BMAD-METHOD",
+      "sourceType": "github",
+      "skillPath": "skills/bmad-code-review/SKILL.md",
+      "computedHash": "479350928de30d82fca3309a4ddfba785e60914d505403ae0dbea7b1bc858b47"
+    },
+    "bmad-correct-course": {
+      "source": "bmad-code-org/BMAD-METHOD",
+      "sourceType": "github",
+      "skillPath": "skills/bmad-correct-course/SKILL.md",
+      "computedHash": "daaf25a34127d28c210b23c814c6fc0a5eeb0644ad7d75a79f635247ba533ac9"
+    },
+    "bmad-customize": {
+      "source": "bmad-code-org/BMAD-METHOD",
+      "sourceType": "github",
+      "skillPath": "skills/bmad-customize/SKILL.md",
+      "computedHash": "013cc7367705921eeb00b791b345fec95feb111a09dcd7c5f3ee72d04bbe9a18"
+    },
+    "bmad-deep-recon": {
+      "source": "bmad-code-org/BMAD-METHOD",
+      "sourceType": "github",
+      "skillPath": "skills/bmad-deep-recon/SKILL.md",
+      "computedHash": "3110fb0ec6f67665e28786ff91820c8206ae2971192d463f6b60d20ac314b2cb"
+    },
+    "bmad-forge-idea": {
+      "source": "bmad-code-org/BMAD-METHOD",
+      "sourceType": "github",
+      "skillPath": "skills/bmad-forge-idea/SKILL.md",
+      "computedHash": "8c8245c17c0775a0b1961ecdc5a10180952305209e07f2bae99a74767fa311ce"
+    },
+    "bmad-party-mode": {
+      "source": "bmad-code-org/BMAD-METHOD",
+      "sourceType": "github",
+      "skillPath": "skills/bmad-party-mode/SKILL.md",
+      "computedHash": "fedf519fbb1e91503051214290967e0d000ca8d4b9c4f6ff4ff8becb9d2e310d"
+    },
+    "bmad-prd": {
+      "source": "bmad-code-org/BMAD-METHOD",
+      "sourceType": "github",
+      "skillPath": "skills/bmad-prd/SKILL.md",
+      "computedHash": "f073c2aecea73cc2afd26be2a6ffb5eeefd2496f9dfbc6edb12798f702370e5a"
+    },
+    "bmad-prfaq": {
+      "source": "bmad-code-org/BMAD-METHOD",
+      "sourceType": "github",
+      "skillPath": "skills/bmad-prfaq/SKILL.md",
+      "computedHash": "78b189b536fd2a341f927bb41459faa3ce529830fc3aab336a48e40ac2fbc6c7"
+    },
+    "bmad-product-brief": {
+      "source": "bmad-code-org/BMAD-METHOD",
+      "sourceType": "github",
+      "skillPath": "skills/bmad-product-brief/SKILL.md",
+      "computedHash": "2719f43700ef0a83f3fe306bc4d4148e59733832165fedf4ba43263f03608d5f"
+    },
+    "bmad-project-context": {
+      "source": "bmad-code-org/BMAD-METHOD",
+      "sourceType": "github",
+      "skillPath": "skills/bmad-project-context/SKILL.md",
+      "computedHash": "28d9cb8e337899aa93aa06dc9f6a4754b2b090303a3fcbd03b63f3ebf92fa24a"
+    },
+    "bmad-qa-generate-e2e-tests": {
+      "source": "bmad-code-org/BMAD-METHOD",
+      "sourceType": "github",
+      "skillPath": "skills/bmad-qa-generate-e2e-tests/SKILL.md",
+      "computedHash": "1bd708d759f8559447f2af5a56075bb3459fdd458957bec5280061bc9c8d2862"
+    },
+    "bmad-retrospective": {
+      "source": "bmad-code-org/BMAD-METHOD",
+      "sourceType": "github",
+      "skillPath": "skills/bmad-retrospective/SKILL.md",
+      "computedHash": "628a1ad6c4219a09406c5e4d0653406fb3d3a86691d6769c19bbfcc377cd9c65"
+    },
+    "bmad-review": {
+      "source": "bmad-code-org/BMAD-METHOD",
+      "sourceType": "github",
+      "skillPath": "skills/bmad-review/SKILL.md",
+      "computedHash": "24428c28e2ac1d1f40f2419e4322c3d4a141c2c4e9131077e5f4550de2010d0c"
+    },
+    "bmad-spec": {
+      "source": "bmad-code-org/BMAD-METHOD",
+      "sourceType": "github",
+      "skillPath": "skills/bmad-spec/SKILL.md",
+      "computedHash": "2b4905b8a7cc3e98af4a5db80f432f11846e4376165673b2dea67c82ff43010b"
+    },
+    "bmad-ticket": {
+      "source": "bmad-code-org/BMAD-METHOD",
+      "sourceType": "github",
+      "skillPath": "skills/bmad-ticket/SKILL.md",
+      "computedHash": "04632484b6f994a772533c87859117cea72092536f89a509d6b5cf423e75b7f9"
+    },
+    "bmad-ux": {
+      "source": "bmad-code-org/BMAD-METHOD",
+      "sourceType": "github",
+      "skillPath": "skills/bmad-ux/SKILL.md",
+      "computedHash": "1933c4c15cd0b21e172df2a24b0ca6c632f43deedbef03afa903dcc590c00f79"
+    },
+    "bmad-walkthrough": {
+      "source": "bmad-code-org/BMAD-METHOD",
+      "sourceType": "github",
+      "skillPath": "skills/bmad-walkthrough/SKILL.md",
+      "computedHash": "6f6b0dabc6a4e63babfd63f35d1e2a72d78d8af390ea18f17999e265092d4b4d"
+    },
+    "bmod-core-tools": {
+      "source": "bmad-code-org/BMAD-METHOD",
+      "sourceType": "github",
+      "skillPath": "skills/bmod-core-tools/SKILL.md",
+      "computedHash": "eaaeb0a6858d9cf293b86c7b57460cfa55300fa1508bf2cee4ef0e4df8299d18"
+    },
+    "bmod-method": {
+      "source": "bmad-code-org/BMAD-METHOD",
+      "sourceType": "github",
+      "skillPath": "skills/bmod-method/SKILL.md",
+      "computedHash": "11ad8839c097293adbe700fb6c0fd378a6b25014b5c69ed953d778ecc8b914a6"
+    }
+  }
+}

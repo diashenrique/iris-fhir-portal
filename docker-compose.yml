@@ -1,4 +1,3 @@
-version: "3.3"
 services:
   iris:
     build:
@@ -6,11 +5,13 @@ services:
       dockerfile: Dockerfile
     restart: always
     command: --check-caps false
+    # The image's WORKDIR is the bind-mounted checkout below, which irisowner cannot write to;
+    # keep the runtime cwd off it so iris-main.log is writable.
+    working_dir: /home/irisowner
     ports:
       - 32782:1972
       - 32783:52773
-      - 32784:53773
     volumes:
       - ./fhirUI:/usr/irissys/csp/user/fhirUI
 #      - ~/iris.key:/usr/irissys/mgr/iris.key
-      - ./:/irisdev/app
+      - ./:/home/irisowner/dev
