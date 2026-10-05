@@ -1,0 +1,3 @@
+    // Spike 3.6: load Rest.cls into FHIRSERVER first, then run this in %SYS
+kill p set p("NameSpace")="FHIRSERVER",p("DispatchClass")="Spike.Rest",p("AutheEnabled")=32,p("MatchRoles")=":%HS_DB_FHIRSERVER:FHIRPortalAPI" w "spike app ",##class(Security.Applications).Create("/spike",.p),!
+halt

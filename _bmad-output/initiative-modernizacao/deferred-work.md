@@ -6,7 +6,13 @@
   evidence: `fhirUI/jqFhir.js` linha 81 (`ret.reject({error: err, data: err, config: args})`); o redirect de sessão da story 2.2 só funcionou depois de ler `err.error.status`, o que o e2e "page kept open" provou. É do epic-robustez-fhir (erros visíveis).
 - source_plan: `_bmad-output/initiative-modernizacao/epic-seguranca/story-fhir-api-com-papel-minimo-sem-cors-aberto-plan.md`
   summary: As sondas de SQL injection do smoke passam sempre que o `/fhir/api` responde `[]`, e o `Dispatch` responde `[]` com 200 também quando o SQL falha, então uma mudança que quebre a query em vez de vazar linhas não seria detectada.
-  evidence: Os três métodos do `Dispatch.cls` capturam a exceção, escrevem o array vazio e retornam `4789`. Quando o epic-robustez-fhir fizer o `Dispatch` responder 4xx/5xx em erro, as sondas passam a distinguir "sem resultado" de "erro".
+  evidence: Os três métodos do `Dispatch.cls` capturam a exceção, escrevem o array vazio e retornam `$$OK`. Quando o epic-robustez-fhir fizer o `Dispatch` responder 4xx/5xx em erro, as sondas passam a distinguir "sem resultado" de "erro".
 - source_plan: `_bmad-output/initiative-modernizacao/epic-seguranca/story-fhir-api-com-papel-minimo-sem-cors-aberto-plan.md`
   summary: A rota `<Route Url="/" Method="GET" Call="Test"/>` do `Dispatch.cls` aponta para um método que não existe, então `GET /fhir/api/` gera `<METHOD DOES NOT EXIST>`.
   evidence: Nenhum método `Test` na classe; a avaliação (§4 Correção funcional) já atribui isso ao epic-robustez-fhir.
+- source_plan: `_bmad-output/initiative-modernizacao/epic-robustez-fhir/spike-spike-consultas-do-dispatch-e-esquema-do-endpoint-plan.md`
+  summary: O papel `%HS_DB_FHIRSERVER`, que o `/fhir/api` recebe, permite SQL dinâmico de leitura e escrita nas tabelas FHIR (UPDATE e DELETE com SQLCODE 100); o papel mínimo só restringe de fato o EXECUTE das funções.
+  evidence: Rota `/spike/privileges` do `spike-consultas/Rest.cls`, rodando como `fhirportal` com `%HS_DB_FHIRSERVER,FHIRPortalAPI`. Hoje o código do `Dispatch` só lê e é parametrizado; endurecer pede SQL com checagem de privilégio ou um papel de banco próprio. Candidato ao epic-ipm-paridade, que declara os papéis no `module.xml`.
+- source_plan: `_bmad-output/initiative-modernizacao/epic-robustez-fhir/story-dispatch-com-esquema-do-endpoint-status-http-corretos-e-cons-plan.md`
+  summary: Os testes e2e que fazem login e não fazem logout deixam sessões do IRIS abertas por 15 minutos (Timeout 900); com rodadas repetidas, a instância Community chega a `<LICENSE LIMIT EXCEEDED>`.
+  evidence: Visto pelo implementador da 3.7 ao rodar smoke e e2e várias vezes (`iris session` falhou; `docker restart` liberou). Só o tracer faz logout. Para o sweep do epic-robustez-fhir (3.9): logout ao fim de cada teste (afterEach no helper) e Timeout menor no grupo de sessão, se fizer sentido.

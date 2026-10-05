@@ -28,13 +28,15 @@ ClassMethod GetAtJSON(json As %String, position As %Integer) As %String(MAXLEN="
 
     set dyna = [].%FromJSON(json)
     
-    set i = 0
+    set i = 0, key = "", result = "", found = 0
     set iterator = dyna.%GetIterator()
-    
+
     while iterator.%GetNext(.key, .result) {
-        quit:(i=position) 
+        if (i=position) { set found = 1  quit }
         do $Increment(i)
     }
+    // Empty array or position past its end
+    quit:'found ""
 
     Quit $s(result'="":$s(($classname(result)="%Library.DynamicObject")||($classname(result)="%Library.DynamicArray"):result.%ToJSON(),1:{}.%Set(key,result,dyna.%GetTypeOf(key)).%ToJSON()),1:"")
 }

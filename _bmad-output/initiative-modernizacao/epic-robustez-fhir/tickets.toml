@@ -1,0 +1,109 @@
+# Breakdown do epic-robustez-fhir, aprovado em 2026-10-05 sob autonomia total concedida pelo usuário. A ordem das tabelas é a ordem de build.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Tracer: paciente mínimo e paciente sem registros clínicos sem erro"
+description = "Cria em e2e/tests/helpers.js um helper de fixtures (createResource e cleanup que apaga tudo num finally, com a lógica que o xss.spec.js já usa) que as entradas 2, 3 e 5 reaproveitam (handoff), e faz o myFHIR.js abrir um Patient sem name, address, identifier, birthDate e gender (campos vazios, e o update só cria as estruturas preenchidas) e mostrar 'No records' nas quatro tabelas quando a busca vem sem entry."
+verify = "Um e2e novo (edge-cases.spec.js) cria um paciente mínimo sem registros clínicos, abre os detalhes sem erro de console, vê 'No records' nas quatro tabelas, salva uma cidade e confere no FHIR que só address foi criado; os testes anteriores seguem verdes."
+covers = ["B2", "B3"]
+after = ["1.3", "2.6"]       # harness e2e (1.3) e o último myFHIR.js/e2e do epic-seguranca (2.6)
+hitl = false
+risk = "medium"
+uncertainty = "O xss.spec.js passa a usar o helper novo para não duplicar a limpeza; o list title de um paciente sem name precisa de um texto (ex.: '(no name)')."
+
+[[entry]]
+id = 6
+type = "spike"
+title = "Spike: consultas do Dispatch e esquema do endpoint"
+description = "Mede no IRIS 2026.2 três caminhos para as consultas do Dispatch (manter GetJSON/GetProp/GetAtJSON, JSON_TABLE sobre HSFHIR_*_R.Rsrc, FHIR SQL Builder) em resultado, desempenho nas 3 rotas e legibilidade como exemplo do artigo 4, e descobre como obter o esquema SQL do endpoint /fhir/r4 sem fixar HSFHIR_X0001 (API da estratégia ou do ServiceConfig); a recomendação, com evidência, fica no plano para a entrada 7 (handoff)."
+verify = "O plano registra, para cada caminho, as três consultas, os resultados iguais aos de hoje para um paciente com exames e o tempo medido, e uma chamada ObjectScript que devolve o esquema do endpoint, testada no container rodando como fhirportal com os papéis do /fhir/api (%HS_DB_FHIRSERVER e FHIRPortalAPI), não como _SYSTEM."
+covers = ["B8"]
+after = []
+hitl = false
+risk = "medium"
+uncertainty = "O FHIR SQL Builder pode exigir configuração manual de projeção que não cabe num exemplo didático."
+
+[[entry]]
+id = 2
+type = "story"
+title = "SSN pelo system us-ssn, não por posição"
+description = "Troca identifier[2] por uma busca do identifier com system http://hl7.org/fhir/sid/us-ssn na leitura, na máscara do modal e no update (criando o identifier quando o paciente não tem e um valor é salvo), mantendo a máscara e o Show da story 2.6; o e2e cobre um paciente com o SSN fora da posição 2 e um sem SSN que recebe um."
+verify = "O e2e cria um paciente com o identifier SSN na posição 0 e outro sem SSN: o primeiro mostra a máscara certa e salva sem mexer nos outros identifiers; no segundo, revelar, digitar e salvar cria o identifier com o system us-ssn; o ssn.spec.js segue verde."
+covers = ["B1"]
+after = [1]
+hitl = false
+risk = "medium"
+uncertainty = "Nenhuma conhecida."
+
+[[entry]]
+id = 3
+type = "story"
+title = "Observations sem valueQuantity nas tabelas"
+description = "As tabelas de sinais vitais e de laboratório mostram o valor de valueQuantity, valueCodeableConcept (text ou coding[0].display), valueString ou os components, com unidade só quando existe, em vez de quebrar; usa o helper de fixtures da entrada 1."
+verify = "O e2e cria Observations de laboratório e de sinal vital com valueCodeableConcept, valueString, com component sem value[x] e sem valor, e vê cada uma na tabela com o valor certo ou vazio, sem erro de console."
+covers = ["B5"]
+after = [2]                 # mesmo myFHIR.js
+hitl = false
+risk = "low"
+uncertainty = "Nenhuma conhecida."
+
+[[entry]]
+id = 4
+type = "story"
+title = "Paginação: lista e buscas clínicas seguem link[next]"
+description = "A lista de pacientes e as quatro buscas clínicas seguem o link next do Bundle (fhir.js nextPage ou fetch da URL do link com a sessão) até o fim e mostram todos os resultados; os badges continuam mostrando o total."
+verify = "O e2e força páginas pequenas reescrevendo a busca com page.route para _count=5 e confere que a lista mostra os 18+ pacientes e que uma tabela clínica com mais de 5 registros mostra todos."
+covers = ["B4"]
+after = [3]                 # mesmo myFHIR.js
+hitl = false
+risk = "medium"
+uncertainty = "Os links next do servidor usam a URL interna (http://localhost:32783 no container); com o mesmo host o cookie vale, mas é preciso conferir se a URL do link bate com a origem da página."
+
+[[entry]]
+id = 5
+type = "story"
+title = "Erros das buscas FHIR visíveis na lista e nos detalhes"
+description = "Todos os .catch do myFHIR.js leem err.error.status (o adapter jQuery do fhir.js) e mostram um toast pelo helper showError(what, status) com a mensagem 'Could not load <what> (HTTP <status>)', formato que a entrada 8 repete no labresult.js (handoff), mantendo o redirect de sessão da story 2.2 para 401/404 na lista; o e2e força erros com page.route."
+verify = "O e2e responde 500 numa busca de imunização e numa de paciente via page.route e vê o toast de erro correspondente, sem redirect; os testes de sessão seguem verdes."
+covers = ["B7"]
+after = [4]                 # mesmo myFHIR.js
+hitl = false
+risk = "low"
+uncertainty = "Nenhuma conhecida."
+
+[[entry]]
+id = 7
+type = "story"
+title = "Dispatch com esquema do endpoint, status HTTP corretos e consultas do spike"
+description = "Reescreve o Dispatch.cls segundo a recomendação da entrada 6: o esquema vem do endpoint /fhir/r4, os parâmetros são validados (400 para id ou código inválido), falhas de SQL respondem 500 com JSON {error}, a rota / sem método sai; o getPatient aceita um Patient sem name (devolve name vazio em vez de falhar); os GRANTs do papel FHIRPortalAPI no iris.script também usam o esquema resolvido do endpoint e só o que a nova abordagem precisar (o epic-ipm-paridade reaproveita essa resolução no module.xml, handoff); o smoke passa a exigir que as sondas de injeção respondam 400 ou 200 com [], nunca 5xx nem linhas, e ganha uma checagem de 400 para id inválido."
+verify = "No CI o smoke passa com as rotas cheias, as sondas de injeção em 400 ou 200 [], 400 para /fhir/api/patient/abc e git grep HSFHIR_X0001 -- src iris.script vazio; trocar o nome da tabela por um inexistente no Dispatch faz o smoke falhar com 500."
+covers = ["B7", "B8"]
+after = [6, "1.2", "2.3"]       # spike; smoke (1.2); papel mínimo e Dispatch atual (2.3)
+hitl = false
+risk = "high"
+uncertainty = "Se a abordagem mudar, os GRANTs do papel FHIRPortalAPI no iris.script mudam junto."
+
+[[entry]]
+id = 8
+type = "story"
+title = "Página do gráfico: um gráfico por vez, erros visíveis e sem código morto"
+description = "O labresult.js destrói o gráfico anterior antes de criar outro, mostra toast 'Could not load <what> (HTTP <status>)', o formato da entrada 5, quando /fhir/api responde 4xx/5xx (que a entrada 7 passa a devolver), e plota só valores numéricos (decisão: Observations sem valueQuantity ficam fora do gráfico) e perde o jsonfile de exemplo; o e2e troca de exame duas vezes e força um 500."
+verify = "O e2e escolhe dois exames seguidos e confere que existe uma só instância em Chart.instances; com page.route devolvendo 500 em /fhir/api/patient/:id/lab/:code, aparece o toast de erro."
+covers = ["B6", "B7"]
+after = [7]
+hitl = false
+risk = "low"
+uncertainty = "Nenhuma conhecida."
+
+[[entry]]
+id = 9
+type = "story"
+title = "Refactor sweep"
+description = "Limpeza deixada para depois pelas entradas 1 a 8, com escopo definido ao começar, a partir dos planos e das revisões; só limpeza."
+verify = "O CI segue verde, cada item de limpeza do plano está resolvido ou explicitamente adiado, e o run de master depois do merge final está verde (Done when 5)."
+covers = ["B1", "B2", "B3", "B4", "B5", "B6", "B7", "B8"]
+after = [1, 2, 3, 4, 5, 6, 7, 8]
+hitl = false
+risk = "low"
+uncertainty = "O escopo só é conhecido ao fim das entradas anteriores."

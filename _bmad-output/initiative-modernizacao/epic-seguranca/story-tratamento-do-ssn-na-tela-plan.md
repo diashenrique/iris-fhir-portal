@@ -3,7 +3,7 @@ title: 'Tratamento do SSN na tela'
 type: 'feature'
 ticket: '6'
 created: '2026-10-05'
-status: 'built'
+status: done
 baseline_revision: '46a3fb5d867335542a133dbb82f03435c1ca9a4a'
 route: 'oneshot'
 route_source: 'auto'
