@@ -3,7 +3,7 @@ title: 'E2E Playwright do tracer: lista, detalhe, edição e gráfico'
 type: 'chore'
 ticket: '3'
 created: '2026-10-05'
-status: 'built'
+status: done
 baseline_revision: '815d3dc4e26f5ce2e714b66cd406d4969d742121'
 route: 'oneshot'
 route_source: 'auto'

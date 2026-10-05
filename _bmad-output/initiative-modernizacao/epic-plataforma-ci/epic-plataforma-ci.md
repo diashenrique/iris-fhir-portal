@@ -6,6 +6,7 @@ covers: [R1]
 after: []
 assignee: ""
 risk: medium
+status: done
 ---
 
 # Base de plataforma e CI no IRIS 2026.2
@@ -52,6 +53,8 @@ A infraestrutura do repositório: `.github/workflows`, `Dockerfile`, `docker-com
 - Unknown: se o runner `ubuntu-latest` tem disco suficiente para a imagem (cerca de 6 GB) mais as camadas do build; a entrada 1 descobre isso e libera espaço no runner se for preciso.
 - Tracer bullet: entrada 1, um workflow que builda a imagem e prova que `/fhir/r4/metadata` responde 200 dentro do runner; ela atravessa Actions → BuildKit → IRIS → HTTP.
 - Sequenciamento: 2 e 3 estendem o `ci.yml` da entrada 1 e rodam em sequência (mesmo arquivo). A 4 não depende de nada e pode rodar a qualquer momento. A 5 roda depois da 2, porque é verificada pelo build e pelo smoke no CI. Depois vêm o sweep (6) e o merge (7).
+- Decision: o CI roda em `pull_request`, em `push` só para `master` e em `workflow_dispatch`, em vez de todo push. O motivo é evitar duas builds de cerca de 6 GB por push com PR aberto (revisão da story 1.1, 2026-10-05).
+- Decision: o Done when 2 foi provado por testes de mutação locais, com os mesmos comandos do CI: `iris.script` com carga vazia deixou a checagem de dados vermelha; sem o bloco `auth` no `myFHIR.js` (depois de reiniciar o container, por causa do cache gzip), o e2e ficou vermelho.
 - Decision: remover o workflow objectscript-quality em vez de fixar o script (usuário, 2026-10-05).
 - Decision: breakdown de 7 entradas aprovado (usuário, 2026-10-05).
 - Decision: o merge em `master` e o badge ficam numa entrada separada do sweep, que só faz limpeza (validação, 2026-10-05).

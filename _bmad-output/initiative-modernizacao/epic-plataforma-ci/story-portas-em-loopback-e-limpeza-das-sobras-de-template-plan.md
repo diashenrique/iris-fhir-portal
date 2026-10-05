@@ -3,7 +3,7 @@ title: 'Portas em loopback e limpeza das sobras de template'
 type: 'chore'
 ticket: '5'
 created: '2026-10-05'
-status: 'built'
+status: done
 baseline_revision: '15c5d2325e3e6667bb9419bd89e967e93bf01fb5'
 route: 'oneshot'
 route_source: 'auto'

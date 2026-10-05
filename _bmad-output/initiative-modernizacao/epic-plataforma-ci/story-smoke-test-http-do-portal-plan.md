@@ -3,7 +3,7 @@ title: 'Smoke test HTTP do portal'
 type: 'chore'
 ticket: '2'
 created: '2026-10-05'
-status: 'built'
+status: done
 baseline_revision: '35812f42c906edef2622de284b055eac7ae57333'
 route: 'oneshot'
 route_source: 'auto'
