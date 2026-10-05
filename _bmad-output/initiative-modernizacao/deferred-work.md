@@ -10,3 +10,6 @@
 - source_plan: `_bmad-output/initiative-modernizacao/epic-seguranca/story-fhir-api-com-papel-minimo-sem-cors-aberto-plan.md`
   summary: A rota `<Route Url="/" Method="GET" Call="Test"/>` do `Dispatch.cls` aponta para um método que não existe, então `GET /fhir/api/` gera `<METHOD DOES NOT EXIST>`.
   evidence: Nenhum método `Test` na classe; a avaliação (§4 Correção funcional) já atribui isso ao epic-robustez-fhir.
+- source_plan: `_bmad-output/initiative-modernizacao/epic-robustez-fhir/spike-spike-consultas-do-dispatch-e-esquema-do-endpoint-plan.md`
+  summary: O papel `%HS_DB_FHIRSERVER`, que o `/fhir/api` recebe, permite SQL dinâmico de leitura e escrita nas tabelas FHIR (UPDATE e DELETE com SQLCODE 100); o papel mínimo só restringe de fato o EXECUTE das funções.
+  evidence: Rota `/spike/privileges` do `spike-consultas/Rest.cls`, rodando como `fhirportal` com `%HS_DB_FHIRSERVER,FHIRPortalAPI`. Hoje o código do `Dispatch` só lê e é parametrizado; endurecer pede SQL com checagem de privilégio ou um papel de banco próprio. Candidato ao epic-ipm-paridade, que declara os papéis no `module.xml`.
