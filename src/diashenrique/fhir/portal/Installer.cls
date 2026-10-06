@@ -7,8 +7,11 @@ Class diashenrique.fhir.portal.Installer
 /// FHIR endpoint the portal reads (the same as Dispatch)
 Parameter FHIRENDPOINT = "/fhir/r4";
 
-/// Role of /fhir/api: EXECUTE on the JSON SQL functions of User.SQLvar
+/// Role of /fhir/api: SELECT on the endpoint's resource and search schemas and EXECUTE on the JSON SQL functions
 Parameter APIROLE = "FHIRPortalAPI";
+
+/// Role of /fhir/api: read-only access to the FHIR databases (the database role of the namespace gives read and write)
+Parameter READROLE = "FHIRPortalRead";
 
 /// One IRIS session shared by the portal pages, /fhir/api and the FHIR endpoint
 Parameter SESSIONGROUP = "fhirportal";
@@ -47,22 +50,41 @@ ClassMethod Setup(pPortalPath As %String = "", pDemoUser As %Boolean = 0) As %St
         If '$IsObject(strategy) || 'strategy.%IsA("HS.FHIRServer.Storage.JsonAdvSQL.InteractionsStrategy") {
             $$$ThrowStatus($$$ERROR($$$GeneralError, ..#FHIRENDPOINT_" must use the JsonAdvSQL storage strategy"))
         }
+        // The SQL schemas Dispatch reads (resources and search parameters), named by the endpoint, never hard-coded
+        Set grants = $ListBuild("SELECT ON SCHEMA "_$Piece(strategy.GetResourceTable("Patient"), "."),
+            "SELECT ON SCHEMA "_$Piece(strategy.GetSearchTable("Observation"), "."),
+            "EXECUTE ON SQLUser.GetJSON, SQLUser.GetProp, SQLUser.GetAtJSON")
         Set $Namespace = "%SYS"
         If pPortalPath = "" Set pPortalPath = $System.Util.InstallDirectory()_"csp/fhir/portal/"
         Set dbRole = "%HS_DB_"_namespace
 
         If '##class(Security.Roles).Exists(..#APIROLE) {
-            $$$ThrowOnError(##class(Security.Roles).Create(..#APIROLE, "JSON SQL functions of /fhir/api", "", ""))
+            $$$ThrowOnError(##class(Security.Roles).Create(..#APIROLE, "SQL privileges of /fhir/api", "", ""))
+        }
+        // The databases of the namespace's database role, each with R instead of RW
+        $$$ThrowOnError(##class(Security.Roles).Get(dbRole, .roleProps))
+        Set readResources = ""
+        For i = 1:1:$Length(roleProps("Resources"), ",") {
+            Set resource = $Piece($Piece(roleProps("Resources"), ",", i), ":")
+            Continue:$Extract(resource, 1, 4)'="%DB_"
+            Set readResources = readResources_$Select(readResources="":"", 1:",")_resource_":R"
+        }
+        If ##class(Security.Roles).Exists(..#READROLE) {
+            Kill roleProps
+            Set roleProps("Resources") = readResources
+            $$$ThrowOnError(##class(Security.Roles).Modify(..#READROLE, .roleProps))
+        } Else {
+            $$$ThrowOnError(##class(Security.Roles).Create(..#READROLE, "Read-only FHIR databases of /fhir/api", readResources, ""))
         }
 
         // Portal pages: static files only for an authenticated session (ServeFiles=3); the role lets the entry page run
         Set apps("/fhir/portal", "NameSpace") = namespace, apps("/fhir/portal", "Path") = pPortalPath
         Set apps("/fhir/portal", "Recurse") = 1, apps("/fhir/portal", "AutheEnabled") = 32
         Set apps("/fhir/portal", "ServeFiles") = 3, apps("/fhir/portal", "MatchRoles") = ":"_dbRole
-        // REST API: the FHIR SQL tables (read and also write, see deferred-work.md) come from the database role;
-        // FHIRPortalAPI only adds EXECUTE on the JSON SQL functions. Dispatch itself only reads, with bound parameters.
+        // REST API: read-only databases and SQL privileges for exactly what Dispatch reads, so not even a bug in it
+        // could write to the FHIR tables (UPDATE and DELETE fail with SQLCODE -99)
         Set apps("/fhir/api", "NameSpace") = namespace, apps("/fhir/api", "DispatchClass") = "diashenrique.fhir.portal.Dispatch"
-        Set apps("/fhir/api", "AutheEnabled") = 32, apps("/fhir/api", "MatchRoles") = ":"_dbRole_":"_..#APIROLE
+        Set apps("/fhir/api", "AutheEnabled") = 32, apps("/fhir/api", "MatchRoles") = ":"_..#READROLE_":"_..#APIROLE
         // FHIR endpoint: keep 8288 (unauthenticated allowed on the web app): the FHIR server itself refuses UnknownUser
         // with 401. Without the unauthenticated bit (8224) every anonymous call makes CSP look for a login page this
         // REST app does not have, logs a severity-2 alert and leaves the container unhealthy.
@@ -89,9 +111,11 @@ ClassMethod Setup(pPortalPath As %String = "", pDemoUser As %Boolean = 0) As %St
         }
 
         Set $Namespace = namespace
-        Set result = ##class(%SQL.Statement).%ExecDirect(, "GRANT EXECUTE ON SQLUser.GetJSON, SQLUser.GetProp, SQLUser.GetAtJSON TO "_..#APIROLE)
-        If result.%SQLCODE < 0 {
-            Throw ##class(%Exception.SQL).CreateFromSQLCODE(result.%SQLCODE, result.%Message)
+        For i = 1:1:$ListLength(grants) {
+            Set result = ##class(%SQL.Statement).%ExecDirect(, "GRANT "_$List(grants, i)_" TO "_..#APIROLE)
+            If result.%SQLCODE < 0 {
+                Throw ##class(%Exception.SQL).CreateFromSQLCODE(result.%SQLCODE, result.%Message)
+            }
         }
         Write !,"fhir-portal: configured; open /fhir/portal/diashenrique.fhir.portal.Home.cls",!
     } Catch ex {

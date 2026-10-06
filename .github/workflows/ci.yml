@@ -25,7 +25,7 @@ jobs:
     env:
       BASE_URL: http://localhost:32783
       # How the steps below reach the IRIS container of each install
-      IRIS_EXEC: ${{ matrix.install == 'docker' && 'docker compose exec -T iris' || 'docker exec fhirportal-ipm' }}
+      IRIS_EXEC: ${{ matrix.install == 'docker' && 'docker compose exec -T iris' || 'docker exec -i fhirportal-ipm' }}
     defaults:
       run:
         shell: bash  # -eo pipefail: a failing curl fails the step instead of feeding jq empty input
@@ -72,6 +72,10 @@ jobs:
 
       - name: Smoke test
         run: bash scripts/smoke.sh
+
+      # The roles of /fhir/api read the FHIR tables and cannot write to them (SQLCODE -99)
+      - name: Read-only /fhir/api
+        run: bash scripts/check-readonly.sh
 
       - uses: actions/setup-node@v7
         with:
