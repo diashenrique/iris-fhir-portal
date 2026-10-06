@@ -16,7 +16,7 @@ uncertainty = "O fhir-server 1.3.7 pode não instalar no 2026.2; se isso acontec
 id = 2
 type = "story"
 title = "Tracer: módulo 1.1.0 instala o portal completo e o CI prova pelo IPM"
-description = "Seguindo o spike: o module.xml 1.1.0 empacota diashenrique.fhir.portal, User.SQLvar e fhirUI e, por uma classe instaladora (diashenrique.fhir.portal.Installer, chamada por <Invoke>), cria /fhir/portal, /fhir/api, o papel FHIRPortalAPI com o GRANT EXECUTE, o grupo de sessão com o /fhir/r4 e, com o parâmetro -Dzpm.DemoUser=1 (contrato usado pelas entradas 3 e 6 e pelo README), o usuário fhirportal; a desinstalação remove o que a classe criou e devolve o /fhir/r4 ao estado anterior; um job novo no ci.yml (ipm-install) sobe um irishealth-community:latest-cd limpo, instala o IPM e o fhir-server com dados, faz zpm load do checkout com o parâmetro de demo e roda contra ele os mesmos passos do job Docker (checagem de dados, scripts/smoke.sh, e2e e "No CSP login-page alerts") (handoff: a classe instaladora é a única fonte da configuração, que a entrada 3 passa a usar no Docker)."
+description = "Seguindo o spike: o module.xml 1.1.0 empacota diashenrique.fhir.portal, User.SQLvar e fhirUI e, por uma classe instaladora (diashenrique.fhir.portal.Installer, chamada por <Invoke>), cria /fhir/portal, /fhir/api, o papel FHIRPortalAPI com o GRANT EXECUTE, o grupo de sessão com o /fhir/r4 e, com o parâmetro -Dzpm.DemoUser=1 (contrato usado pelas entradas 3 e 6 e pelo README), o usuário fhirportal; a desinstalação remove o que a classe criou e devolve o /fhir/r4 ao estado anterior; um job novo no ci.yml (ipm-install) sobe um irishealth-community:latest-cd limpo, instala o IPM e o fhir-server com dados, faz zpm load do checkout com o parâmetro de demo e roda contra ele os mesmos passos do job Docker (checagem de dados, scripts/smoke.sh, e2e e 'No CSP login-page alerts') (handoff: a classe instaladora é a única fonte da configuração, que a entrada 3 passa a usar no Docker)."
 verify = "No CI, o job ipm-install fica verde com smoke e e2e; o job Docker atual continua verde."
 covers = ["P1", "P3", "P5"]
 after = [1, "2.8", "3.7"]        # spike; configuração de sessão final (2.8) e Dispatch sem esquema fixo (3.7)
@@ -65,7 +65,7 @@ id = 6
 type = "story"
 title = "Publicar fhir-portal 1.1.0 e documentar a instalação por IPM"
 description = "Atualiza a seção de instalação por IPM do README (comando, -Dzpm.DemoUser=1, URL de entrada e login de demo), acrescenta ao job ipm-install um workflow_dispatch com a fonte (checkout ou registro) para que qualquer pessoa rode o Done when 4, e publica a versão 1.1.0 no registro IPM (uma pessoa com as credenciais do registro publica, ou autoriza e fornece o caminho)."
-verify = "zpm \"install fhir-portal\" num IRIS for Health 2026.2 limpo com o fhir-server instala a 1.1.0, e o smoke passa contra ele; o README descreve isso."
+verify = "zpm install fhir-portal num IRIS for Health 2026.2 limpo com o fhir-server instala a 1.1.0, e o smoke passa contra ele; o README descreve isso."
 covers = ["P6"]
 after = [5]
 hitl = true                       # a publicação exige credenciais do registro
