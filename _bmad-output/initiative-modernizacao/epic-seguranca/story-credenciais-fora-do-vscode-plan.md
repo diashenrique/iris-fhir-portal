@@ -42,6 +42,8 @@ Rota oneshot: 4 linhas em um arquivo. Risco baixo.
 
 - Verificado no GitHub: PR #13, run 37322708909 verde em 6min15s (smoke, E2E com 5 testes e o passo "No CSP login-page alerts").
 
+- Ajuste depois da checagem humana (2026-10-06): com a senha fora do arquivo, a extensão ObjectScript chamava o `/api/atelier` sem credencial e falhava com "Authorization error" (o servidor respondia 200 para `_SYSTEM`/`SYS` e 401 sem credencial). O `objectscript.conn` passou a usar um servidor do InterSystems Server Manager definido no próprio `.vscode/settings.json` (`intersystems.servers.iris-fhir-portal`, porta 32783, sem senha), que pede a senha e pode guardá-la no cofre do sistema; `.vscode/extensions.json` recomenda as extensões.
+
 ## Review Triage Log
 
 Revisão `quick`, passada 1: 0 high, 1 medium, 1 low, 0 false, 1 verificação humana pendente.
