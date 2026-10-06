@@ -3,7 +3,7 @@ title: 'Docker instala pelo mesmo módulo'
 type: 'refactor'
 ticket: '3'
 created: '2026-10-06'
-status: 'built'
+status: done
 baseline_revision: 'd609beeb646cbfa4c6778f9bebb832772a4c88d7'
 route: 'oneshot'
 route_source: 'auto'
