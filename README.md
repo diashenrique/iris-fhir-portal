@@ -33,7 +33,7 @@ CI runs these checks on every pull request and push to master. To run them again
 $ bash scripts/smoke.sh
 ```
 
-signs in and checks the FHIR server, the `/fhir/api` REST routes, both pages, and that nothing answers without a login or after logout. The browser test needs [Node.js](https://nodejs.org/) 22 or later and signs in and walks through the patient list, details, an update, the lab chart and logout. It changes one patient's city and restores it at the end:
+signs in and checks the FHIR server, the `/fhir/api` REST routes, both pages, and that nothing answers without a login or after logout. `bash scripts/check-readonly.sh` checks that the roles of `/fhir/api` can read the FHIR tables and cannot write to them. The browser test needs [Node.js](https://nodejs.org/) 22 or later and signs in and walks through the patient list, details, an update, the lab chart and logout. It changes one patient's city and restores it at the end:
 
 ```
 $ cd e2e
@@ -46,12 +46,34 @@ On a fresh Linux machine, use `npx playwright install --with-deps chromium` to a
 
 ## Installation via IPM
 
+The portal needs IRIS for Health with a FHIR R4 server at `/fhir/r4` that uses the JsonAdvSQL storage strategy, for example the `fhir-server` package of [iris-fhir-template](https://github.com/intersystems-community/iris-fhir-template). Install the portal in the namespace of that server, after it:
+
 ```
+zn "FHIRSERVER"
 zpm "install fhir-portal"
 ```
-After installation open the URL:
 
-your-server:port/fhir/portal/patientlist.html
+The module (version 1.1.0 or later) creates everything the Docker setup has, through `diashenrique.fhir.portal.Installer`:
+- the web apps `/fhir/portal` and `/fhir/api`, both with password login;
+- one session shared with `/fhir/r4`;
+- the roles `FHIRPortalRead` (read-only FHIR databases) and `FHIRPortalAPI` (SELECT on the endpoint's SQL schemas and EXECUTE on the JSON SQL functions).
+
+The Docker image installs the portal through the same module.
+
+Open `http://your-server:port/fhir/portal/diashenrique.fhir.portal.Home.cls` and sign in with an IRIS user. To also create the demo login `fhirportal` / `fhirportal`, pass the module parameter. With IPM 0.10, the `-Dzpm.` form does not reach the module:
+
+```
+zpm "install fhir-portal -DDemoUser=1"
+```
+
+Installed in a namespace without `/fhir/r4` (for example `USER`, before the FHIR server exists), the module only prints a warning and configures nothing. `zpm "uninstall fhir-portal"` removes the two web apps, the roles and the demo user. The session settings stay on `/fhir/r4`.
+
+On IRIS for Health 2026.2, `fhir-server` 1.3.7 fails when it creates the FHIRSERVER namespace itself. `scripts/ipm-install.sh` shows the workaround CI uses: create the namespace first and map IPM into it. To check the whole IPM path in a clean container on port 42783:
+
+```
+$ bash scripts/ipm-install.sh
+$ BASE_URL=http://localhost:42783 bash scripts/smoke.sh
+```
 
 ## Testing the FHIR Application
 

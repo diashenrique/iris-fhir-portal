@@ -5,6 +5,12 @@ on:
     branches: [master]
   pull_request:
   workflow_dispatch:
+    inputs:
+      portal_source:
+        description: 'Install leg: this checkout (zpm load) or the published package (zpm install fhir-portal)'
+        type: choice
+        options: [checkout, registry]
+        default: checkout
 
 # A new push to a PR replaces its running build; runs on master always finish
 concurrency:
@@ -49,6 +55,8 @@ jobs:
 
       - name: Install IPM, fhir-server and the portal module
         if: matrix.install == 'ipm'
+        env:
+          PORTAL_SOURCE: ${{ inputs.portal_source || 'checkout' }}
         run: PORT=32783 bash scripts/ipm-install.sh
 
       # The wait signs in as the demo user, so it also proves that credential works before the tests

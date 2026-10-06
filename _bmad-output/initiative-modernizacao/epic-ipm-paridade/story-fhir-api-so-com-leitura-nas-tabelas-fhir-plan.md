@@ -3,7 +3,7 @@ title: '/fhir/api só com leitura nas tabelas FHIR'
 type: 'feature'
 ticket: '4'
 created: '2026-10-06'
-status: 'built'
+status: done
 baseline_revision: 'ca3027b65c12695db0707b71e1e98ac08d20261d'
 route: 'oneshot'
 route_source: 'auto'

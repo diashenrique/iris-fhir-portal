@@ -4,11 +4,17 @@
 # with zpm load in the FHIRSERVER namespace and the demo login. CI runs it; locally it does not touch
 # the docker compose container.
 # Usage: bash scripts/ipm-install.sh   (then BASE_URL=http://localhost:42783 bash scripts/smoke.sh)
-# Env: PORT (default 42783), NAME (container, default fhirportal-ipm), IMAGE
+# Env: PORT (default 42783), NAME (container, default fhirportal-ipm), IMAGE,
+#      PORTAL_SOURCE: checkout (default, zpm load of this checkout) or registry (zpm install fhir-portal)
 set -eo pipefail
 PORT="${PORT:-42783}"
 NAME="${NAME:-fhirportal-ipm}"
 IMAGE="${IMAGE:-intersystems/irishealth-community:latest-cd}"
+case "${PORTAL_SOURCE:-checkout}" in
+  checkout) PORTAL_CMD='zpm "load /opt/fhir-portal -v -DDemoUser=1"' ;;
+  registry) PORTAL_CMD='zpm "install fhir-portal -v -DDemoUser=1"' ;;
+  *) echo "PORTAL_SOURCE must be checkout or registry"; exit 1 ;;
+esac
 # Windows paths for Docker Desktop under Git Bash; plain pwd elsewhere
 REPO="$(cd "$(dirname "$0")/.." && (pwd -W 2>/dev/null || pwd))"
 LOG="$(mktemp)"
@@ -36,9 +42,9 @@ docker exec "$NAME" wget -q https://pm.community.intersystems.com/packages/zpm/l
 # fhir-server 1.3.7 fails on IRIS 2026.2 when it creates FHIRSERVER itself: the end of its Activate runs there,
 # before IPM is mapped into it, and the failure removes the namespace (spike 4.1). Creating the namespace first
 # and mapping IPM globally avoids it; its Setup accepts an existing namespace.
-docker exec -i "$NAME" iris session IRIS -U %SYS > "$LOG" 2>&1 <<'EOF' || fail "iris session exited with $?"
+docker exec -i "$NAME" iris session IRIS -U %SYS > "$LOG" 2>&1 <<EOF || fail "iris session exited with $?"
 do ##class(Security.Users).UnExpireUserPasswords("*")
-write "ipm installer: ",$system.OBJ.Load("/tmp/zpm.xml","ck"),!
+write "ipm installer: ",\$system.OBJ.Load("/tmp/zpm.xml","ck"),!
 zn "HSLIB"
 do ##class(HS.Util.Installer.Foundation).Install("FHIRSERVER")
 zn "%SYS"
@@ -48,7 +54,7 @@ zpm "enable -community"
 zn "USER"
 zpm "install fhir-server"
 zn "FHIRSERVER"
-zpm "load /opt/fhir-portal -v -DDemoUser=1"
+$PORTAL_CMD
 zpm "list"
 halt
 EOF
