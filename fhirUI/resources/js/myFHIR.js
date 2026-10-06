@@ -1,6 +1,4 @@
 $(document).ready(function () {
-    const divPlist = document.querySelector('#patientlist');
-
     var objPatient = "";
 
     // Login page of the portal; the IRIS session cookie authenticates /fhir/r4 and /fhir/api
@@ -245,7 +243,6 @@ $(document).ready(function () {
                 if (!isSelected(patientId)) return;
                 const bundle = res.data;
                 entries(bundle).forEach((patient) => {
-                    //console.log(patient.resource);
                     objPatient = patient;
                     const r = patient.resource;
                     // Any of these may be missing in a valid Patient: show an empty field
