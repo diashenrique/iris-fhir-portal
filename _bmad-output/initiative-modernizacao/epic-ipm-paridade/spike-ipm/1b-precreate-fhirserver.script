@@ -1,0 +1,9 @@
+    // Spike 4.1, step 1b (workaround): create the FHIRSERVER foundation namespace first and map IPM into it,
+    // so the end of fhir-server's Activate (which runs in FHIRSERVER) finds the IPM classes
+zn "HSLIB"
+do ##class(HS.Util.Installer.Foundation).Install("FHIRSERVER")
+zn "%SYS"
+zpm "enable -map -globally"
+zn "FHIRSERVER"
+w "IPM visible in FHIRSERVER: ",##class(%Dictionary.CompiledClass).%ExistsId("%IPM.Repo.UniversalSettings"),!
+halt

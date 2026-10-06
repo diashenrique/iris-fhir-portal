@@ -1,0 +1,5 @@
+    // Spike 4.1, step 2: the iris-fhir-template order (its iris.script): portal first in USER, then the FHIR server
+zn "USER"
+zpm "install fhir-portal -v"
+zpm "install fhir-server -v"
+halt

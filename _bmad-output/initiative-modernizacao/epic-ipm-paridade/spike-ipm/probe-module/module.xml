@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Export generator="Cache" version="25">
+  <Document name="fhir-portal-probe.ZPM">
+    <Module>
+      <Name>fhir-portal-probe</Name>
+      <Version>0.0.2</Version>
+      <Packaging>module</Packaging>
+      <SourcesRoot>src</SourcesRoot>
+      <Resource Name="diashenrique.fhir.portal.PKG"/>
+      <Resource Name="User.SQLvar.CLS"/>
+      <!-- Spike 4.1: which Security.Applications properties does <WebApplication> pass through? -->
+      <WebApplication
+        Url="/fhir/portal"
+        SourcePath="/fhirUI"
+        DeployPath="${cspdir}/fhir/portal"
+        Path="${cspdir}/fhir/portal/"
+        CSRFToken="1"
+        SessionScope="2"
+        ServeFiles="3"
+        Recurse="1"
+        AutheEnabled="32"
+        GroupById="fhirportal"
+        CookiePath="/fhir/"
+        UseCookies="2"
+        MatchRoles=":%HS_DB_FHIRSERVER"
+       />
+      <WebApplication
+        Url="/fhir/api"
+        Recurse="1"
+        DispatchClass="diashenrique.fhir.portal.Dispatch"
+        SessionScope="2"
+        AutheEnabled="32"
+        GroupById="fhirportal"
+        CookiePath="/fhir/"
+        UseCookies="2"
+        MatchRoles=":%HS_DB_FHIRSERVER"
+       />
+    </Module>
+  </Document>
+</Export>

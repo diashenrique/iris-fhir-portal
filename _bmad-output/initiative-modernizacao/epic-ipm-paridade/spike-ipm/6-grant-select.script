@@ -1,0 +1,5 @@
+    // Spike 4.1, step 6: SELECT only on the endpoint's resource and search schemas (run in FHIRSERVER)
+w "select R ",##class(%SQL.Statement).%ExecDirect(,"GRANT SELECT ON SCHEMA HSFHIR_X0001_R TO FHIRPortalAPI").%SQLCODE,!
+w "select S ",##class(%SQL.Statement).%ExecDirect(,"GRANT SELECT ON SCHEMA HSFHIR_X0001_S TO FHIRPortalAPI").%SQLCODE,!
+set r=##class(%SQL.Statement).%ExecDirect(,"GRANT EXECUTE ON SQLUser.GetJSON, SQLUser.GetProp, SQLUser.GetAtJSON TO FHIRPortalAPI") w "exec ",r.%SQLCODE," ",r.%Message,!
+halt
