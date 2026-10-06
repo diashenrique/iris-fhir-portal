@@ -1,6 +1,11 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
-const { ENTRY_PAGE, login } = require('./helpers');
+const { ENTRY_PAGE, login, logout } = require('./helpers');
+
+// End the session after each test: every login holds an IRIS license until its session ends
+test.afterEach(async ({ page }) => {
+  await logout(page);
+});
 
 test('without login the portal shows the login page and no patient data', async ({ page }) => {
   await page.goto(ENTRY_PAGE);

@@ -1,6 +1,11 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
-const { FHIR_JSON, login } = require('./helpers');
+const { FHIR_JSON, login, logout } = require('./helpers');
+
+// End the session after each test: every login holds an IRIS license until its session ends
+test.afterEach(async ({ page }) => {
+  await logout(page);
+});
 
 test('the SSN is masked, revealed on request, and the mask is never saved', async ({ page }) => {
   await login(page);

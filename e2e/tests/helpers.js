@@ -23,6 +23,15 @@ async function login(page, user = 'fhirportal', password = 'fhirportal') {
 }
 
 /**
+ * End the IRIS session of the page, so it stops holding a license (the community license is small).
+ * Never throws: a page that never logged in or already logged out is fine.
+ * @param {import('@playwright/test').Page} page
+ */
+async function logout(page) {
+  await page.request.get(`${ENTRY_PAGE}?IRISLogout=end`).catch(() => null);
+}
+
+/**
  * Test data created through FHIR with the session of the login, and removed afterwards.
  * Call cleanup() in a finally: it tries every delete, newest first, and returns what it could not delete.
  * @param {import('@playwright/test').Page} page
@@ -58,4 +67,30 @@ function fixtures(page) {
   };
 }
 
-module.exports = { ENTRY_PAGE, FHIR_JSON, fixtures, login };
+/**
+ * Record the text of every error toast the page shows, across reloads. An exception inside a
+ * .then is caught by the .catch of the search and becomes an error toast, never a pageerror:
+ * a test that expects no errors checks this list too. Call before login (it registers an init script).
+ * @param {import('@playwright/test').Page} page
+ * @returns {Promise<string[]>} the list, filled while the test runs
+ */
+async function watchErrorToasts(page) {
+  /** @type {string[]} */
+  const toasts = [];
+  await page.exposeFunction('__e2eErrorToast', (text) => { toasts.push(text); });
+  await page.addInitScript(() => {
+    new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        for (const node of m.addedNodes) {
+          if (node instanceof Element && node.matches('.toast-error')) {
+            // @ts-ignore
+            window.__e2eErrorToast(node.textContent);
+          }
+        }
+      }
+    }).observe(document, { childList: true, subtree: true });
+  });
+  return toasts;
+}
+
+module.exports = { ENTRY_PAGE, FHIR_JSON, fixtures, login, logout, watchErrorToasts };

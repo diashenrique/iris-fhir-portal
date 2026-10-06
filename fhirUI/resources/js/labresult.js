@@ -3,8 +3,42 @@ var urlREST = urlOrigin + "/fhir/api";
 
 $(document).ready(function () {
 
+    // Login page of the portal: a 401 from /fhir/api means the session ended
+    const entryPage = 'diashenrique.fhir.portal.Home.cls';
+    // Shared with myFHIR.js, which clears it once the patient list loads
+    const redirectKey = 'fhirPortalLoginRedirect';
+
+    // Same messages as the patient list (myFHIR.js): "Could not load <what> (HTTP <status>)"
+    let unloading = false;
+    window.addEventListener('beforeunload', () => { unloading = true; });
+    window.addEventListener('pagehide', () => { unloading = true; });
+
+    function failed(what) {
+        return function (jqXHR) {
+            if (unloading) return;
+            const status = jqXHR && typeof jqXHR.status === 'number' ? jqXHR.status : null;
+            if (status === 401) {
+                // Redirect once, like the patient list: a 401 right after a redirect means the session is
+                // valid but /fhir/api refuses it (configuration), and redirecting again would hide that
+                if (!sessionStorage.getItem(redirectKey)) {
+                    sessionStorage.setItem(redirectKey, '1');
+                    window.location.href = entryPage;
+                    return;
+                }
+                sessionStorage.removeItem(redirectKey);
+                toastr.error('The FHIR API refused the request (HTTP 401). Check the /fhir/api configuration.');
+            } else if (status === 0) {
+                toastr.error('Could not load ' + what + ' (no response from the server)');
+            } else if (status) {
+                toastr.error('Could not load ' + what + ' (HTTP ' + status + ')');
+            } else {
+                console.error('Could not load ' + what, jqXHR);
+                toastr.error('Could not load ' + what);
+            }
+        };
+    }
+
     $("#labSearch").click(function () {
-        $("#testName").text($("#labtest option:selected").text());
         getResults();
     });
 
@@ -29,60 +63,47 @@ $(document).ready(function () {
     getOptions();
 
     function getPatient() {
-        $.getJSON(urlREST + "/patient/" + patientId, function (responseData) {
-            var jsonPatient = JSON.stringify(responseData);
-            $.each(JSON.parse(jsonPatient), function (idx, obj) {
+        $.getJSON(urlREST + "/patient/" + encodeURIComponent(patientId), function (responseData) {
+            $.each(responseData, function (idx, obj) {
                 $("#fhirId").val(patientId);
                 $("#fullName").val(obj.name);
                 $("#dateofbirth").val(obj.birthdate);
             });
-        });
+        }).fail(failed('the patient'));
     }
 
     function getOptions() {
-        $.getJSON(urlREST + "/laboptions/" + patientId,
-            function (responseData) {
-                var jsonData = JSON.stringify(responseData);
-                $.each(JSON.parse(jsonData), function (idx, obj) {
-                    $("#labtest").append($('<option>').val(obj.code).text(obj.name));
-                });
-
+        $.getJSON(urlREST + "/laboptions/" + encodeURIComponent(patientId), function (responseData) {
+            $.each(responseData, function (idx, obj) {
+                $("#labtest").append($('<option>').val(obj.code).text(obj.name));
             });
+        }).fail(failed('lab tests'));
     }
 
-
-    var jsonfile = {
-        "jsonarray": [{
-            "name": "Joe",
-            "age": 12
-        }, {
-            "name": "Tom",
-            "age": 14
-        }]
-    };
-
-    console.log(jsonfile)
-
     var ctx = document.getElementById("myChart").getContext("2d");
+    // One chart at a time: the previous one is destroyed before drawing the next
+    var chart = null;
+    // Only the latest search may draw: an older response arriving late is ignored
+    var latestRequest = 0;
 
     function getResults() {
-        $.getJSON(urlREST + "/patient/" + patientId + "/lab/" + $("#labtest").val(), function (responseData) {
-            console.log(responseData);
-
-            var labels = responseData.map(function (e) {
-                return e.date;
-            });
-            var data = responseData.map(function (e) {
-                return e.value;
+        var request = ++latestRequest;
+        var label = $("#labtest option:selected").text();
+        var url = urlREST + "/patient/" + encodeURIComponent(patientId) + "/lab/" + encodeURIComponent($("#labtest").val());
+        $.getJSON(url, function (responseData) {
+            if (request !== latestRequest) return;
+            // Only numeric results can be plotted
+            var points = responseData.filter(function (e) {
+                return e.value !== null && e.value !== '' && !isNaN(Number(e.value));
             });
 
             var config = {
                 type: 'line',
                 data: {
-                    labels: labels,
+                    labels: points.map(function (e) { return e.date; }),
                     datasets: [{
-                        label: $("#labtest option:selected").text(),
-                        data: data,
+                        label: label,
+                        data: points.map(function (e) { return Number(e.value); }),
                         backgroundColor: 'rgba(0, 119, 204, 0.3)'
                     }]
                 },
@@ -95,9 +116,14 @@ $(document).ready(function () {
                 }
             };
 
-            var chart = new Chart(ctx, config);
+            if (chart) {
+                chart.destroy();
+            }
+            chart = new Chart(ctx, config);
+            $("#testName").text(label);
+        }).fail(function (jqXHR) {
+            if (request === latestRequest) failed('lab results')(jqXHR);
         });
     }
-
 
 });

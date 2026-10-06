@@ -1,6 +1,4 @@
 $(document).ready(function () {
-    const divPlist = document.querySelector('#patientlist');
-
     var objPatient = "";
 
     // Login page of the portal; the IRIS session cookie authenticates /fhir/r4 and /fhir/api
@@ -75,6 +73,13 @@ $(document).ready(function () {
         return text.length > 4 ? '***-**-' + text.slice(-4) : text.replace(/./g, '*');
     }
 
+    // The SSN is the identifier with this system, wherever it sits in the list
+    const SSN_SYSTEM = 'http://hl7.org/fhir/sid/us-ssn';
+
+    function findSSN(resource) {
+        return (resource.identifier || []).find((id) => id && id.system === SSN_SYSTEM);
+    }
+
     function showMaskedSSN() {
         ssnRevealed = false;
         $("#SSN").val(maskSSN(ssnValue)).prop('readonly', true);
@@ -106,21 +111,142 @@ $(document).ready(function () {
         return (bundle && bundle.entry) || [];
     }
 
+    // The link of a bundle with this relation, if any
+    function bundleLink(bundle, relation) {
+        const link = ((bundle && bundle.link) || []).find((l) => l && l.relation === relation);
+        return link && link.url;
+    }
+
+    // Run a search and follow every link[next] the server returns, in order.
+    // Resolves to { first, bundles, entries }: the first bundle (its total feeds the badges),
+    // every bundle fetched, and the entries of all pages together. A failed page rejects;
+    // when it is a next page (not the first request), the error carries nextPage: true.
+    function searchAll(params) {
+        const bundles = [];
+        const seen = new Set();
+        const collect = (res) => {
+            const bundle = res.data;
+            bundles.push(bundle);
+            const next = bundleLink(bundle, 'next');
+            // A next link already followed would loop forever: stop there
+            if (next && !seen.has(next)) {
+                seen.add(next);
+                return client.nextPage({ bundle: bundle }).then(collect, (err) => {
+                    const failure = err && typeof err === 'object' ? err : { error: err };
+                    failure.nextPage = true;
+                    throw failure;
+                });
+            }
+            return {
+                first: bundles[0],
+                bundles: bundles,
+                entries: bundles.reduce((all, b) => all.concat(entries(b)), [])
+            };
+        };
+        return client.search(params).then(collect);
+    }
+
+    // Append the JSON of every page to the FHIR Data Source modal
+    function appendBundles(bundles) {
+        bundles.forEach((bundle) => {
+            $('#fhirdatasource').val($('#fhirdatasource').val() + JSON.stringify(bundle, undefined, 4));
+        });
+    }
+
+    // The value[x] element name of an Observation or of a component, if it has one
+    function valueKey(item) {
+        return Object.keys(item || {}).find((key) => /^value[A-Z]/.test(key));
+    }
+
+    // The text of a CodeableConcept: its text, or the display of its first coding
+    function conceptText(concept) {
+        if (!concept) return '';
+        if (concept.text) return concept.text;
+        return (concept.coding && concept.coding[0] && concept.coding[0].display) || '';
+    }
+
+    // Value and unit of an Observation or of a component, for any value[x]; empty when there is none
+    function observationValue(item) {
+        const key = valueKey(item);
+        if (!key) return { value: '', unit: '' };
+        const value = item[key];
+        if (key === 'valueQuantity') {
+            const number = value.value == null ? '' : String(value.value);
+            return {
+                // A comparator such as "<" belongs to the value: "< 0.5"
+                value: value.comparator && number !== '' ? value.comparator + ' ' + number : number,
+                unit: value.unit || value.code || ''
+            };
+        }
+        if (key === 'valueCodeableConcept') return { value: conceptText(value), unit: '' };
+        // valueString, valueBoolean, valueInteger, valueDateTime, valueTime...: shown as text
+        if (value !== null && typeof value !== 'object') return { value: String(value), unit: '' };
+        return { value: '', unit: '' };
+    }
+
+    // The rows of an Observation: [name, value, unit, date], one per component when it has no value[x]
+    function observationRows(resource) {
+        const date = resource.effectiveDateTime || '';
+        const row = (item) => {
+            const v = observationValue(item);
+            return [conceptText(item.code), v.value, v.unit, date];
+        };
+        if (!valueKey(resource) && resource.component && resource.component.length > 0) {
+            return resource.component.map(row);
+        }
+        return [row(resource)];
+    }
+
+    // The HTTP status of a failed FHIR request, if it has one. The jQuery adapter of fhir.js
+    // rejects with { error: jqXHR }, so the status is on err.error; 0 means no answer from the server.
+    function httpStatus(err) {
+        const status = err && err.error && err.error.status;
+        return typeof status === 'number' ? status : null;
+    }
+
+    // Requests cancelled because the page is going away fail with status 0: nothing to tell then
+    let unloading = false;
+    window.addEventListener('beforeunload', () => { unloading = true; });
+    window.addEventListener('pagehide', () => { unloading = true; });
+
+    // Tell the user that a search failed: "Could not load <what> (HTTP <status>)".
+    // An error without an HTTP status is a bug in the code (an exception in a .then): it is logged too.
+    function showError(what, err) {
+        if (unloading) return;
+        const status = httpStatus(err);
+        if (status === 0) {
+            toastr.error('Could not load ' + what + ' (no response from the server)');
+        } else if (status) {
+            toastr.error('Could not load ' + what + ' (HTTP ' + status + ')');
+        } else {
+            console.error('Could not load ' + what, err);
+            toastr.error('Could not load ' + what);
+        }
+    }
+
+    // The patient whose details are shown: results that arrive for another one are dropped
+    let selectedPatientId = null;
+
+    function isSelected(patientId) {
+        return String(patientId) === String(selectedPatientId);
+    }
+
     // Perform a search to retrieve patient details for a specific patient
     window.loadForm = function (patientId) {
+        selectedPatientId = patientId;
         client.search({
                 type: 'Patient',
                 query: {
                     _id: patientId
                 }
             }).then((res) => {
+                if (!isSelected(patientId)) return;
                 const bundle = res.data;
                 entries(bundle).forEach((patient) => {
-                    //console.log(patient.resource);
                     objPatient = patient;
                     const r = patient.resource;
                     // Any of these may be missing in a valid Patient: show an empty field
-                    const ssn = (r.identifier && r.identifier[2]) || {};
+                    const ssn = findSSN(r) || {};
                     const name = (r.name && r.name[0]) || {};
                     const address = (r.address && r.address[0]) || {};
                     $("#fhirId").val(r.id);
@@ -137,8 +263,9 @@ $(document).ready(function () {
 
                     // The FHIR Data Source modal shows the resource as stored, except the SSN, which stays masked
                     const shownPatient = JSON.parse(JSON.stringify(patient.resource));
-                    if (shownPatient.identifier && shownPatient.identifier[2]) {
-                        shownPatient.identifier[2].value = maskSSN(shownPatient.identifier[2].value);
+                    const shownSSN = findSSN(shownPatient);
+                    if (shownSSN && shownSSN.value) {
+                        shownSSN.value = maskSSN(shownSSN.value);
                     }
                     var textedJSON = JSON.stringify(shownPatient, undefined, 4);
                     $('#fhirdatasource').val(textedJSON);
@@ -157,28 +284,19 @@ $(document).ready(function () {
                 });
             })
             .catch((err) => {
-                // Error responses
-                if (err.status) {
-                    console.log(err);
-                    console.log('Error', err.status);
-                }
-                // Errors
-                if (err.data && err.data) {
-                    console.log('Error', err.data);
-                }
+                if (isSelected(patientId)) showError('patient', err);
             });
     };
 
-    // Perform a search to retrieve patient list
-    client.search({
+    // Perform a search to retrieve patient list, every page of it
+    searchAll({
             type: 'Patient',
             query: {
                 _sort: '-_lastUpdated'
             }
-        }).then((res) => {
+        }).then((result) => {
             sessionStorage.removeItem(redirectKey);
-            const bundle = res.data;
-            entries(bundle).forEach((patient) => {
+            result.entries.forEach((patient) => {
                 const patientId = patient.resource.id;
                 const name = getName(patient.resource).trim();
                 const item = $('<div class="list-group-item" data-toggle="sidebar" data-sidebar="show">')
@@ -200,8 +318,10 @@ $(document).ready(function () {
         .catch((err) => {
             // No session (logged out or expired): the FHIR endpoint answers 401 (404 if the web app ever refuses it first).
             // The jQuery adapter of fhir.js rejects with { error: jqXHR }, so the status is on err.error.
-            const status = err.error && err.error.status;
-            if (status === 401 || status === 404) {
+            // Only the first request tells about the session: a next page that fails (an expired
+            // queryId answers 404) goes to the normal error handling, never to the login.
+            const status = httpStatus(err);
+            if (!err.nextPage && (status === 401 || status === 404)) {
                 // Redirect once: a refusal right after a redirect means the session is fine but the
                 // FHIR endpoint refuses it (configuration), and redirecting again would loop forever
                 if (!sessionStorage.getItem(redirectKey)) {
@@ -211,37 +331,29 @@ $(document).ready(function () {
                 }
                 sessionStorage.removeItem(redirectKey);
                 toastr.error('The FHIR server refused the request (HTTP ' + status + '). Check the /fhir/r4 configuration.');
+                return;
             }
-            // Error responses
-            if (err.status) {
-                console.log(err);
-                console.log('Error', err.status);
-            }
-            // Errors
-            if (err.data && err.data) {
-                console.log('Error', err.data);
-            }
+            showError('the patient list', err);
         });
 
 
     // Perform a search to Immunization list for a specific patient
     window.immunization = function (patientId) {
-        client.search({
+        searchAll({
                 type: 'Immunization',
                 query: {
                     patient: patientId
                 }
-            }).then((res) => {
-                const bundle = res.data;
-                $("#badgeImmunization").text(bundle.total || 0);
+            }).then((result) => {
+                if (!isSelected(patientId)) return;
+                $("#badgeImmunization").text(result.first.total || 0);
 
-                var resourceImmunization = JSON.stringify(bundle, undefined, 4);
-                $('#fhirdatasource').val($('#fhirdatasource').val() + resourceImmunization);
+                appendBundles(result.bundles);
 
-                if (entries(bundle).length === 0) {
+                if (result.entries.length === 0) {
                     $("#immunizationTable tbody").append(noRecordsRow(2));
                 }
-                entries(bundle).forEach((immunization) => {
+                result.entries.forEach((immunization) => {
                     $("#immunizationTable tbody").append(textRow([
                         immunization.resource.vaccineCode["coding"][0].display,
                         immunization.resource.occurrenceDateTime
@@ -249,36 +361,27 @@ $(document).ready(function () {
                 });
             })
             .catch((err) => {
-                // Error responses
-                if (err.status) {
-                    console.log(err);
-                    console.log('Error', err.status);
-                }
-                // Errors
-                if (err.data && err.data) {
-                    console.log('Error', err.data);
-                }
+                if (isSelected(patientId)) showError('immunizations', err);
             });
     };
 
     // Perform a search to Allergy list for a specific patient
     window.allergy = function (patientId) {
-        client.search({
+        searchAll({
                 type: 'AllergyIntolerance',
                 query: {
                     patient: patientId
                 }
-            }).then((res) => {
-                const bundle = res.data;
-                $("#badgeAllergy").text(bundle.total || 0);
+            }).then((result) => {
+                if (!isSelected(patientId)) return;
+                $("#badgeAllergy").text(result.first.total || 0);
 
-                if (entries(bundle).length === 0) {
+                if (result.entries.length === 0) {
                     $("#allergyTable tbody").append(noRecordsRow(4));
                 } else {
-                    var resourceAllergy = JSON.stringify(bundle, undefined, 4);
-                    $('#fhirdatasource').val($('#fhirdatasource').val() + resourceAllergy);
+                    appendBundles(result.bundles);
 
-                    entries(bundle).forEach((allergy) => {
+                    result.entries.forEach((allergy) => {
                         $("#allergyTable tbody").append(textRow([
                             allergy.resource.code.coding[0].display,
                             allergy.resource.type,
@@ -289,113 +392,70 @@ $(document).ready(function () {
                 }
             })
             .catch((err) => {
-                // Error responses
-                if (err.status) {
-                    console.log(err);
-                    console.log('Error', err.status);
-                }
-                // Errors
-                if (err.data && err.data) {
-                    console.log('Error', err.data);
-                }
+                if (isSelected(patientId)) showError('allergies', err);
             });
     };
 
     // Perform a search to Vital Signs list for a specific patient
     window.vitalsigns = function (patientId) {
-        client.search({
+        searchAll({
                 type: 'Observation',
                 query: {
                     patient: patientId,
                     category: 'vital-signs',
                     _sort: 'date'
                 }
-            }).then((res) => {
-                const bundle = res.data;
-                $("#badgeVitalSigns").text(bundle.total || 0);
+            }).then((result) => {
+                if (!isSelected(patientId)) return;
+                $("#badgeVitalSigns").text(result.first.total || 0);
 
-                var resourceVitalSigns = JSON.stringify(bundle, undefined, 4);
-                $('#fhirdatasource').val($('#fhirdatasource').val() + resourceVitalSigns);
+                appendBundles(result.bundles);
 
-                if (entries(bundle).length === 0) {
+                if (result.entries.length === 0) {
                     $("#vitalSignsTable tbody").append(noRecordsRow(4));
                 }
-                entries(bundle).forEach((vitalsigns) => {
-                    if (vitalsigns.resource.hasOwnProperty('valueQuantity')) {
-                        $("#vitalSignsTable tbody").append(textRow([
-                            vitalsigns.resource.code.coding[0].display,
-                            vitalsigns.resource.valueQuantity.value,
-                            vitalsigns.resource.valueQuantity.unit,
-                            vitalsigns.resource.effectiveDateTime
-                        ]));
-                    } else {
-                        vitalsigns.resource.component.forEach((bp) => {
-                            $("#vitalSignsTable tbody").append(textRow([
-                                bp.code.text,
-                                bp.valueQuantity.value,
-                                bp.valueQuantity.unit,
-                                vitalsigns.resource.effectiveDateTime
-                            ]));
-                        });
-                    }
+                result.entries.forEach((vitalsigns) => {
+                    observationRows(vitalsigns.resource).forEach((values) => {
+                        $("#vitalSignsTable tbody").append(textRow(values));
+                    });
                 });
             })
             .catch((err) => {
-                // Error responses
-                if (err.status) {
-                    console.log(err);
-                    console.log('Error', err.status);
-                }
-                // Errors
-                if (err.data && err.data) {
-                    console.log('Error', err.data);
-                }
+                if (isSelected(patientId)) showError('vital signs', err);
             });
     };
 
     window.laboratory = function (patientId) {
-        client.search({
+        searchAll({
                 type: 'Observation',
                 query: {
                     patient: patientId,
                     category: 'laboratory',
                     _sort: 'date'
                 }
-            }).then((res) => {
-                const bundle = res.data;
-                $("#badgeLaboratory").text(bundle.total || 0);
+            }).then((result) => {
+                if (!isSelected(patientId)) return;
+                $("#badgeLaboratory").text(result.first.total || 0);
 
-                if (entries(bundle).length > 0) {
+                if (entries(result.first).length > 0) {
                     const icone = $('<a target="_blank"><span class="label label-info"><i class="fas fa-chart-line"></i></span></a>')
                         .attr('href', 'labresult.html?id=' + encodeURIComponent(patientId));
                     $("#iconChart").append(icone);
                 }
 
-                var resourceLaboratory = JSON.stringify(bundle, undefined, 4);
-                $('#fhirdatasource').val($('#fhirdatasource').val() + resourceLaboratory);
+                appendBundles(result.bundles);
 
-                if (entries(bundle).length === 0) {
+                if (result.entries.length === 0) {
                     $("#laboratoryTable tbody").append(noRecordsRow(4));
                 }
-                entries(bundle).forEach((laboratory) => {
-                    $("#laboratoryTable tbody").append(textRow([
-                        laboratory.resource.code.coding[0].display,
-                        laboratory.resource.valueQuantity.value,
-                        laboratory.resource.valueQuantity.unit,
-                        laboratory.resource.effectiveDateTime
-                    ]));
+                result.entries.forEach((laboratory) => {
+                    observationRows(laboratory.resource).forEach((values) => {
+                        $("#laboratoryTable tbody").append(textRow(values));
+                    });
                 });
             })
             .catch((err) => {
-                // Error responses
-                if (err.status) {
-                    console.log(err);
-                    console.log('Error', err.status);
-                }
-                // Errors
-                if (err.data && err.data) {
-                    console.log('Error', err.data);
-                }
+                if (isSelected(patientId)) showError('laboratory results', err);
             });
     };
 
@@ -446,9 +506,13 @@ $(document).ready(function () {
         if (ssnRevealed) {
             ssnValue = $("#SSN").val();
         }
-        // The SSN lives in identifier[2] in the Synthea data; it is not created in that position
-        if (r.identifier && r.identifier[2]) {
-            setOrRemove(r.identifier[2], 'value', ssnValue);
+        // Update the us-ssn identifier; a patient without one gains it at the end only when there is a value
+        const ssn = findSSN(r);
+        if (ssn) {
+            setOrRemove(ssn, 'value', ssnValue);
+        } else if (ssnValue) {
+            r.identifier = r.identifier || [];
+            r.identifier.push({ system: SSN_SYSTEM, value: ssnValue });
         }
 
         const firstName = $("#firstName").val();
