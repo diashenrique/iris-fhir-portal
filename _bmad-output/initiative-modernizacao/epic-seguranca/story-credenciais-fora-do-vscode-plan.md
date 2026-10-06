@@ -3,7 +3,7 @@ title: 'Credenciais fora do .vscode'
 type: 'chore'
 ticket: '5'
 created: '2026-10-05'
-status: 'built'
+status: done
 baseline_revision: '6d1bea33c6a68652da12e750c285fba8205a73b8'
 route: 'oneshot'
 route_source: 'auto'
