@@ -6,7 +6,7 @@ covers: [R2]
 after: []
 assignee: ""
 risk: high
-status: in-progress
+status: done
 ---
 
 # Portal sem XSS, sem %All e sem credencial embutida
@@ -60,5 +60,6 @@ A segurança do portal no caminho Docker: `fhirUI/` (páginas e JS), `src/diashe
 - Tracer bullet: entrada 2, login → sessão → lista → `/fhir/r4` e `/fhir/api` → logout, precedida pelo spike (entrada 1), porque o desenho depende da resposta dele.
 - Sequenciamento: 1 → 2; depois 3, 4 e 5 em paralelo (3 mexe em `iris.script`, `Dispatch.cls` e smoke; 4 em `myFHIR.js`, `labresult.js` e e2e; 5 em `.vscode`, depois da 2, que também mexe nele); 6 depois da 4 (mesmo `myFHIR.js` e e2e); 7 fecha.
 - Fechamento (2026-10-05): a checagem de fechamento deu todos os Done when como MET; S5 está PARTIAL só pela checagem manual da 2.5 (o VS Code pedir a senha e conectar), que é do usuário. O épico fecha quando ela for feita.
+- Fechado (2026-10-06): o usuário confirmou no VS Code que a conexão pede a senha e conecta, depois do ajuste para o InterSystems Server Manager (PR #18). S5 passa a MET, e as 8 entradas e o épico ficam `done`.
 - Cuidado: a extensão ObjectScript regrava `.vscode/settings.json` com `"active": false` quando o prompt de senha fica sem resposta; um commit levou isso junto (`ae436a2`), e o valor foi restaurado para `true`.
 - Handoff para o epic-ipm-paridade: o modelo de autenticação daqui (web apps, papel mínimo, login) é o que o `module.xml` vai declarar.
