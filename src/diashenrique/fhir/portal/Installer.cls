@@ -124,4 +124,36 @@ ClassMethod Setup(pPortalPath As %String = "", pDemoUser As %Boolean = 0) As %St
     Quit sc
 }
 
+/// Undoes Setup when the module is uninstalled (zpm "uninstall fhir-portal"): the portal's web apps, roles and demo user.
+/// The session group settings and AutheEnabled 8288 stay on the FHIR endpoint, which belongs to the FHIR server.
+/// Only what belongs to this namespace is removed, so uninstalling a copy loaded elsewhere (USER) touches nothing.
+ClassMethod Remove() As %Status
+{
+    Set sc = $$$OK
+    Set namespace = $Namespace
+    Try {
+        New $Namespace
+        Set $Namespace = "%SYS"
+        For app = "/fhir/portal", "/fhir/api" {
+            Continue:'##class(Security.Applications).Exists(app)
+            Kill props
+            $$$ThrowOnError(##class(Security.Applications).Get(app, .props))
+            Continue:$Get(props("NameSpace"))'=namespace
+            $$$ThrowOnError(##class(Security.Applications).Delete(app))
+            Set removed = 1
+        }
+        // The roles and the demo user exist for these apps only
+        If $Get(removed) {
+            For role = ..#READROLE, ..#APIROLE {
+                If ##class(Security.Roles).Exists(role) $$$ThrowOnError(##class(Security.Roles).Delete(role))
+            }
+            If ##class(Security.Users).Exists(..#DEMOUSER) $$$ThrowOnError(##class(Security.Users).Delete(..#DEMOUSER))
+            Write !,"fhir-portal: removed /fhir/portal, /fhir/api, their roles and the demo user",!
+        }
+    } Catch ex {
+        Set sc = ex.AsStatus()
+    }
+    Quit sc
+}
+
 }

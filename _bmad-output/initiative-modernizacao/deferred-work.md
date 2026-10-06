@@ -19,3 +19,4 @@
 - source_plan: `_bmad-output/initiative-modernizacao/epic-ipm-paridade/story-tracer-modulo-1-1-0-instala-o-portal-completo-e-o-ci-prova-p-plan.md`
   summary: O `zpm "uninstall fhir-portal"` não desfaz o que a classe instaladora criou: ficam `/fhir/portal` e `/fhir/api` (apontando para classes e arquivos removidos), o papel `FHIRPortalAPI`, o usuário de demo e o grupo de sessão e o 8288 no `/fhir/r4`.
   evidence: Revisão quick da 4.2 (achado 4). O `module.xml` só tem o `<Invoke>` de Activate. Para o sweep (4.5): um `<Invoke>` de desinstalação que remove os dois web apps, e o README dizendo o que fica no `/fhir/r4`.
+  status: resolvido na 4.5 (`Installer.Remove`, fase Unconfigure).

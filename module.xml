@@ -25,6 +25,8 @@
           <Arg>${PortalPath}</Arg>
           <Arg>${DemoUser}</Arg>
         </Invoke>
+        <!-- zpm "uninstall fhir-portal": removes the web apps, roles and demo user (before the classes go away) -->
+        <Invoke Class="diashenrique.fhir.portal.Installer" Method="Remove" Phase="Unconfigure" When="Before" CheckStatus="true"/>
       </Invokes>
       <AfterInstallMessage>
 &#13;Install in the namespace of the FHIR server, after it: zn "FHIRSERVER" zpm "install fhir-portal"
