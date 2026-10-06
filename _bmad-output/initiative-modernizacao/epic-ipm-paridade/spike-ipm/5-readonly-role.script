@@ -1,0 +1,8 @@
+    // Spike 4.1, step 5: a read-only role for /fhir/api instead of %HS_DB_FHIRSERVER (run in %SYS)
+w "role ",##class(Security.Roles).Create("FHIRPortalRead","Read-only access to the FHIR databases","%DB_FHIRSERVER:R,%DB_FHIRSERVERX0001R:R,%DB_FHIRSERVERX0001V:R",""),!
+kill p set s=##class(Security.Applications).Get("/fhir/api",.p) set p("MatchRoles")=":FHIRPortalRead:FHIRPortalAPI" w "api ",##class(Security.Applications).Modify("/fhir/api",.p),!
+zn "FHIRSERVER"
+w "spike class ",$system.OBJ.Load("/tmp/SpikeRest.cls","ck-d"),!
+zn "%SYS"
+kill p set p("NameSpace")="FHIRSERVER",p("DispatchClass")="Spike.Rest",p("AutheEnabled")=32,p("MatchRoles")=":FHIRPortalRead:FHIRPortalAPI" w "spike app ",##class(Security.Applications).Create("/spike",.p),!
+halt

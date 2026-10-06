@@ -1,0 +1,9 @@
+    // Spike 4.1, step 4: what the installer class must do beyond <WebApplication> (run in %SYS)
+w "role ",##class(Security.Roles).Create("FHIRPortalAPI","Least privilege of /fhir/api","",""),!
+zn "FHIRSERVER"
+w "grant ",##class(%SQL.Statement).%ExecDirect(,"GRANT EXECUTE ON SQLUser.GetJSON, SQLUser.GetProp, SQLUser.GetAtJSON TO FHIRPortalAPI").%SQLCODE,!
+zn "%SYS"
+kill p set s=##class(Security.Applications).Get("/fhir/api",.p) set p("MatchRoles")=":%HS_DB_FHIRSERVER:FHIRPortalAPI" w "api ",##class(Security.Applications).Modify("/fhir/api",.p),!
+kill p set s=##class(Security.Applications).Get("/fhir/r4",.p) set p("GroupById")="fhirportal",p("CookiePath")="/fhir/",p("UseCookies")=2,p("AutheEnabled")=8288 w "r4 ",##class(Security.Applications).Modify("/fhir/r4",.p),!
+w "user ",##class(Security.Users).Create("fhirportal","","fhirportal","FHIR Portal demo user"),!
+halt

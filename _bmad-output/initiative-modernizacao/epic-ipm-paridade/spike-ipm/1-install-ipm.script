@@ -1,0 +1,8 @@
+    // Spike 4.1, step 1: install IPM in a clean irishealth-community:latest-cd (run in %SYS), mapped to every namespace
+    // (without the global mapping, fhir-server 1.3.7 fails at the end of Activate: its Setup leaves the process in
+    // FHIRSERVER, where IPM is not mapped, and IPM's analytics step raises <CLASS DOES NOT EXIST> %IPM.Repo.UniversalSettings)
+do ##class(Security.Users).UnExpireUserPasswords("*")
+set sc=$system.OBJ.Load("/tmp/zpm.xml","ck") w "ipm load: ",sc,!
+zpm "enable -map -globally"
+zpm "enable -community"
+halt

@@ -1,0 +1,10 @@
+    // Spike 4.1, step 3: load a probe module (portal code + User.SQLvar + <WebApplication> attributes) in FHIRSERVER
+zn "FHIRSERVER"
+zpm "load /tmp/probe -v"
+zn "%SYS"
+for app="/fhir/portal","/fhir/api" { kill p set s=##class(Security.Applications).Get(app,.p) w "APP ",app," ns=",$g(p("NameSpace"))," authe=",$g(p("AutheEnabled"))," serve=",$g(p("ServeFiles"))," group=",$g(p("GroupById"))," cookie=",$g(p("CookiePath"))," usecookies=",$g(p("UseCookies"))," roles=",$g(p("MatchRoles"))," path=",$g(p("Path"))," dispatch=",$g(p("DispatchClass")),! }
+zn "FHIRSERVER"
+w "SQLVAR in FHIRSERVER: ",##class(%Dictionary.CompiledClass).%ExistsId("User.SQLvar"),!
+zn "USER"
+w "SQLVAR in USER: ",##class(%Dictionary.CompiledClass).%ExistsId("User.SQLvar"),!
+halt
