@@ -3,7 +3,7 @@ title: 'Erros das buscas FHIR visíveis na lista e nos detalhes'
 type: 'bugfix'
 ticket: '5'
 created: '2026-10-05'
-status: 'built'
+status: done
 baseline_revision: 'a2d2424ece8d01b200e27eb119cf5150a45842c8'
 route: 'oneshot'
 route_source: 'auto'

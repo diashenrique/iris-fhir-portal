@@ -3,7 +3,7 @@ title: 'Tracer: paciente mínimo e paciente sem registros clínicos sem erro'
 type: 'bugfix'
 ticket: '1'
 created: '2026-10-05'
-status: 'built'
+status: done
 baseline_revision: 'a4c48b2c0ceaa11c2ab856b26a1736827a621ed4'
 route: 'full'
 route_source: 'auto'

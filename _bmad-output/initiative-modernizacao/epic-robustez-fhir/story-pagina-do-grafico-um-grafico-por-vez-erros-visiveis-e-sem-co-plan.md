@@ -3,7 +3,7 @@ title: 'Página do gráfico: um gráfico por vez, erros visíveis e sem código 
 type: 'bugfix'
 ticket: '8'
 created: '2026-10-05'
-status: 'built'
+status: done
 baseline_revision: 'c10c740dea6c9525dbf366618daf46b65248749a'
 route: 'full'
 route_source: 'auto'

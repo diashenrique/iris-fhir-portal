@@ -3,7 +3,7 @@ title: 'SSN pelo system us-ssn, não por posição'
 type: 'bugfix'
 ticket: '2'
 created: '2026-10-05'
-status: 'built'
+status: done
 baseline_revision: 'e60888e0c2f7f5c772ea7df6aaaf989f818ab8d5'
 route: 'full'
 route_source: 'auto'

@@ -6,7 +6,7 @@ covers: [R3]
 after: []
 assignee: ""
 risk: medium
-status: in-progress
+status: done
 ---
 
 # Prontuário que não quebra com dados FHIR reais
@@ -60,4 +60,5 @@ A lógica do portal: `fhirUI/resources/js/myFHIR.js`, `fhirUI/resources/js/labre
 - Decision (autonomia): o gráfico plota só valores numéricos (`valueQuantity`); Observations com outro tipo de valor ficam fora dele (o B5 cobre as tabelas).
 - Decision (autonomia): a entrada 4 força páginas pequenas reescrevendo a busca com `page.route` (`_count=5`), sem parâmetro novo no portal.
 - Contrato entre as entradas 5 e 8: toast "Could not load <what> (HTTP <status>)".
-- Unknown: se `JSON_TABLE` ou o FHIR SQL Builder do IRIS 2026.2 substituem bem as funções do artigo 4 e como descobrir o esquema do endpoint; o spike (entrada 6) responde antes da entrada 7.
+- Fechamento (2026-10-06): a checagem de fechamento deu os Done when 1–5 e os requisitos B1–B8 como MET (PRs #15 e #16; run de master 37406350268). O endurecimento do acesso SQL do `%HS_DB_FHIRSERVER` foi para o escopo do epic-ipm-paridade.
+- Unknown (resolvido pelo spike 3.6): se `JSON_TABLE` ou o FHIR SQL Builder do IRIS 2026.2 substituem bem as funções do artigo 4 e como descobrir o esquema do endpoint; o spike (entrada 6) responde antes da entrada 7.

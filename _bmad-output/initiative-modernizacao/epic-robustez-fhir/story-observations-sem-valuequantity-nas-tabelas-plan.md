@@ -3,7 +3,7 @@ title: 'Observations sem valueQuantity nas tabelas'
 type: 'bugfix'
 ticket: '3'
 created: '2026-10-05'
-status: 'built'
+status: done
 baseline_revision: 'cd0cb08f26a8cb171cd5c80d6886437ec75e561f'
 route: 'full'
 route_source: 'auto'

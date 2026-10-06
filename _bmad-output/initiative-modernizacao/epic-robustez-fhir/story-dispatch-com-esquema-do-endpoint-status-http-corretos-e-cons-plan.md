@@ -3,7 +3,7 @@ title: 'Dispatch com esquema do endpoint, status HTTP corretos e consultas do sp
 type: 'refactor'
 ticket: '7'
 created: '2026-10-05'
-status: 'built'
+status: done
 baseline_revision: 'e2d0bb819fce6aec981eac6f1ec583660ec2e06b'
 route: 'full'
 route_source: 'auto'

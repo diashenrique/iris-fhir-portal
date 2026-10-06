@@ -3,7 +3,7 @@ title: 'Spike: consultas do Dispatch e esquema do endpoint'
 type: 'chore'
 ticket: '6'
 created: '2026-10-05'
-status: 'built'
+status: done
 baseline_revision: 'a4c48b2c0ceaa11c2ab856b26a1736827a621ed4'
 route: 'oneshot'
 route_source: 'auto'
