@@ -16,3 +16,6 @@
 - source_plan: `_bmad-output/initiative-modernizacao/epic-robustez-fhir/story-dispatch-com-esquema-do-endpoint-status-http-corretos-e-cons-plan.md`
   summary: Os testes e2e que fazem login e não fazem logout deixam sessões do IRIS abertas por 15 minutos (Timeout 900); com rodadas repetidas, a instância Community chega a `<LICENSE LIMIT EXCEEDED>`.
   evidence: Visto pelo implementador da 3.7 ao rodar smoke e e2e várias vezes (`iris session` falhou; `docker restart` liberou). Só o tracer faz logout. Para o sweep do epic-robustez-fhir (3.9): logout ao fim de cada teste (afterEach no helper) e Timeout menor no grupo de sessão, se fizer sentido.
+- source_plan: `_bmad-output/initiative-modernizacao/epic-ipm-paridade/story-tracer-modulo-1-1-0-instala-o-portal-completo-e-o-ci-prova-p-plan.md`
+  summary: O `zpm "uninstall fhir-portal"` não desfaz o que a classe instaladora criou: ficam `/fhir/portal` e `/fhir/api` (apontando para classes e arquivos removidos), o papel `FHIRPortalAPI`, o usuário de demo e o grupo de sessão e o 8288 no `/fhir/r4`.
+  evidence: Revisão quick da 4.2 (achado 4). O `module.xml` só tem o `<Invoke>` de Activate. Para o sweep (4.5): um `<Invoke>` de desinstalação que remove os dois web apps, e o README dizendo o que fica no `/fhir/r4`.

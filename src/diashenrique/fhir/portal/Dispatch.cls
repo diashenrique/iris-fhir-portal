@@ -15,8 +15,10 @@ XData UrlMap [ XMLNamespace = "http://www.intersystems.com/urlmap" ]
 
 /// Storage strategy of the FHIR endpoint: it names the SQL tables (R = resources, S = search parameters),
 /// so the schema is never hard-coded
-/// Only the JsonAdvSQL strategy has GetResourceTable and GetSearchTable, so any other strategy throws
-ClassMethod Strategy() As HS.FHIRServer.Storage.JsonAdvSQL.InteractionsStrategy
+/// Only the JsonAdvSQL strategy has GetResourceTable and GetSearchTable, so any other strategy throws.
+/// It returns a HS.FHIRServer.Storage.JsonAdvSQL.InteractionsStrategy, declared as %RegisteredObject so the class
+/// also compiles in a namespace without the FHIR server classes (the IPM module warns there instead of failing)
+ClassMethod Strategy() As %RegisteredObject
 {
     Set strategy = ##class(HS.FHIRServer.API.InteractionsStrategy).GetStrategyForEndpoint(..#FHIRENDPOINT)
     If '$IsObject(strategy) || 'strategy.%IsA("HS.FHIRServer.Storage.JsonAdvSQL.InteractionsStrategy") {

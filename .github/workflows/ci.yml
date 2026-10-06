@@ -13,11 +13,19 @@ concurrency:
 
 jobs:
   build:
-    name: Build image and check FHIR data
+    # docker: the project's image (Dockerfile + iris.script); ipm: a clean IRIS for Health with the fhir-server
+    # package (the iris-fhir-template) and this checkout's module.xml, the way IPM users install the portal
+    name: ${{ matrix.install == 'docker' && 'Build image and check FHIR data' || 'Install through IPM' }}
     runs-on: ubuntu-24.04  # pinned: the IRIS latest-cd image is the only intended moving part
     timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        install: [docker, ipm]
     env:
       BASE_URL: http://localhost:32783
+      # How the steps below reach the IRIS container of each install
+      IRIS_EXEC: ${{ matrix.install == 'docker' && 'docker compose exec -T iris' || 'docker exec fhirportal-ipm' }}
     defaults:
       run:
         shell: bash  # -eo pipefail: a failing curl fails the step instead of feeding jq empty input
@@ -32,10 +40,16 @@ jobs:
           df -h /
 
       - name: Build image
+        if: matrix.install == 'docker'
         run: docker compose build --progress=plain
 
       - name: Start container
+        if: matrix.install == 'docker'
         run: docker compose up -d
+
+      - name: Install IPM, fhir-server and the portal module
+        if: matrix.install == 'ipm'
+        run: PORT=32783 bash scripts/ipm-install.sh
 
       # The wait signs in as the demo user, so it also proves that credential works before the tests
       - name: Wait for FHIR server
@@ -78,7 +92,7 @@ jobs:
         run: |
           # grep exits 0 on a match, 1 on none and 2 on an error; docker compose exec fails if the container is down
           set +e
-          docker compose exec -T iris grep "Error displaying login page" /usr/irissys/mgr/messages.log
+          $IRIS_EXEC grep "Error displaying login page" /usr/irissys/mgr/messages.log
           status=$?
           set -e
           if [ "$status" -eq 0 ]; then echo "messages.log has CSP login-page alerts"; exit 1; fi
@@ -89,7 +103,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.install }}
           path: |
             e2e/playwright-report
             e2e/test-results
@@ -97,4 +111,5 @@ jobs:
 
       - name: Container logs
         if: failure()
-        run: docker compose logs --tail=200
+        run: |
+          if [ "${{ matrix.install }}" = docker ]; then docker compose logs --tail=200; else docker logs --tail=200 fhirportal-ipm; fi

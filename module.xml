@@ -3,36 +3,31 @@
   <Document name="fhir-portal.ZPM">
     <Module>
       <Name>fhir-portal</Name>
-      <Version>1.0.3</Version>
+      <Version>1.1.0</Version>
       <Description>Patient Chart using FHIR capabilities in IRIS For Health</Description>
       <Keywords>fhir,patient,chart,jquery,iris4health</Keywords>
       <Packaging>module</Packaging>
+      <SystemRequirements Health="true"/>
+      <!-- 1 creates the demo login fhirportal/fhirportal: zpm "install fhir-portal -DDemoUser=1" -->
+      <Default Name="DemoUser" Value="0"/>
       <SourcesRoot>src</SourcesRoot>
       <Resource Name="diashenrique.fhir.portal.PKG"/>
-      <CSPApplication
-        Url="/fhir/portal"
-        SourcePath="/fhirUI"
-        DeployPath="${cspdir}/fhir/portal"
-        ServeFiles="1"
-        Recurse="1"
-        CookiePath="/fhir/portal"
-        UseCookies="2"
-        MatchRoles=":${dbrole}"
-        PasswordAuthEnabled="0"
-        UnauthenticatedEnabled="1"
-       />
-
-       <CSPApplication 
-        Url="/fhir/api"
-        Recurse="1"
-      MatchRoles=":${dbrole}"
-        PasswordAuthEnabled="1"
-        UnauthenticatedEnabled="0"
-        DispatchClass="diashenrique.fhir.portal.Dispatch"
-        ServeFiles="1"
-        CookiePath="/fhir/portal"
-        UseCookies="2"
-       />
+      <!-- JSON SQL functions of /fhir/api (article 4) -->
+      <Resource Name="User.SQLvar.CLS"/>
+      <FileCopy Name="fhirUI/" Target="${cspdir}fhir/portal/"/>
+      <!-- Web apps, role, SQL grants and session group: see diashenrique.fhir.portal.Installer.
+           Install in the namespace of the FHIR server (/fhir/r4), after it. -->
+      <Invokes>
+        <Invoke Class="diashenrique.fhir.portal.Installer" Method="Setup" Phase="Activate" When="After" CheckStatus="true">
+          <Arg>${cspdir}fhir/portal/</Arg>
+          <Arg>${DemoUser}</Arg>
+        </Invoke>
+      </Invokes>
+      <AfterInstallMessage>
+&#13;Install in the namespace of the FHIR server, after it: zn "FHIRSERVER" zpm "install fhir-portal"
+&#13;Then open /fhir/portal/diashenrique.fhir.portal.Home.cls and log in with an IRIS user.
+&#13;-DDemoUser=1 also creates the demo login fhirportal/fhirportal.
+      </AfterInstallMessage>
     </Module>
   </Document>
 </Export>
