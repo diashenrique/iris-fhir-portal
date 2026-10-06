@@ -1,0 +1,73 @@
+# Breakdown do epic-ipm-paridade, aprovado em 2026-10-06 sob a autonomia total concedida pelo usuário. A ordem das tabelas é a ordem de build.
+
+[[entry]]
+id = 1
+type = "spike"
+title = "Spike: IPM no IRIS 2026.2, pacote fhir-server e instalação do portal"
+description = "Num container irishealth-community:latest-cd limpo: instala o IPM pelo instalador do registro (como o sentai-task), instala o fhir-server 1.3.7 e registra se o /fhir/r4 sobe com dados; verifica quais atributos de web app o <CSPApplication> do IPM aceita (ServeFiles=3, GroupById, CookiePath, UseCookies, MatchRoles com papel próprio) e o que precisa ir para uma classe instaladora (<Invoke>), inclusive o ajuste do /fhir/r4 (GroupById, CookiePath, UseCookies, AutheEnabled 8288); reproduz a ordem real do iris-fhir-template (zn USER; zpm install fhir-portal; depois o fhir-server) e registra em que namespace o módulo do portal fica e o que acontece quando o FHIRSERVER e o /fhir/r4 ainda não existem; testa o conflito concreto entre o User.PKG do fhir-server (que é o mesmo src/User/SQLvar.cls) e o User.SQLvar do portal; e testa um papel que dá ao /fhir/api leitura sem escrita nas tabelas HSFHIR_* (recursos de banco R, privilégios SQL), rodando como fhirportal. A receita, com os comandos que a provam, fica no plano para as entradas 2 a 4 (handoff)."
+verify = "O plano registra, com comandos reproduzíveis em arquivos versionados: a instalação do IPM e do fhir-server no 2026.2 (com o resultado de /fhir/r4/metadata e da contagem de Patients), a tabela de atributos de web app aceitos ou não pelo <CSPApplication>, o resultado do conflito User.PKG e o resultado de UPDATE/DELETE como fhirportal com o papel candidato."
+covers = ["P1", "P3", "P4"]
+after = []
+hitl = false
+risk = "high"
+uncertainty = "O fhir-server 1.3.7 pode não instalar no 2026.2; se isso acontecer, o P3 e o Done when 1 são revistos com uma linha Decision antes da entrada 2."
+
+[[entry]]
+id = 2
+type = "story"
+title = "Tracer: módulo 1.1.0 instala o portal completo e o CI prova pelo IPM"
+description = "Seguindo o spike: o module.xml 1.1.0 empacota diashenrique.fhir.portal, User.SQLvar e fhirUI e, por uma classe instaladora (diashenrique.fhir.portal.Installer, chamada por <Invoke>), cria /fhir/portal, /fhir/api, o papel FHIRPortalAPI com o GRANT EXECUTE, o grupo de sessão com o /fhir/r4 e, com o parâmetro -Dzpm.DemoUser=1 (contrato usado pelas entradas 3 e 6 e pelo README), o usuário fhirportal; a desinstalação remove o que a classe criou e devolve o /fhir/r4 ao estado anterior; um job novo no ci.yml (ipm-install) sobe um irishealth-community:latest-cd limpo, instala o IPM e o fhir-server com dados, faz zpm load do checkout com o parâmetro de demo e roda contra ele os mesmos passos do job Docker (checagem de dados, scripts/smoke.sh, e2e e "No CSP login-page alerts") (handoff: a classe instaladora é a única fonte da configuração, que a entrada 3 passa a usar no Docker)."
+verify = "No CI, o job ipm-install fica verde com smoke e e2e; o job Docker atual continua verde."
+covers = ["P1", "P3", "P5"]
+after = [1, "2.8", "3.7"]        # spike; configuração de sessão final (2.8) e Dispatch sem esquema fixo (3.7)
+hitl = false
+risk = "high"
+uncertainty = "O e2e assume dados Synthea e a URL /fhir/portal; com o fhir-server, os dados de teste são os do template, e alguns testes podem precisar de pacientes com exames, que o template também carrega."
+
+[[entry]]
+id = 3
+type = "story"
+title = "Docker instala pelo mesmo módulo"
+description = "O Dockerfile instala o IPM, o iris.script mantém só a instalação do servidor FHIR, a carga de dados e o desbloqueio de senhas, e passa a fazer zpm load do checkout com o parâmetro de demo, removendo a criação de web apps, papéis, GRANT e usuário (agora da classe instaladora da entrada 2), e registra se o zpm load -dev mantém a edição ao vivo do fhirUI montado (hoje o /fhir/portal serve /home/irisowner/dev/fhirUI/)."
+verify = "git grep -n 'Security.Applications\\|Security.Roles\\|GRANT' -- iris.script não encontra nada, e o job Docker do CI (build, smoke, e2e) fica verde."
+covers = ["P2"]
+after = [2]
+hitl = false
+risk = "medium"
+uncertainty = "O zpm load precisa do checkout montado no build (bind mount do BuildKit), como hoje."
+
+[[entry]]
+id = 4
+type = "story"
+title = "/fhir/api só com leitura nas tabelas FHIR"
+description = "Aplica na classe instaladora o papel de leitura que o spike provou (ou registra por que não há como restringir a escrita sem quebrar o FHIR server), troca o %HS_DB_FHIRSERVER do /fhir/api por ele e acrescenta aos dois jobs de CI um passo que, por iris session com os papéis do /fhir/api, prova que a escrita é negada (sem rota de diagnóstico no módulo publicado)."
+verify = "No CI, o smoke prova que o /fhir/api continua lendo (três rotas cheias) e que um UPDATE/DELETE como o papel do /fhir/api é negado; ou o plano registra a razão técnica e a decisão."
+covers = ["P4"]
+after = [3]                       # ci.yml e a configuração de papéis já unificados pela entrada 3
+hitl = false
+risk = "medium"
+uncertainty = "Os recursos de banco do FHIRSERVER podem não separar leitura das tabelas FHIR de escrita de outras estruturas que o código precisa (ex.: cache de consultas)."
+
+[[entry]]
+id = 5
+type = "story"
+title = "Refactor sweep"
+description = "Limpeza deixada para depois pelas entradas 1 a 4, com escopo definido ao começar, a partir dos planos e das revisões; só limpeza."
+verify = "O CI segue verde, cada item de limpeza do plano está resolvido ou explicitamente adiado, e o run de master depois do merge está verde (Done when 5)."
+covers = ["P1", "P2", "P3", "P4", "P5"]
+after = [1, 2, 3, 4]
+hitl = false
+risk = "low"
+uncertainty = "O escopo só é conhecido ao fim das entradas anteriores."
+
+[[entry]]
+id = 6
+type = "story"
+title = "Publicar fhir-portal 1.1.0 e documentar a instalação por IPM"
+description = "Atualiza a seção de instalação por IPM do README (comando, -Dzpm.DemoUser=1, URL de entrada e login de demo), acrescenta ao job ipm-install um workflow_dispatch com a fonte (checkout ou registro) para que qualquer pessoa rode o Done when 4, e publica a versão 1.1.0 no registro IPM (uma pessoa com as credenciais do registro publica, ou autoriza e fornece o caminho)."
+verify = "zpm \"install fhir-portal\" num IRIS for Health 2026.2 limpo com o fhir-server instala a 1.1.0, e o smoke passa contra ele; o README descreve isso."
+covers = ["P6"]
+after = [5]
+hitl = true                       # a publicação exige credenciais do registro
+risk = "medium"
+uncertainty = "O processo de publicação no registro da comunidade (OEX/zpm publish) e as credenciais são do usuário."
