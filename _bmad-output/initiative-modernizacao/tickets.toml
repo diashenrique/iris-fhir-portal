@@ -37,7 +37,7 @@ id = 5
 slug = "epic-frontend-deps"
 title = "Dependências de frontend mantidas e inventariadas"
 covers = ["R5"]
-after = [{ epic = 3, needs = "a lógica de tela estabilizada, para não reescrever duas vezes" }]
+after = [{ epic = 3, needs = "a lógica de tela estabilizada, para não reescrever duas vezes" }, { epic = 4, needs = "o ci.yml com as duas pernas de instalação (4.5), que o check de vendor estende" }]
 description = "Decidir: manter jQuery atualizado ou migrar para JS puro/ES modules; trocar fhir.js (sem manutenção) por fhirclient.js ou fetch; Chart.js 4; enxugar os 11 MB de vendor (locales, fontes, .map); inventário com versões e checagem de CVE no CI; acessibilidade básica (lista navegável por teclado, alternativa textual ao gráfico)."
 
 [[epic]]
