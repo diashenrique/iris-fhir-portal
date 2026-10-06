@@ -13,9 +13,14 @@ FROM $IMAGE
 
 WORKDIR /home/irisowner/dev
 
-# The checkout is bind-mounted only for this step (BuildKit): the FHIR test data and the
-# ObjectScript sources are loaded into the databases, nothing is copied into the image layers.
+# The checkout is bind-mounted only for this step (BuildKit): the FHIR test data is loaded and the portal
+# module installed from it (zpm load), nothing is copied into the image layers. The image has no IPM, so
+# its installer comes from the community registry, as in musketeers-br/sentai-task. iris session exits 0 even
+# when a line of iris.script fails, so the build checks the log for the portal module's success line.
 RUN --mount=type=bind,src=.,dst=. \
+    wget -q https://pm.community.intersystems.com/packages/zpm/latest/installer -O /tmp/zpm.xml && \
     iris start IRIS && \
-    iris session IRIS < iris.script && \
-    iris stop IRIS quietly
+    iris session IRIS < iris.script | tee /tmp/iris-script.log && \
+    iris stop IRIS quietly && \
+    grep -q "fhir-portal: configured" /tmp/iris-script.log && \
+    rm -f /tmp/zpm.xml /tmp/iris-script.log

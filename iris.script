@@ -1,6 +1,9 @@
 zn "%SYS"
 Do ##class(Security.Users).UnExpireUserPasswords("*")
 
+    // IPM (the Dockerfile downloads its installer); it is mapped into FHIRSERVER below, once that namespace exists
+set sc = $system.OBJ.Load("/tmp/zpm.xml", "ck")
+
 zn "HSLIB"
 set namespace="FHIRSERVER"
 Set appKey = "/fhir/r4"
@@ -26,40 +29,12 @@ do strategy.SaveServiceConfigData(config)
 
 zw ##class(HS.FHIRServer.Tools.DataLoader).SubmitResourceFiles(appdir_"/data/fhir/", namespace, appKey)
 
-do $System.OBJ.LoadDir(appdir_"/src","ck",,1)
-
-    // REST API used by labresult.html (FHIR SQL schema)
+    // The portal through its own IPM module, as zpm "install fhir-portal" does (diashenrique.fhir.portal.Installer):
+    // web apps, role, SQL grant, session group with /fhir/r4 and the demo login documented in the README.
+    // /fhir/portal serves the bind-mounted checkout, so edits to fhirUI show up after a docker compose restart.
+    // The global mapping only reaches namespaces that exist when it runs, so it runs now, after FHIRSERVER.
 zn "%SYS"
-    // Access of /fhir/api: the FHIR SQL tables (read and also write, see deferred-work.md) come from %HS_DB_FHIRSERVER;
-    // FHIRPortalAPI only adds EXECUTE on the JSON SQL functions. Dispatch itself only reads, with bound parameters.
-zw ##class(Security.Roles).Create("FHIRPortalAPI", "JSON SQL functions of /fhir/api", "", "")
-zn "FHIRSERVER"
-zw ##class(%SQL.Statement).%ExecDirect(, "GRANT EXECUTE ON SQLUser.GetJSON, SQLUser.GetProp, SQLUser.GetAtJSON TO FHIRPortalAPI").%SQLCODE
-zn "%SYS"
-    // Login required, in the same session group as the portal pages and /fhir/r4 (below)
-set props("AutheEnabled") = 32
-set props("NameSpace") = "FHIRSERVER"
-set props("IsNameSpaceDefault") = 0
-set props("DispatchClass") = "diashenrique.fhir.portal.Dispatch"
-set props("MatchRoles")=":%HS_DB_FHIRSERVER:FHIRPortalAPI"
-set props("GroupById")="fhirportal",props("CookiePath")="/fhir/",props("UseCookies")=2
-zw ##class(Security.Applications).Create("/fhir/api" , .props)
-
-    // Demo login of the portal (no roles), documented in the README
-zw ##class(Security.Users).Create("fhirportal", "", "fhirportal", "FHIR Portal demo user")
-
-    // Portal pages: password login, one session shared with /fhir/r4 and /fhir/api (same GroupById and cookie path)
-    // ServeFiles=3 serves the static files only to an authenticated session; the role lets the entry page run
-kill props
-set props("NameSpace")="FHIRSERVER",props("Path")="/home/irisowner/dev/fhirUI/",props("Recurse")=1,props("AutheEnabled")=32,props("ServeFiles")=3
-set props("GroupById")="fhirportal",props("CookiePath")="/fhir/",props("UseCookies")=2,props("MatchRoles")=":%HS_DB_FHIRSERVER"
-zw ##class(Security.Applications).Create("/fhir/portal", .props)
-
-    // Keep 8288 (unauthenticated allowed on the web app): the FHIR server itself refuses UnknownUser with 401.
-    // Without the unauthenticated bit (8224) every anonymous call makes CSP look for a login page this REST app
-    // does not have, logs a severity-2 alert and leaves the container unhealthy.
-kill props
-set sc=##class(Security.Applications).Get("/fhir/r4",.props)
-set props("GroupById")="fhirportal",props("CookiePath")="/fhir/",props("UseCookies")=2,props("AutheEnabled")=8288
-zw ##class(Security.Applications).Modify("/fhir/r4", .props)
+zpm "enable -map -globally"
+zn namespace
+zpm "load /home/irisowner/dev -v -DDemoUser=1 -DPortalPath=/home/irisowner/dev/fhirUI/"
 halt

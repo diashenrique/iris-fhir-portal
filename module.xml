@@ -10,6 +10,9 @@
       <SystemRequirements Health="true"/>
       <!-- 1 creates the demo login fhirportal/fhirportal: zpm "install fhir-portal -DDemoUser=1" -->
       <Default Name="DemoUser" Value="0"/>
+      <!-- Folder /fhir/portal serves; empty: the copy of fhirUI below. Docker passes its bind-mounted checkout
+           (-DPortalPath=/home/irisowner/dev/fhirUI/), so edits show up without reinstalling. -->
+      <Default Name="PortalPath" Value=""/>
       <SourcesRoot>src</SourcesRoot>
       <Resource Name="diashenrique.fhir.portal.PKG"/>
       <!-- JSON SQL functions of /fhir/api (article 4) -->
@@ -19,7 +22,7 @@
            Install in the namespace of the FHIR server (/fhir/r4), after it. -->
       <Invokes>
         <Invoke Class="diashenrique.fhir.portal.Installer" Method="Setup" Phase="Activate" When="After" CheckStatus="true">
-          <Arg>${cspdir}fhir/portal/</Arg>
+          <Arg>${PortalPath}</Arg>
           <Arg>${DemoUser}</Arg>
         </Invoke>
       </Invokes>

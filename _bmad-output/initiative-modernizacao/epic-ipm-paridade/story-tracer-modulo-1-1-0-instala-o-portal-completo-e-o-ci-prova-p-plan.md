@@ -3,7 +3,7 @@ title: 'Tracer: módulo 1.1.0 instala o portal completo e o CI prova pelo IPM'
 type: 'feature'
 ticket: '2'
 created: '2026-10-06'
-status: 'built'
+status: done
 baseline_revision: '0a29e9a00d22091ee7d2be67949c27b0ef08d56d'
 route: 'full'
 route_source: 'auto'
