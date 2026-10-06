@@ -4,16 +4,25 @@
     "Dockerfile*": "dockerfile",
     "iris.script": "objectscript"
   },
+  // The container from docker-compose.yml. No password here: the InterSystems Server Manager
+  // asks for it on the first connection and can keep it in the operating system's credential store.
+  "intersystems.servers": {
+    "iris-fhir-portal": {
+      "webServer": {
+        "scheme": "http",
+        "host": "localhost",
+        "port": 32783
+      },
+      "username": "_SYSTEM",
+      "description": "iris-fhir-portal container (docker compose up -d)"
+    }
+  },
   "objectscript.conn": {
+    "server": "iris-fhir-portal",
     "ns": "FHIRSERVER",
     "active": true,
-    "username": "_SYSTEM",
-    "docker-compose": {
-      "service": "iris",
-      "internalPort": 52773
-    },
     "links": {
-      "FHIR Portal": "http://localhost:${port}/fhir/portal/diashenrique.fhir.portal.Home.cls"
+      "FHIR Portal": "http://localhost:32783/fhir/portal/diashenrique.fhir.portal.Home.cls"
     }
   },
   "sqltools.connections": [{

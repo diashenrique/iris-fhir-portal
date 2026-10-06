@@ -1,0 +1,7 @@
+{
+  "recommendations": [
+    "intersystems-community.vscode-objectscript",
+    "intersystems-community.servermanager",
+    "intersystems.language-server"
+  ]
+}
