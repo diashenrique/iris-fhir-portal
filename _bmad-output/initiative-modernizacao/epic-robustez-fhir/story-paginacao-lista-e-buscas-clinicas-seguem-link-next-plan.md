@@ -3,7 +3,7 @@ title: 'Paginação: lista e buscas clínicas seguem link[next]'
 type: 'bugfix'
 ticket: '4'
 created: '2026-10-05'
-status: 'built'
+status: done
 baseline_revision: 'ead7e8c73c76a435e6586ac699c7d6d79ee46a7d'
 route: 'full'
 route_source: 'auto'

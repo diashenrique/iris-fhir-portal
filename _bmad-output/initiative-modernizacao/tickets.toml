@@ -30,7 +30,7 @@ slug = "epic-ipm-paridade"
 title = "zpm install fhir-portal funcional no IRIS atual"
 covers = ["R4"]
 after = [{ epic = 2, needs = "o modelo de autenticação que o module.xml vai configurar" }, { epic = 3, needs = "o Dispatch e os GRANTs sem esquema físico fixo, com a resolução do esquema pelo endpoint (entrada 3.7)" }]
-description = "Docker passa a usar zpm load do próprio module.xml (um único caminho de instalação, como no sentai-task); web apps e papéis declarados no módulo; resolver o esquema SQL pelo endpoint; teste de instalação no iris-fhir-template; publicar a versão 1.1.0 no registro."
+description = "Docker passa a usar zpm load do próprio module.xml (um único caminho de instalação, como no sentai-task); web apps e papéis declarados no módulo; resolver o esquema SQL pelo endpoint; teste de instalação no iris-fhir-template; publicar a versão 1.1.0 no registro. Inclui o endurecimento do acesso SQL do /fhir/api: hoje o %HS_DB_FHIRSERVER dá leitura e escrita nas tabelas FHIR (spike 3.6, deferred-work.md); avaliar SQL com checagem de privilégio ou um papel de banco próprio ao declarar os papéis no module.xml."
 
 [[epic]]
 id = 5
