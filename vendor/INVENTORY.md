@@ -1,6 +1,6 @@
 # Inventory of the libraries fhirUI loads
 
-Every library the pages (`patientlist.html`, `labresult.html`) load, where it comes from, and its version.
+Every library the portal page (`patientlist.html`) loads, where it comes from, and its version. (`labresult.html` only sends the browser to the chart of the patient and loads nothing.)
 
 - **npm (manifest):** pinned in `package-lock.json`, copied by `sync.mjs`, checked in CI.
 - **not on npm:** kept as is, with the origin recorded here.
