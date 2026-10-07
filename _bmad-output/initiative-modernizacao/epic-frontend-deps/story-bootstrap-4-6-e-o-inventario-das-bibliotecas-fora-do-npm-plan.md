@@ -3,7 +3,7 @@ title: 'Bootstrap 4.6 e o inventário das bibliotecas fora do npm'
 type: 'chore'
 ticket: '3'
 created: '2026-10-07'
-status: 'built'
+status: done
 baseline_revision: '38ad7f819fc3147c610a6586c4b00da2a78a769c'
 route: 'oneshot'
 route_source: 'auto'

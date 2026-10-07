@@ -3,7 +3,7 @@ title: 'Chart.js 4 no gráfico de exames'
 type: 'chore'
 ticket: '2'
 created: '2026-10-07'
-status: 'built'
+status: done
 baseline_revision: '701739d983504551eaec9a1d86fb246ed507133e'
 route: 'oneshot'
 route_source: 'auto'
