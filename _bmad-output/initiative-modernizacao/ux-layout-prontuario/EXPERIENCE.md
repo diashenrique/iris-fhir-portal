@@ -15,7 +15,10 @@ O portal é uma web responsiva de duas páginas estáticas, servidas pelo IRIS e
 
 **Público principal:** o desenvolvedor que lê os artigos da Developer Community ou instala o portal pelo IPM para ver o FHIR do IRIS for Health funcionando (decisão do usuário, 2026-10-06). O prontuário se comporta como um prontuário clínico real. A camada técnica fica sempre à vista, mas nunca na frente: o selo de origem em cada card, o JSON bruto a um clique e a edição que demonstra o `update` do fhir.js do artigo 3.
 
-**Idioma:** a interface é em inglês, como hoje e como nos artigos. O pt-BR fica para o i18n do epic-prontuario-ampliado (decisão do usuário, 2026-10-06).
+**Idioma:** a interface é em inglês por padrão, como nos artigos (decisão do usuário, 2026-10-06). Desde o epic-prontuario-ampliado (6.5), um seletor no cabeçalho troca para português (pt-BR):
+- **Persistência:** a escolha fica guardada no navegador. Trocar recarrega a página no mesmo paciente (`patientlist.html?id=`).
+- **O que muda:** os textos da interface, o `<html lang>`, as datas ("Sep 3, 2014" ou "3 de set. de 2014") e os números ("6.72" ou "6,72"), inclusive no gráfico e no calendário do Edit.
+- **O que não muda:** os dados clínicos aparecem como o FHIR os envia, sem tradução.
 
 ## Information Architecture
 
@@ -27,6 +30,7 @@ O portal é uma web responsiva de duas páginas estáticas, servidas pelo IRIS e
 | Edit patient (modal) | "Edit" no resumo | Alterar os dados demográficos pelo `update` do fhir.js (artigo 3) |
 | FHIR JSON (painel) | "FHIR JSON" no resumo | O recurso Patient bruto, para o desenvolvedor |
 | Lab chart (dentro do card Laboratory) | Escolher um exame no card | A evolução de um exame pelo `/fhir/api` (artigo 4) |
+| Timeline (aba do prontuário) | Aba "Timeline" do resumo, ao lado de "Chart" | Todos os eventos datados do paciente, numa chamada só a `Patient/$everything` (epic-prontuario-ampliado, 6.2) |
 
 - **Desktop (≥ 992px):** a lista e o prontuário dividem a tela, e a seleção na lista troca o prontuário sem recarregar.
 - **Abaixo de 992px:** uma superfície de cada vez. Escolher um paciente abre o prontuário; "Back to patients" volta para a lista, mantendo a busca e a posição.
@@ -59,6 +63,7 @@ Comportamento; o visual está em `DESIGN.md.Components`.
 | Vital signs card | Patient chart | Mostra o último valor de cada sinal (pressão, frequência cardíaca, peso, altura, IMC...), com unidade, valor arredondado e data. "Show all" expande o histórico. |
 | Conditions card | Patient chart | As ativas primeiro (active, recurrence, relapse; sem `clinicalStatus` conta como ativa), depois as resolvidas e inativas em cinza, cada grupo do início mais recente para o mais antigo. Colunas: condição, status, início e resolução. O resumo mostra o selo "N active conditions", que leva ao card (epic-prontuario-ampliado, 6.1). |
 | Laboratory card | Patient chart | Exames agrupados por data, do mais recente ao mais antigo. Valor arredondado com unidade e faixa de referência quando o FHIR traz `referenceRange`. O valor fora da faixa (ou com `interpretation` alta ou baixa) é destacado. O seletor de exame desenha o gráfico logo abaixo. |
+| Timeline | Patient chart, aba Timeline | Carrega na primeira vez que a aba é aberta, uma vez por paciente; um paciente novo volta para "Chart". Eventos: encontros (period.start), início de condições (onset, ou recordedDate), procedimentos (performed), vacinas (occurrence), prescrições (authoredOn) e laudos (effective, ou issued), do mais recente para o mais antigo, agrupados por ano. Os botões de filtro, um por tipo presente e com a contagem, mostram ou escondem o tipo (`aria-pressed`), e um ano sem eventos visíveis some. As setas trocam de aba. Segue `link[next]` se o servidor paginar (o IRIS devolve uma página só). |
 | Lab chart | Laboratory card | Desenha ao trocar o exame, sem botão "Search". O eixo x mostra datas e o y a unidade; a faixa de referência aparece como banda quando existe. Mantém a tabela alternativa para leitores de tela (5.5). |
 | Edit patient | Modal | É o formulário de hoje (nome, nascimento, sexo, endereço). "Save" faz o `update` e fecha com "Saved."; em erro, o modal continua aberto com a mensagem. O SSN nunca é gravado mascarado (epic-seguranca). |
 | FHIR JSON | Painel lateral (o modal docked de hoje) | Mostra o Patient bruto, só leitura, com "Copy". O SSN aparece mascarado, como hoje. |
@@ -75,6 +80,7 @@ Comportamento; o visual está em `DESIGN.md.Components`.
 | Card carregando | Cada card clínico | Esqueleto no corpo; o título e o selo já aparecem |
 | Card sem registros | Cada card clínico | Uma linha: "No allergies recorded.", "No vital signs recorded.", "No lab results recorded.", "No immunizations recorded." ou "No conditions recorded." |
 | Card com erro | Cada card clínico | "Couldn't load {seção}." com "Try again" no próprio card, mais o toast de erro de hoje (epic-robustez-fhir) |
+| Timeline carregando, vazia ou com erro | Timeline | Esqueleto enquanto o `$everything` responde; "No events recorded." sem eventos datados; "Couldn't load the timeline." com "Try again", mais o toast |
 | Exame sem valor numérico | Lab chart | Sem gráfico: "{exame} has no numeric results to chart." A tabela mostra os valores em texto |
 | Sessão expirada | Qualquer superfície | Volta à tela de login uma vez (epic-seguranca); o comportamento de hoje não muda |
 | Salvando | Edit patient | "Save" desabilitado com "Saving…"; o modal não fecha durante o envio |

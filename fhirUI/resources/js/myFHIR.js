@@ -1,4 +1,6 @@
 $(document).ready(function () {
+    // Interface texts in the chosen language (i18n.js)
+    const t = I18N.t;
     var objPatient = "";
 
     // Login page of the portal; the IRIS session cookie authenticates /fhir/r4 and /fhir/api
@@ -18,6 +20,12 @@ $(document).ready(function () {
     // Reload asks the server again for the list, keeping the search typed
     $("#reloadList").click(function () {
         loadList();
+    });
+
+    // The language: the choice is kept in the browser, and the page reloads in it, on the same patient
+    $("#langSelect").val(I18N.lang).on('change', function () {
+        I18N.setLang($(this).val());
+        window.location.href = 'patientlist.html' + (selectedPatientId ? '?id=' + encodeURIComponent(selectedPatientId) : '');
     });
 
     // The user of the IRIS session, in the header
@@ -51,19 +59,30 @@ $(document).ready(function () {
         return age >= 0 ? String(age) : '';
     }
 
+    // The sex of the patient in the language; a code the dictionary does not know shows as it is
+    function genderText(gender) {
+        if (!gender) return '';
+        const text = t('gender.' + gender);
+        return text === 'gender.' + gender ? gender : text;
+    }
+
     // The summary at the top of the chart: who the patient is, at a glance
     function showSummary(r) {
         const name = displayName(r);
         const age = ageOf(r.birthDate);
-        $("#patientName").text(name || '(no name)').attr('title', getName(r).trim());
-        $("#patientAge").text(age ? age + ' years' : '');
-        $("#patientGender").text(r.gender ? r.gender.charAt(0).toUpperCase() + r.gender.slice(1) : '');
-        $("#patientBirthDate").text(r.birthDate ? 'Born ' + r.birthDate : '');
+        $("#patientName").text(name || t('noName')).attr('title', getName(r).trim());
+        $("#patientAge").text(age ? t('years', { n: age }) : '');
+        $("#patientGender").text(genderText(r.gender));
+        $("#patientBirthDate").text(r.birthDate ? t('summary.born', { date: readableDate(r.birthDate) }) : '');
         $("#patientFhirId").text('FHIR ID ' + r.id);
         $("#allergyAlert").addClass('d-none').text('');
         $("#conditionAlert").addClass('d-none').text('');
         $("#emptyState").addClass('d-none');
         $("#patientChart").removeClass('d-none');
+        if (timelineFor !== r.id) {
+            timelineFor = null;
+            showTab('chart');
+        }
     }
 
     $("#updateData").prop('disabled', true);
@@ -77,13 +96,13 @@ $(document).ready(function () {
     $("#vitalsShowAll").click(function () {
         const all = $(this).attr('aria-expanded') !== 'true';
         $("#vitalSignsTable tbody .vital-history").toggleClass('d-none', !all);
-        $(this).attr('aria-expanded', String(all)).text(all ? 'Show latest' : 'Show all (' + $("#vitalSignsTable tbody tr").length + ')');
+        $(this).attr('aria-expanded', String(all)).text(all ? t('showLatest') : t('showAll', { n: $("#vitalSignsTable tbody tr").length }));
     });
 
     // Copy the FHIR JSON; without the Clipboard API (a page that is not https or localhost), select and copy
     $("#copyJSON").click(function () {
         const text = $("#fhirdatasource").val();
-        const copied = () => toastr.info('Copied.');
+        const copied = () => toastr.info(t('copied'));
         if (navigator.clipboard && window.isSecureContext) {
             navigator.clipboard.writeText(text).then(copied);
         } else {
@@ -108,16 +127,16 @@ $(document).ready(function () {
     function saveToast(saved) {
         const options = { positionClass: 'toast-bottom-center' };
         if (saved) {
-            toastr.success('Saved.', '', options);
+            toastr.success(t('saved'), '', options);
         } else {
-            const message = "Couldn't save the patient. Try again.";
+            const message = t('saveError');
             toastr.error(message, '', options);
             $("#liveStatus").text(message);
         }
     }
 
     $("#updateData").click(function () {
-        $("#updateData").prop('disabled', true).text('Saving…');
+        $("#updateData").prop('disabled', true).text(t('saving'));
         updatePatient($("#fhirId").val());
     });
 
@@ -170,20 +189,12 @@ $(document).ready(function () {
         $("#revealSSN").prop('disabled', true);
     });
 
-    // A FHIR date or dateTime as people read it ("Sep 3, 2014"), from its own digits: no time zone shift
-    const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    // A FHIR date or dateTime as people read it, from its own digits: no time zone shift (i18n.js)
+    const readableDate = I18N.readableDate;
 
-    function readableDate(value) {
-        const m = /^(\d{4})(?:-(\d{2}))?(?:-(\d{2}))?/.exec(value || '');
-        if (!m) return value || '';
-        if (!m[2]) return m[1];
-        const month = MONTHS[Number(m[2]) - 1];
-        return m[3] ? month + ' ' + Number(m[3]) + ', ' + m[1] : month + ' ' + m[1];
-    }
-
-    // A number shown with at most two decimals ("6.7188" -> "6.72"); anything else as it is
+    // A number shown with at most two decimals and the separators of the language; anything else as it is
     function roundValue(value) {
-        return /^-?\d+(\.\d+)?$/.test(value) ? String(Math.round(Number(value) * 100) / 100) : value;
+        return /^-?\d+(\.\d+)?$/.test(value) ? I18N.formatNumber(value) : value;
     }
 
     // Build a table row whose cells hold the values as text, never as HTML.
@@ -204,11 +215,12 @@ $(document).ready(function () {
 
     // The clinical cards: their table, columns, what they hold and what they say when empty
     const CARDS = {
-        allergy: { table: '#allergyTable', badge: '#badgeAllergy', columns: 4, what: 'allergies', empty: 'No allergies recorded.' },
-        condition: { table: '#conditionTable', badge: '#badgeCondition', columns: 4, what: 'conditions', empty: 'No conditions recorded.' },
-        vitalsigns: { table: '#vitalSignsTable', badge: '#badgeVitalSigns', columns: 4, what: 'vital signs', empty: 'No vital signs recorded.' },
-        laboratory: { table: '#laboratoryTable', badge: '#badgeLaboratory', columns: 4, what: 'laboratory results', empty: 'No lab results recorded.' },
-        immunization: { table: '#immunizationTable', badge: '#badgeImmunization', columns: 2, what: 'immunizations', empty: 'No immunizations recorded.' }
+    // (what they hold and their empty line are the keys what.<card> and empty.<card> of i18n.js)
+        allergy: { table: '#allergyTable', badge: '#badgeAllergy', columns: 4 },
+        condition: { table: '#conditionTable', badge: '#badgeCondition', columns: 4 },
+        vitalsigns: { table: '#vitalSignsTable', badge: '#badgeVitalSigns', columns: 4 },
+        laboratory: { table: '#laboratoryTable', badge: '#badgeLaboratory', columns: 4 },
+        immunization: { table: '#immunizationTable', badge: '#badgeImmunization', columns: 2 }
     };
 
     // A row spanning every column of the card's table
@@ -229,17 +241,17 @@ $(document).ready(function () {
         $(card.badge).text(total);
         $(card.table + ' tbody').empty().removeAttr('aria-busy');
         if (total === 0) {
-            $(card.table + ' tbody').append(cardRow(card, document.createTextNode(card.empty)));
+            $(card.table + ' tbody').append(cardRow(card, document.createTextNode(t('empty.' + key))));
         }
     }
 
     // Failed: the toast (showError), and in the card itself what failed and a way to try again
     function cardError(key, patientId, err) {
         const card = CARDS[key];
-        showError(card.what, err);
+        showError(key, err);
         $(card.table + ' tbody').empty().removeAttr('aria-busy').append(cardRow(card, [
-            document.createTextNode("Couldn't load " + card.what + '. '),
-            $('<button type="button" class="btn btn-link btn-sm p-0 card-retry">').text('Try again').on('click', () => {
+            document.createTextNode(t('error.card', { what: t('what.' + key) }) + ' '),
+            $('<button type="button" class="btn btn-link btn-sm p-0 card-retry">').text(t('tryAgain')).on('click', () => {
                 if (isSelected(patientId)) window[key](patientId);
             })
         ]));
@@ -397,12 +409,14 @@ $(document).ready(function () {
         if (unloading) return;
         const status = httpStatus(err);
         if (status === 0) {
-            toastError('Could not load ' + what + ' (no response from the server)');
+            toastError(t('error.noResponse', { what: t('what.' + what) }));
         } else if (status) {
-            toastError('Could not load ' + what + ' (HTTP ' + status + ')');
+            toastError(t('error.loadStatus', { what: t('what.' + what), status: status }));
         } else {
-            console.error('Could not load ' + what, err);
-            toastError('Could not load ' + what);
+            // The same message in the console, with the error itself
+            const message = t('error.load', { what: t('what.' + what) });
+            console.error(message, err);
+            toastError(message);
         }
     }
 
@@ -510,7 +524,7 @@ $(document).ready(function () {
             if (match) shown++;
         });
         $("#noMatch").toggleClass('d-none', !(term && shown === 0 && $("#listgroup .list-group-item").length > 0));
-        $("#noMatchTerm").text($("#searchClients").val().trim());
+        $("#noMatchText").text(t('list.noMatch', { term: $("#searchClients").val().trim() }));
     }
 
     $("#searchClients").on('input keyup', filterList);
@@ -527,8 +541,8 @@ $(document).ready(function () {
         const original = getName(resource).trim();
         const age = ageOf(resource.birthDate);
         const meta = [
-            age ? age + ' years' : '',
-            resource.gender ? resource.gender.charAt(0).toUpperCase() + resource.gender.slice(1) : '',
+            age ? t('years', { n: age }) : '',
+            genderText(resource.gender),
             'ID ' + patientId
         ].filter((part) => part).join(' \u00b7 ');
         return $('<div class="list-group-item">')
@@ -542,12 +556,12 @@ $(document).ready(function () {
             .append(
                 // The link is what the keyboard reaches (Tab, then the arrows below); its name says who it opens
                 $('<a href="#" class="stretched-link"></a>')
-                    .attr('aria-label', (name || '(no name)') + ', FHIR Patient ID ' + patientId),
+                    .attr('aria-label', t('list.item', { name: name || t('noName'), id: patientId })),
                 $('<div class="list-group-item-figure">').append(
                     $('<div class="tile tile-circle bg-blue">').text(name ? name.slice(0, 1) : '?')
                 ),
                 $('<div class="list-group-item-body">').append(
-                    $('<h4 class="list-group-item-title">').text(name || '(no name)').attr('title', original),
+                    $('<h4 class="list-group-item-title">').text(name || t('noName')).attr('title', original),
                     $('<p class="list-group-item-text">').text(meta)
                 )
             );
@@ -601,10 +615,10 @@ $(document).ready(function () {
                     return;
                 }
                 sessionStorage.removeItem(redirectKey);
-                toastError('The FHIR server refused the request (HTTP ' + status + '). Check the /fhir/r4 configuration.');
+                toastError(t('error.fhirRefused', { status: status }));
                 return;
             }
-            showError('the patient list', err);
+            showError('patientList', err);
         })
         .then(() => {
             $("#listgroup .list-skeleton").remove();
@@ -649,6 +663,12 @@ $(document).ready(function () {
         return coding.code || 'active';
     }
 
+    // The clinical status in the language; a code the dictionary does not know shows as it is
+    function statusText(code) {
+        const text = t('status.' + code);
+        return text === 'status.' + code ? code : text;
+    }
+
     window.condition = function (patientId) {
         cardLoading('condition');
         searchAll({
@@ -669,7 +689,7 @@ $(document).ready(function () {
                 conditions.sort((a, b) => (b.active - a.active) || onset(b.r).localeCompare(onset(a.r)));
                 const rows = conditions.map((c) => textRow([
                     conceptText(c.r.code),
-                    c.status.charAt(0).toUpperCase() + c.status.slice(1),
+                    statusText(c.status),
                     onset(c.r),
                     abatement(c.r)
                 ], 2).each(function () {
@@ -684,7 +704,7 @@ $(document).ready(function () {
                 // The count in the summary: how many are active, a link to their card
                 const active = conditions.filter((c) => c.active).length;
                 if (active > 0) {
-                    $("#conditionAlert").removeClass('d-none').text(active + (active === 1 ? ' active condition' : ' active conditions'));
+                    $("#conditionAlert").removeClass('d-none').text(I18N.plural('summary.conditions', active));
                 }
             })
             .catch((err) => {
@@ -705,7 +725,7 @@ $(document).ready(function () {
                 // The alert in the summary: how many allergies, a link to their card
                 const allergies = result.entries.length;
                 if (allergies > 0) {
-                    $("#allergyAlert").removeClass('d-none').text(allergies + (allergies === 1 ? ' allergy' : ' allergies'));
+                    $("#allergyAlert").removeClass('d-none').text(I18N.plural('summary.allergies', allergies));
                 }
 
                 appendBundles(result.bundles);
@@ -749,7 +769,7 @@ $(document).ready(function () {
                 $("#vitalSignsTable tbody").append(rows);
                 const history = values.length - latest.size;
                 $("#vitalsShowAll").toggleClass('d-none', history === 0).attr('aria-expanded', 'false')
-                    .text('Show all (' + values.length + ')');
+                    .text(t('showAll', { n: values.length }));
             })
             .catch((err) => {
                 if (isSelected(patientId)) cardError('vitalsigns', patientId, err);
@@ -785,7 +805,7 @@ $(document).ready(function () {
                 Array.from(days.keys()).reverse().forEach((day) => {
                     const labs = days.get(day);
                     rows.push($('<tr class="lab-date">').append(
-                        $('<th scope="colgroup" colspan="4">').text(readableDate(labs[0].date) || 'No date').attr('title', labs[0].date)
+                        $('<th scope="colgroup" colspan="4">').text(readableDate(labs[0].date) || t('lab.noDate')).attr('title', labs[0].date)
                     ));
                     labs.forEach((lab) => {
                         const value = $('<td>').text(lab.value);
@@ -793,7 +813,7 @@ $(document).ready(function () {
                             value.addClass('value-abnormal').append(
                                 $('<span class="value-flag">').append(
                                     $('<span aria-hidden="true">').text(lab.flag === 'High' ? ' \u2191' : ' \u2193'),
-                                    $('<span class="value-flag-text">').text(' ' + lab.flag)
+                                    $('<span class="value-flag-text">').text(' ' + t('flag.' + lab.flag))
                                 )
                             );
                         }
@@ -816,7 +836,7 @@ $(document).ready(function () {
     if (window.Chart) {
         Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Fira Sans", "Helvetica Neue", "Apple Color Emoji", sans-serif';
         // Numbers and dates on the axes in English, like the rest of the interface
-        Chart.defaults.locale = 'en-US';
+        Chart.defaults.locale = I18N.locale;
     }
 
     // One chart at a time: the previous one is destroyed before drawing the next
@@ -836,14 +856,16 @@ $(document).ready(function () {
                 return;
             }
             sessionStorage.removeItem(redirectKey);
-            toastError('The FHIR API refused the request (HTTP 401). Check the /fhir/api configuration.');
+            toastError(t('error.apiRefused'));
         } else if (status === 0) {
-            toastError('Could not load ' + what + ' (no response from the server)');
+            toastError(t('error.noResponse', { what: t('what.' + what) }));
         } else if (status) {
-            toastError('Could not load ' + what + ' (HTTP ' + status + ')');
+            toastError(t('error.loadStatus', { what: t('what.' + what), status: status }));
         } else {
-            console.error('Could not load ' + what, jqXHR);
-            toastError('Could not load ' + what);
+            // The same message in the console, with the error itself
+            const message = t('error.load', { what: t('what.' + what) });
+            console.error(message, jqXHR);
+            toastError(message);
         }
     }
 
@@ -866,11 +888,11 @@ $(document).ready(function () {
     function loadLabOptions(patientId) {
         $.getJSON('/fhir/api/laboptions/' + encodeURIComponent(patientId), function (options) {
             if (!isSelected(patientId)) return;
-            $("#labtest").empty().append($('<option value="">').text('Choose a test…'),
+            $("#labtest").empty().append($('<option value="">').text(t('chart.choose')),
                 options.map((o) => $('<option>').val(o.code).text(o.name)));
             $("#labChartSection").toggleClass('d-none', options.length === 0);
         }).fail(function (jqXHR) {
-            if (isSelected(patientId)) apiFailed('lab tests', jqXHR);
+            if (isSelected(patientId)) apiFailed('labTests', jqXHR);
         });
     }
 
@@ -880,9 +902,7 @@ $(document).ready(function () {
 
     // Text alternative of the chart: its name on the canvas and every plotted point in a table only screen readers see
     function describeChart(label, points) {
-        $("#myChart").attr('aria-label', label
-            ? 'Lab results chart of ' + label + ', ' + points.length + ' results, listed in the table below'
-            : 'Lab results chart');
+        $("#myChart").attr('aria-label', label ? t('chart.ariaOf', { label: label, n: points.length }) : t('chart.aria'));
         $("#labTable caption").text(label);
         $("#labTable tbody").empty().append(points.map((e) => $('<tr>').append($('<td>').text(e.date), $('<td>').text(e.value))));
     }
@@ -900,7 +920,7 @@ $(document).ready(function () {
             }
             $("#testName").text(label);
             describeChart(label, points);
-            $("#chartEmpty").toggleClass('d-none', points.length > 0).text(points.length ? '' : label + ' has no numeric results to chart.');
+            $("#chartEmpty").toggleClass('d-none', points.length > 0).text(points.length ? '' : t('chart.noNumeric', { label: label }));
             $("#chartBox").toggleClass('d-none', points.length === 0);
             if (!points.length) return;
 
@@ -935,7 +955,140 @@ $(document).ready(function () {
                 }
             });
         }).fail(function (jqXHR) {
-            if (request === latestLabRequest) apiFailed('lab results', jqXHR);
+            if (request === latestLabRequest) apiFailed('labResults', jqXHR);
+        });
+    }
+
+    // ---- Timeline: every dated event of the patient, from one call to Patient/$everything
+
+    // The tab that is shown: the clinical cards (chart) or the timeline. The timeline loads the first time it is opened.
+    let timelineFor = null;
+
+    function showTab(tab) {
+        const timeline = tab === 'timeline';
+        $("#tabChart").toggleClass('active', !timeline).attr({ 'aria-selected': String(!timeline), tabindex: timeline ? '-1' : '0' });
+        $("#tabTimeline").toggleClass('active', timeline).attr({ 'aria-selected': String(timeline), tabindex: timeline ? '0' : '-1' });
+        $("#chartView").toggleClass('d-none', timeline);
+        $("#timelineView").toggleClass('d-none', !timeline);
+        if (timeline && timelineFor !== selectedPatientId) loadTimeline(selectedPatientId);
+    }
+
+    $("#tabChart").click(() => showTab('chart'));
+    $("#tabTimeline").click(() => showTab('timeline'));
+    // Arrow keys move between the two tabs (the tab pattern)
+    $(".chart-tabs").on('keydown', '.nav-link', function (e) {
+        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+        e.preventDefault();
+        const other = this.id === 'tabChart' ? '#tabTimeline' : '#tabChart';
+        $(other).trigger('click').trigger('focus');
+    });
+
+    // The event a resource stands for: its type, its date and what to call it; null when it has no date
+    const TIMELINE_TYPES = {
+        Encounter: { date: (r) => r.period && r.period.start, text: (r) => conceptText((r.type || [])[0]) || (r.class && (r.class.display || r.class.code)) || 'Encounter' },
+        Condition: { date: (r) => r.onsetDateTime || (r.onsetPeriod && r.onsetPeriod.start) || r.recordedDate, text: (r) => conceptText(r.code) },
+        Procedure: { date: (r) => r.performedDateTime || (r.performedPeriod && r.performedPeriod.start), text: (r) => conceptText(r.code) },
+        Immunization: { date: (r) => r.occurrenceDateTime, text: (r) => conceptText(r.vaccineCode) },
+        MedicationRequest: { date: (r) => r.authoredOn, text: (r) => conceptText(r.medicationCodeableConcept) || (r.medicationReference && r.medicationReference.display) || 'Medication' },
+        DiagnosticReport: { date: (r) => r.effectiveDateTime || (r.effectivePeriod && r.effectivePeriod.start) || r.issued, text: (r) => conceptText(r.code) }
+    };
+
+    function timelineEvent(resource) {
+        const type = TIMELINE_TYPES[resource.resourceType];
+        const date = type && type.date(resource);
+        return date ? { type: resource.resourceType, date: date, text: type.text(resource) || resource.resourceType } : null;
+    }
+
+    // Every page of $everything, following link[next] (the IRIS server answers with one page today)
+    function everything(patientId) {
+        const resources = [];
+        const seen = new Set();
+        const page = (url) => $.ajax({ url: url, headers: { Accept: 'application/fhir+json' }, dataType: 'json' }).then((bundle) => {
+            entries(bundle).forEach((e) => resources.push(e.resource));
+            const next = bundleLink(bundle, 'next');
+            if (next && !seen.has(next)) {
+                seen.add(next);
+                // Same host as the page, where the session cookie applies
+                const u = new URL(next, window.location.origin);
+                return page(u.pathname + u.search);
+            }
+            return resources;
+        });
+        return page('/fhir/r4/Patient/' + encodeURIComponent(patientId) + '/$everything');
+    }
+
+    function timelineState(content) {
+        $("#timelineFilters").empty();
+        $("#timelineBody").empty().append(content);
+    }
+
+    function loadTimeline(patientId) {
+        timelineFor = patientId;
+        $("#timelineBody").attr('aria-busy', 'true');
+        timelineState([$('<span class="skeleton-line" aria-hidden="true">'), $('<span class="skeleton-line short" aria-hidden="true">')]);
+        everything(patientId).then((resources) => {
+            if (!isSelected(patientId) || timelineFor !== patientId) return;
+            $("#timelineBody").removeAttr('aria-busy');
+            const events = resources.map(timelineEvent).filter((e) => e);
+            // Latest first: ISO dates sort as text
+            events.sort((a, b) => b.date.localeCompare(a.date));
+            if (!events.length) {
+                timelineState($('<p class="text-muted mb-0">').text(t('timeline.empty')));
+                return;
+            }
+            renderTimeline(events);
+        }, (jqXHR) => {
+            if (!isSelected(patientId) || timelineFor !== patientId) return;
+            $("#timelineBody").removeAttr('aria-busy');
+            timelineFor = null;
+            showError('timeline', { error: jqXHR });
+            timelineState($('<p class="mb-0">').append(
+                document.createTextNode(t('error.card', { what: t('what.timeline') }) + ' '),
+                $('<button type="button" class="btn btn-link btn-sm p-0 card-retry">').text(t('tryAgain')).on('click', () => loadTimeline(patientId))
+            ));
+        });
+    }
+
+    function renderTimeline(events) {
+        // One filter button per type present, with its count; all pressed at first
+        const counts = {};
+        events.forEach((e) => { counts[e.type] = (counts[e.type] || 0) + 1; });
+        $("#timelineFilters").empty().append(Object.keys(TIMELINE_TYPES).filter((type) => counts[type]).map((type) =>
+            $('<button type="button" class="btn btn-sm btn-outline-primary timeline-filter active" aria-pressed="true">')
+                .attr('data-type', type).text(t('type.' + type) + ' (' + counts[type] + ')')
+                .on('click', function () {
+                    const on = $(this).attr('aria-pressed') !== 'true';
+                    $(this).attr('aria-pressed', String(on)).toggleClass('active', on);
+                    filterTimeline();
+                })
+        ));
+        // Grouped by year, latest year first
+        const years = new Map();
+        events.forEach((e) => {
+            const year = e.date.slice(0, 4);
+            if (!years.has(year)) years.set(year, []);
+            years.get(year).push(e);
+        });
+        $("#timelineBody").empty().append(Array.from(years.keys()).map((year) => $('<section class="timeline-year">').append(
+            $('<h3 class="h6 timeline-year-title">').text(year),
+            $('<ol class="timeline-events list-unstyled mb-0">').append(years.get(year).map((e) =>
+                $('<li class="timeline-event">').attr('data-type', e.type).append(
+                    $('<span class="timeline-date">').text(readableDate(e.date)).attr('title', e.date),
+                    $('<span class="timeline-type">').text(t('type.' + e.type)),
+                    $('<span class="timeline-text">').text(e.text)
+                )
+            ))
+        )));
+    }
+
+    // Only the event types whose button is pressed; a year with nothing left to show goes away
+    function filterTimeline() {
+        const shown = new Set($("#timelineFilters .timeline-filter[aria-pressed='true']").map((i, b) => $(b).attr('data-type')).get());
+        $("#timelineBody .timeline-event").each(function () {
+            $(this).toggleClass('d-none', !shown.has($(this).attr('data-type')));
+        });
+        $("#timelineBody .timeline-year").each(function () {
+            $(this).toggleClass('d-none', $(this).find('.timeline-event:not(.d-none)').length === 0);
         });
     }
 
@@ -1030,7 +1183,7 @@ $(document).ready(function () {
         }).then(function (res) {
             saveToast(true);
             showMaskedSSN();
-            $("#updateData").prop('disabled', false).text('Save');
+            $("#updateData").prop('disabled', false).text(t('save'));
             // The server's copy (a new meta.versionId) feeds the summary and the FHIR JSON panel
             if (res && res.data && res.data.resourceType === 'Patient') {
                 objPatient.resource = res.data;
@@ -1041,8 +1194,8 @@ $(document).ready(function () {
         }, function () {
             // The modal stays open with what was typed, and says what happened
             saveToast(false);
-            $("#editError").removeClass('d-none').text("Couldn't save the patient. Try again.");
-            $("#updateData").prop('disabled', false).text('Save');
+            $("#editError").removeClass('d-none').text(t('saveError'));
+            $("#updateData").prop('disabled', false).text(t('save'));
         });
     };
 

@@ -32,9 +32,13 @@
             <span class="app-platform">InterSystems IRIS for Health</span>
           </span>
           <span class="ml-auto d-flex align-items-center">
-            <span id="currentUser" class="text-muted mr-2" title="Logged in user"></span>
-            <a class="btn btn-link" id="logout" href="diashenrique.fhir.portal.Home.cls?IRISLogout=end">
-              <i class="fas fa-sign-out-alt" aria-hidden="true"></i> Log out
+            <span id="currentUser" class="text-muted mr-2" title="Logged in user" data-i18n-attr="title:header.user"></span>
+            <select id="langSelect" class="custom-select custom-select-sm lang-select mr-1" aria-label="Language" data-i18n-attr="aria-label:header.language">
+              <option value="en" lang="en">English</option>
+              <option value="pt-BR" lang="pt-BR">Português</option>
+            </select>
+            <a class="btn btn-link" id="logout" href="diashenrique.fhir.portal.Home.cls?IRISLogout=end" title="Log out" data-i18n-attr="title:header.logout">
+              <i class="fas fa-sign-out-alt" aria-hidden="true"></i> <span class="logout-text" data-i18n="header.logout">Log out</span>
             </a>
           </span>
         </div>
@@ -49,37 +53,37 @@
       <div id="portal" class="portal container-fluid">
         <div class="row">
           <section id="listPane" class="list-pane col-lg-4 col-xl-3 py-3" aria-labelledby="listTitle">
-            <h1 class="page-title h3" id="listTitle">Patients</h1>
+            <h1 class="page-title h3" id="listTitle" data-i18n="list.title">Patients</h1>
             <div class="input-group has-clearable mb-2">
-              <button type="button" class="close" aria-label="Clear search">
+              <button type="button" class="close" aria-label="Clear search" data-i18n-attr="aria-label:list.clear">
                 <span aria-hidden="true"><i class="fa fa-times-circle"></i></span>
               </button>
               <label class="input-group-prepend" for="searchClients">
                 <span class="input-group-text"><span class="oi oi-magnifying-glass" aria-hidden="true"></span></span>
               </label>
-              <input type="text" class="form-control" id="searchClients" placeholder="Find Patients (press /)" aria-label="Find patients by name or FHIR ID" aria-keyshortcuts="/">
+              <input type="text" class="form-control" id="searchClients" placeholder="Find Patients (press /)" aria-label="Find patients by name or FHIR ID" data-i18n-attr="placeholder:list.search;aria-label:list.searchLabel" aria-keyshortcuts="/">
               <div class="input-group-append">
-                <button id="reloadList" class="btn btn-primary" aria-label="Reload the patient list">
+                <button id="reloadList" class="btn btn-primary" aria-label="Reload the patient list" data-i18n-attr="aria-label:list.reload">
                   <i class="fas fa-sync-alt" aria-hidden="true"></i>
                 </button>
               </div>
             </div>
             <p id="noMatch" class="text-muted d-none" role="status">
-              No patients match "<span id="noMatchTerm"></span>". <a href="#" id="clearSearch">Clear search</a>
+              <span id="noMatchText"></span> <a href="#" id="clearSearch" data-i18n="list.clear">Clear search</a>
             </p>
             <div class="card list-card">
-              <div id="listgroup" class="list-group list-group-flush list-group-divider" data-toggle="radiolist" role="list" aria-label="Patients">
+              <div id="listgroup" class="list-group list-group-flush list-group-divider" data-toggle="radiolist" role="list" aria-label="Patients" data-i18n-attr="aria-label:list.title">
               </div>
             </div>
           </section>
 
-          <section id="chartPane" class="chart-pane col-lg-8 col-xl-9 py-3" aria-label="Patient chart">
+          <section id="chartPane" class="chart-pane col-lg-8 col-xl-9 py-3" aria-label="Patient chart" data-i18n-attr="aria-label:chart.label">
             <button type="button" id="backToList" class="btn btn-link px-0 mb-2 d-lg-none">
-              <i class="fa fa-angle-left mr-1" aria-hidden="true"></i> Back to patients
+              <i class="fa fa-angle-left mr-1" aria-hidden="true"></i> <span data-i18n="back">Back to patients</span>
             </button>
 
             <div id="emptyState" class="empty-state text-muted">
-              <p class="mb-0">Select a patient to see their chart.</p>
+              <p class="mb-0" data-i18n="emptyState">Select a patient to see their chart.</p>
             </div>
 
             <div id="patientChart" class="d-none">
@@ -103,36 +107,51 @@
                         <input type="text" class="form-control" id="SSN" readonly>
                         <div class="input-group-append">
                           <button class="btn btn-secondary" type="button" id="revealSSN" disabled>
-                            <i class="fas fa-eye" aria-hidden="true"></i> Reveal
+                            <i class="fas fa-eye" aria-hidden="true"></i> <span data-i18n="reveal">Reveal</span>
                           </button>
                         </div>
                       </div>
                     </div>
                     <div class="col-auto ml-auto">
                       <button type="button" class="btn btn-primary btn-sm" id="editPatient" data-toggle="modal" data-target="#editModal" disabled>
-                        <i class="fas fa-pen" aria-hidden="true"></i> Edit
+                        <i class="fas fa-pen" aria-hidden="true"></i> <span data-i18n="edit">Edit</span>
                       </button>
                       <button type="button" class="btn btn-outline-primary btn-sm" id="showJSON" data-toggle="modal" data-target="#exampleModalDocked" data-backdrop="false">
                         <i class="fas fa-code" aria-hidden="true"></i> FHIR JSON
                       </button>
                     </div>
                   </div>
+                  <!-- Chart (the clinical cards) or Timeline (every dated event, from $everything) -->
+                  <ul class="nav nav-tabs chart-tabs mt-3 mb-n3" role="tablist">
+                    <li class="nav-item"><button type="button" class="nav-link active" id="tabChart" role="tab" aria-selected="true" aria-controls="chartView" data-i18n="tab.chart">Chart</button></li>
+                    <li class="nav-item"><button type="button" class="nav-link" id="tabTimeline" role="tab" aria-selected="false" aria-controls="timelineView" tabindex="-1" data-i18n="tab.timeline">Timeline</button></li>
+                  </ul>
                 </div>
               </section>
 
+              <!-- Timeline: the dated events of Patient/$everything, latest first, by year -->
+              <section id="timelineView" class="card timeline-card d-none" role="tabpanel" aria-labelledby="tabTimeline">
+                <header class="card-header d-flex flex-wrap align-items-center">
+                  <h2 class="card-title h5 mb-0" id="timelineTitle" data-i18n="timeline.title">Timeline</h2>
+                  <span class="badge badge-pill source-badge source-fhir ml-2" title="Loaded with one call to Patient/$everything on /fhir/r4" data-i18n-attr="title:source.everything">FHIR · $everything</span>
+                  <div id="timelineFilters" class="timeline-filters ml-auto" role="group" aria-label="Show event types" data-i18n-attr="aria-label:timeline.filters"></div>
+                </header>
+                <div id="timelineBody" class="card-body"></div>
+              </section>
+
               <!-- Clinical cards, always open: two columns from 1200px -->
-              <div class="row">
+              <div class="row" id="chartView" role="tabpanel" aria-labelledby="tabChart">
               <div class="col-xl-6">
                 <section class="card clinical-card" id="cardAllergies" aria-labelledby="cardAllergiesTitle badgeAllergy">
                   <header class="card-header d-flex align-items-center">
-                    <h2 class="card-title h5 mb-0" id="cardAllergiesTitle">Allergies</h2>
+                    <h2 class="card-title h5 mb-0" id="cardAllergiesTitle" data-i18n="card.allergies">Allergies</h2>
                     <span id="badgeAllergy" class="badge badge-pill badge-primary ml-2"></span>
-                    <span class="badge badge-pill source-badge source-fhir ml-2" title="Loaded with fhir.js from /fhir/r4">FHIR · fhir.js</span>
+                    <span class="badge badge-pill source-badge source-fhir ml-2" title="Loaded with fhir.js from /fhir/r4" data-i18n-attr="title:source.fhir">FHIR · fhir.js</span>
                   </header>
                   <div class="card-body p-0">
                     <table id="allergyTable" class="table table-hover mb-0">
                       <thead class="thead-light">
-                        <tr><th> Allergy </th><th> Type </th><th> Category </th><th> Criticality </th></tr>
+                        <tr><th data-i18n="col.allergy"> Allergy </th><th data-i18n="col.type"> Type </th><th data-i18n="col.category"> Category </th><th data-i18n="col.criticality"> Criticality </th></tr>
                       </thead>
                       <tbody></tbody>
                     </table>
@@ -142,14 +161,14 @@
               <div class="col-xl-6">
                 <section class="card clinical-card" id="cardConditions" aria-labelledby="cardConditionsTitle badgeCondition">
                   <header class="card-header d-flex align-items-center">
-                    <h2 class="card-title h5 mb-0" id="cardConditionsTitle">Conditions</h2>
+                    <h2 class="card-title h5 mb-0" id="cardConditionsTitle" data-i18n="card.conditions">Conditions</h2>
                     <span id="badgeCondition" class="badge badge-pill badge-primary ml-2"></span>
-                    <span class="badge badge-pill source-badge source-fhir ml-2" title="Loaded with fhir.js from /fhir/r4">FHIR · fhir.js</span>
+                    <span class="badge badge-pill source-badge source-fhir ml-2" title="Loaded with fhir.js from /fhir/r4" data-i18n-attr="title:source.fhir">FHIR · fhir.js</span>
                   </header>
                   <div class="card-body p-0">
                     <table id="conditionTable" class="table table-hover mb-0">
                       <thead class="thead-light">
-                        <tr><th> Condition </th><th> Status </th><th> Onset </th><th> Resolved </th></tr>
+                        <tr><th data-i18n="col.condition"> Condition </th><th data-i18n="col.status"> Status </th><th data-i18n="col.onset"> Onset </th><th data-i18n="col.resolved"> Resolved </th></tr>
                       </thead>
                       <tbody></tbody>
                     </table>
@@ -159,18 +178,18 @@
               <div class="col-xl-6">
                 <section class="card clinical-card" id="cardVitalSigns" aria-labelledby="cardVitalSignsTitle badgeVitalSigns">
                   <header class="card-header d-flex align-items-center">
-                    <h2 class="card-title h5 mb-0" id="cardVitalSignsTitle">Vital signs</h2>
+                    <h2 class="card-title h5 mb-0" id="cardVitalSignsTitle" data-i18n="card.vitals">Vital signs</h2>
                     <span id="badgeVitalSigns" class="badge badge-pill badge-primary ml-2"></span>
-                    <span class="badge badge-pill source-badge source-fhir ml-2" title="Loaded with fhir.js from /fhir/r4">FHIR · fhir.js</span>
+                    <span class="badge badge-pill source-badge source-fhir ml-2" title="Loaded with fhir.js from /fhir/r4" data-i18n-attr="title:source.fhir">FHIR · fhir.js</span>
                   </header>
                   <div class="card-body p-0">
                     <table id="vitalSignsTable" class="table table-hover mb-0" aria-describedby="vitalSignsHint">
                       <thead class="thead-light">
-                        <tr><th> Measure </th><th> Value </th><th> Unit </th><th> Date </th></tr>
+                        <tr><th data-i18n="col.measure"> Measure </th><th data-i18n="col.value"> Value </th><th data-i18n="col.unit"> Unit </th><th data-i18n="col.date"> Date </th></tr>
                       </thead>
                       <tbody></tbody>
                     </table>
-                    <p id="vitalSignsHint" class="sr-only">The latest value of each measure; Show all lists the history.</p>
+                    <p id="vitalSignsHint" class="sr-only" data-i18n="vitals.hint">The latest value of each measure; Show all lists the history.</p>
                     <button type="button" id="vitalsShowAll" class="btn btn-link btn-sm d-none" aria-controls="vitalSignsTable" aria-expanded="false">Show all</button>
                   </div>
                 </section>
@@ -178,33 +197,33 @@
               <div class="col-xl-6">
                 <section class="card clinical-card" id="cardLaboratory" aria-labelledby="cardLaboratoryTitle badgeLaboratory">
                   <header class="card-header d-flex align-items-center">
-                    <h2 class="card-title h5 mb-0" id="cardLaboratoryTitle">Laboratory</h2>
+                    <h2 class="card-title h5 mb-0" id="cardLaboratoryTitle" data-i18n="card.lab">Laboratory</h2>
                     <span id="badgeLaboratory" class="badge badge-pill badge-primary ml-2"></span>
-                    <span class="badge badge-pill source-badge source-fhir ml-2" title="Loaded with fhir.js from /fhir/r4">FHIR · fhir.js</span>
+                    <span class="badge badge-pill source-badge source-fhir ml-2" title="Loaded with fhir.js from /fhir/r4" data-i18n-attr="title:source.fhir">FHIR · fhir.js</span>
                   </header>
                   <div class="card-body p-0">
                     <!-- Chart of one test: values from /fhir/api (SQL), unit and range from the FHIR results below -->
                     <div id="labChartSection" class="lab-chart border-bottom p-3 d-none">
                       <div class="d-flex flex-wrap align-items-center mb-2">
-                        <label for="labtest" class="mb-0 mr-2">Chart a test</label>
+                        <label for="labtest" class="mb-0 mr-2" data-i18n="chart.pick">Chart a test</label>
                         <select id="labtest" class="custom-select custom-select-sm lab-test-select mr-2"></select>
-                        <span class="badge badge-pill source-badge source-sql" title="Loaded with SQL from /fhir/api">SQL · /fhir/api</span>
+                        <span class="badge badge-pill source-badge source-sql" title="Loaded with SQL from /fhir/api" data-i18n-attr="title:source.sql">SQL · /fhir/api</span>
                       </div>
                       <h3 id="testName" class="h6 text-muted mb-2"></h3>
                       <p id="chartEmpty" class="text-muted mb-0 d-none"></p>
                       <div id="chartBox" class="chart-box">
-                        <canvas id="myChart" role="img" aria-label="Lab results chart"></canvas>
+                        <canvas id="myChart" role="img" aria-label="Lab results chart" data-i18n-attr="aria-label:chart.aria"></canvas>
                       </div>
                       <!-- The same values as text, for screen readers -->
                       <table id="labTable" class="sr-only">
                         <caption></caption>
-                        <thead><tr><th scope="col">Date</th><th scope="col">Value</th></tr></thead>
+                        <thead><tr><th scope="col" data-i18n="col.date">Date</th><th scope="col" data-i18n="col.value">Value</th></tr></thead>
                         <tbody></tbody>
                       </table>
                     </div>
                     <table id="laboratoryTable" class="table table-hover mb-0">
                       <thead class="thead-light">
-                        <tr><th> Test </th><th> Value </th><th> Unit </th><th> Reference range </th></tr>
+                        <tr><th data-i18n="col.test"> Test </th><th data-i18n="col.value"> Value </th><th data-i18n="col.unit"> Unit </th><th data-i18n="col.range"> Reference range </th></tr>
                       </thead>
                       <tbody></tbody>
                     </table>
@@ -214,14 +233,14 @@
               <div class="col-xl-6">
                 <section class="card clinical-card" id="cardImmunizations" aria-labelledby="cardImmunizationsTitle badgeImmunization">
                   <header class="card-header d-flex align-items-center">
-                    <h2 class="card-title h5 mb-0" id="cardImmunizationsTitle">Immunizations</h2>
+                    <h2 class="card-title h5 mb-0" id="cardImmunizationsTitle" data-i18n="card.immunizations">Immunizations</h2>
                     <span id="badgeImmunization" class="badge badge-pill badge-primary ml-2"></span>
-                    <span class="badge badge-pill source-badge source-fhir ml-2" title="Loaded with fhir.js from /fhir/r4">FHIR · fhir.js</span>
+                    <span class="badge badge-pill source-badge source-fhir ml-2" title="Loaded with fhir.js from /fhir/r4" data-i18n-attr="title:source.fhir">FHIR · fhir.js</span>
                   </header>
                   <div class="card-body p-0">
                     <table id="immunizationTable" class="table table-hover mb-0">
                       <thead class="thead-light">
-                        <tr><th> Vaccine </th><th> Date </th></tr>
+                        <tr><th data-i18n="col.vaccine"> Vaccine </th><th data-i18n="col.date"> Date </th></tr>
                       </thead>
                       <tbody></tbody>
                     </table>
@@ -236,56 +255,56 @@
               <div class="modal-dialog modal-lg" role="document">
                 <div class="modal-content">
                   <div class="modal-header">
-                    <h2 class="modal-title h5" id="editModalLabel">Edit patient</h2>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h2 class="modal-title h5" id="editModalLabel" data-i18n="edit.title">Edit patient</h2>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" data-i18n-attr="aria-label:close"><span aria-hidden="true">&times;</span></button>
                   </div>
                   <div class="modal-body">
                       <form>
                         <div class="form-row">
                           <div class="col-md-6 mb-3">
-                            <label for="fhirId">FHIR Patient ID</label>
+                            <label for="fhirId" data-i18n="form.fhirId">FHIR Patient ID</label>
                             <input type="text" class="form-control" id="fhirId" disabled>
                           </div>
                         </div>
                         <div class="form-row">
                           <div class="col-md-6 mb-3">
-                            <label for="firstName">First name</label>
+                            <label for="firstName" data-i18n="form.first">First name</label>
                             <input type="text" class="form-control" id="firstName" autofocus>
                           </div>
                           <div class="col-md-6 mb-3">
-                            <label for="lastName">Last name</label>
+                            <label for="lastName" data-i18n="form.last">Last name</label>
                             <input type="text" class="form-control" id="lastName">
                           </div>
                         </div>
                         <div class="form-row">
                           <div class="col-md-6 mb-3">
-                            <label class="control-label" for="dateofbirth">Date of Birth</label>
+                            <label class="control-label" for="dateofbirth" data-i18n="form.dob">Date of Birth</label>
                             <input id="dateofbirth" type="text" class="form-control" data-toggle="flatpickr">
                           </div>
                           <div class="col-md-6 mb-3">
-                            <label for="gender">Gender</label>
+                            <label for="gender" data-i18n="form.gender">Gender</label>
                             <select class="custom-select d-block w-100" id="gender">
-                              <option value=""> Choose... </option>
-                              <option value="male"> Male </option>
-                              <option value="female"> Female </option>
+                              <option value="" data-i18n="form.choose"> Choose... </option>
+                              <option value="male" data-i18n="gender.male"> Male </option>
+                              <option value="female" data-i18n="gender.female"> Female </option>
                             </select>
                           </div>
                         </div>
                         <div class="form-group">
-                          <label for="address">Address</label>
+                          <label for="address" data-i18n="form.address">Address</label>
                           <input type="text" class="form-control" id="address">
                         </div>
                         <div class="form-row">
                           <div class="col-md-3 mb-3">
-                            <label for="city">City</label>
+                            <label for="city" data-i18n="form.city">City</label>
                             <input type="text" class="form-control" id="city">
                           </div>
                           <div class="col-md-4 mb-3">
-                            <label for="state">State</label>
+                            <label for="state" data-i18n="form.state">State</label>
                             <input type="text" class="form-control" id="state">
                           </div>
                           <div class="col-md-5 mb-3">
-                            <label for="country">Country</label>
+                            <label for="country" data-i18n="form.country">Country</label>
                             <input type="text" class="form-control" id="country">
                           </div>
                         </div>
@@ -293,8 +312,8 @@
                     <div id="editError" class="alert alert-danger d-none" role="alert"></div>
                   </div>
                   <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-dismiss="modal">Cancel</button>
-                    <button type="button" id="updateData" class="btn btn-primary">Save</button>
+                    <button type="button" class="btn btn-light" data-dismiss="modal" data-i18n="cancel">Cancel</button>
+                    <button type="button" id="updateData" class="btn btn-primary" data-i18n="save">Save</button>
                   </div>
                 </div>
               </div>
@@ -310,9 +329,9 @@
                       <textarea class="form-control" id="fhirdatasource" rows="30" readonly aria-label="FHIR JSON"></textarea>
                     </div>
                     <button type="button" id="copyJSON" class="btn btn-outline-primary btn-block">
-                      <i class="far fa-copy" aria-hidden="true"></i> Copy
+                      <i class="far fa-copy" aria-hidden="true"></i> <span data-i18n="copy">Copy</span>
                     </button>
-                    <button type="button" class="btn btn-lg btn-block btn-link" data-dismiss="modal" aria-label="Close">Close</button>
+                    <button type="button" class="btn btn-lg btn-block btn-link" data-dismiss="modal" aria-label="Close" data-i18n-attr="aria-label:close" data-i18n="close">Close</button>
                   </div>
                 </div>
               </div>
@@ -333,6 +352,9 @@
   <script src="assets/vendor/perfect-scrollbar/perfect-scrollbar.min.js"></script>
   <script src="assets/vendor/flatpickr/flatpickr.min.js"></script>
   <script src="assets/vendor/flatpickr/plugins/monthSelect/index.js"></script>
+  <script src="assets/vendor/flatpickr/l10n/pt.js"></script>
+  <!-- Interface texts in English or Portuguese: before the theme and myFHIR.js, which use them -->
+  <script src="resources/js/i18n.js"></script>
   <!-- END PLUGINS JS -->
   <!-- BEGIN THEME JS -->
   <script src="assets/vendor/chart.js/chart.umd.min.js"></script>
