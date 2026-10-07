@@ -153,6 +153,8 @@ Próprios do portal:
 - **Condition pill:** pill `{colors.primary}` com o número de condições ativas ("2 active conditions"), ao lado do selo de alergias. É azul porque não é alerta: o vermelho fica só para alergia e valor alterado. As condições resolvidas aparecem no card em `{colors.text-muted}`.
 - **Value abnormal:** o valor em `{colors.red}` com uma seta (↑ ou ↓) e o texto "High" ou "Low" para leitores de tela. A cor nunca carrega a informação sozinha.
 - **Source badge:** pill pequeno no cabeçalho do card; FHIR em `{colors.source-fhir}`, SQL em `{colors.source-sql}`.
+- **Chart and Timeline tabs:** abas no pé do resumo, sem caixa: a ativa é sublinhada em `{colors.primary}` (2px) e em negrito, a outra em `{colors.text-muted}`. O contorno de foco aparece só pelo teclado.
+- **Timeline:** card com o selo `source-fhir` "FHIR · $everything", os filtros como botões `btn-outline-primary` pequenos (pressionados ficam cheios) e, por ano, um título com uma linha fina embaixo, seguido dos eventos em três colunas: data em `{colors.text-muted}`, tipo em peso 500 e o texto. No celular, as colunas quebram em linhas.
 - **Focus ring:** 2px `{colors.primary}`, já usado na lista (5.5); vale para todo item clicável sem contorno próprio.
 
 ## Do's and Don'ts

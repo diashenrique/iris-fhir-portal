@@ -248,3 +248,77 @@ canvas {
 .clinical-card tr.condition-inactive td {
     color: #888c9b;
 }
+
+/* Chart and Timeline tabs, at the bottom of the summary (.nav-tabs too: theme.min.css loads after this file) */
+.chart-tabs {
+    border-bottom: 0;
+}
+
+.chart-tabs.nav-tabs .nav-link {
+    background: none;
+    border-width: 0 0 2px;
+    border-color: transparent;
+    color: #888c9b;
+}
+
+.chart-tabs.nav-tabs .nav-link.active {
+    border-color: #346cb0;
+    color: #346cb0;
+    font-weight: 600;
+}
+
+/* Timeline: a year, then its events (date, type, what) */
+.timeline-filters .timeline-filter {
+    margin: 2px;
+}
+
+.timeline-year + .timeline-year {
+    margin-top: 16px;
+}
+
+.timeline-year-title {
+    border-bottom: 1px solid rgba(20, 20, 31, .1);
+    padding-bottom: 4px;
+}
+
+.timeline-event {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    padding: 6px 0;
+}
+
+.timeline-date {
+    min-width: 96px;
+    white-space: nowrap;
+    color: #888c9b;
+}
+
+.timeline-type {
+    min-width: 112px;
+    font-weight: 500;
+}
+
+.timeline-text {
+    flex: 1 1 200px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+#timelineBody .skeleton-line {
+    display: block;
+    height: 12px;
+    margin: 6px 0;
+    width: 70%;
+    border-radius: 4px;
+    background: #e6e8ed;
+}
+
+#timelineBody .skeleton-line.short {
+    width: 40%;
+}
+
+/* The focus ring of the tabs only for the keyboard, not after a click */
+.chart-tabs.nav-tabs .nav-link:focus:not(:focus-visible) {
+    outline: none;
+}

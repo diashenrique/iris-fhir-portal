@@ -64,6 +64,10 @@ $(document).ready(function () {
         $("#conditionAlert").addClass('d-none').text('');
         $("#emptyState").addClass('d-none');
         $("#patientChart").removeClass('d-none');
+        if (timelineFor !== r.id) {
+            timelineFor = null;
+            showTab('chart');
+        }
     }
 
     $("#updateData").prop('disabled', true);
@@ -936,6 +940,139 @@ $(document).ready(function () {
             });
         }).fail(function (jqXHR) {
             if (request === latestLabRequest) apiFailed('lab results', jqXHR);
+        });
+    }
+
+    // ---- Timeline: every dated event of the patient, from one call to Patient/$everything
+
+    // The tab that is shown: the clinical cards (chart) or the timeline. The timeline loads the first time it is opened.
+    let timelineFor = null;
+
+    function showTab(tab) {
+        const timeline = tab === 'timeline';
+        $("#tabChart").toggleClass('active', !timeline).attr({ 'aria-selected': String(!timeline), tabindex: timeline ? '-1' : '0' });
+        $("#tabTimeline").toggleClass('active', timeline).attr({ 'aria-selected': String(timeline), tabindex: timeline ? '0' : '-1' });
+        $("#chartView").toggleClass('d-none', timeline);
+        $("#timelineView").toggleClass('d-none', !timeline);
+        if (timeline && timelineFor !== selectedPatientId) loadTimeline(selectedPatientId);
+    }
+
+    $("#tabChart").click(() => showTab('chart'));
+    $("#tabTimeline").click(() => showTab('timeline'));
+    // Arrow keys move between the two tabs (the tab pattern)
+    $(".chart-tabs").on('keydown', '.nav-link', function (e) {
+        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+        e.preventDefault();
+        const other = this.id === 'tabChart' ? '#tabTimeline' : '#tabChart';
+        $(other).trigger('click').trigger('focus');
+    });
+
+    // The event a resource stands for: its type, its date and what to call it; null when it has no date
+    const TIMELINE_TYPES = {
+        Encounter: { label: 'Encounters', date: (r) => r.period && r.period.start, text: (r) => conceptText((r.type || [])[0]) || (r.class && (r.class.display || r.class.code)) || 'Encounter' },
+        Condition: { label: 'Conditions', date: (r) => r.onsetDateTime || (r.onsetPeriod && r.onsetPeriod.start) || r.recordedDate, text: (r) => conceptText(r.code) },
+        Procedure: { label: 'Procedures', date: (r) => r.performedDateTime || (r.performedPeriod && r.performedPeriod.start), text: (r) => conceptText(r.code) },
+        Immunization: { label: 'Immunizations', date: (r) => r.occurrenceDateTime, text: (r) => conceptText(r.vaccineCode) },
+        MedicationRequest: { label: 'Medications', date: (r) => r.authoredOn, text: (r) => conceptText(r.medicationCodeableConcept) || (r.medicationReference && r.medicationReference.display) || 'Medication' },
+        DiagnosticReport: { label: 'Reports', date: (r) => r.effectiveDateTime || (r.effectivePeriod && r.effectivePeriod.start) || r.issued, text: (r) => conceptText(r.code) }
+    };
+
+    function timelineEvent(resource) {
+        const type = TIMELINE_TYPES[resource.resourceType];
+        const date = type && type.date(resource);
+        return date ? { type: resource.resourceType, date: date, text: type.text(resource) || resource.resourceType } : null;
+    }
+
+    // Every page of $everything, following link[next] (the IRIS server answers with one page today)
+    function everything(patientId) {
+        const resources = [];
+        const seen = new Set();
+        const page = (url) => $.ajax({ url: url, headers: { Accept: 'application/fhir+json' }, dataType: 'json' }).then((bundle) => {
+            entries(bundle).forEach((e) => resources.push(e.resource));
+            const next = bundleLink(bundle, 'next');
+            if (next && !seen.has(next)) {
+                seen.add(next);
+                // Same host as the page, where the session cookie applies
+                const u = new URL(next, window.location.origin);
+                return page(u.pathname + u.search);
+            }
+            return resources;
+        });
+        return page('/fhir/r4/Patient/' + encodeURIComponent(patientId) + '/$everything');
+    }
+
+    function timelineState(content) {
+        $("#timelineFilters").empty();
+        $("#timelineBody").empty().append(content);
+    }
+
+    function loadTimeline(patientId) {
+        timelineFor = patientId;
+        $("#timelineBody").attr('aria-busy', 'true');
+        timelineState([$('<span class="skeleton-line" aria-hidden="true">'), $('<span class="skeleton-line short" aria-hidden="true">')]);
+        everything(patientId).then((resources) => {
+            if (!isSelected(patientId) || timelineFor !== patientId) return;
+            $("#timelineBody").removeAttr('aria-busy');
+            const events = resources.map(timelineEvent).filter((e) => e);
+            // Latest first: ISO dates sort as text
+            events.sort((a, b) => b.date.localeCompare(a.date));
+            if (!events.length) {
+                timelineState($('<p class="text-muted mb-0">').text('No events recorded.'));
+                return;
+            }
+            renderTimeline(events);
+        }, (jqXHR) => {
+            if (!isSelected(patientId) || timelineFor !== patientId) return;
+            $("#timelineBody").removeAttr('aria-busy');
+            timelineFor = null;
+            showError('the timeline', { error: jqXHR });
+            timelineState($('<p class="mb-0">').append(
+                document.createTextNode("Couldn't load the timeline. "),
+                $('<button type="button" class="btn btn-link btn-sm p-0 card-retry">').text('Try again').on('click', () => loadTimeline(patientId))
+            ));
+        });
+    }
+
+    function renderTimeline(events) {
+        // One filter button per type present, with its count; all pressed at first
+        const counts = {};
+        events.forEach((e) => { counts[e.type] = (counts[e.type] || 0) + 1; });
+        $("#timelineFilters").empty().append(Object.keys(TIMELINE_TYPES).filter((t) => counts[t]).map((t) =>
+            $('<button type="button" class="btn btn-sm btn-outline-primary timeline-filter active" aria-pressed="true">')
+                .attr('data-type', t).text(TIMELINE_TYPES[t].label + ' (' + counts[t] + ')')
+                .on('click', function () {
+                    const on = $(this).attr('aria-pressed') !== 'true';
+                    $(this).attr('aria-pressed', String(on)).toggleClass('active', on);
+                    filterTimeline();
+                })
+        ));
+        // Grouped by year, latest year first
+        const years = new Map();
+        events.forEach((e) => {
+            const year = e.date.slice(0, 4);
+            if (!years.has(year)) years.set(year, []);
+            years.get(year).push(e);
+        });
+        $("#timelineBody").empty().append(Array.from(years.keys()).map((year) => $('<section class="timeline-year">').append(
+            $('<h3 class="h6 timeline-year-title">').text(year),
+            $('<ol class="timeline-events list-unstyled mb-0">').append(years.get(year).map((e) =>
+                $('<li class="timeline-event">').attr('data-type', e.type).append(
+                    $('<span class="timeline-date">').text(readableDate(e.date)).attr('title', e.date),
+                    $('<span class="timeline-type">').text(TIMELINE_TYPES[e.type].label),
+                    $('<span class="timeline-text">').text(e.text)
+                )
+            ))
+        )));
+    }
+
+    // Only the event types whose button is pressed; a year with nothing left to show goes away
+    function filterTimeline() {
+        const shown = new Set($("#timelineFilters .timeline-filter[aria-pressed='true']").map((i, b) => $(b).attr('data-type')).get());
+        $("#timelineBody .timeline-event").each(function () {
+            $(this).toggleClass('d-none', !shown.has($(this).attr('data-type')));
+        });
+        $("#timelineBody .timeline-year").each(function () {
+            $(this).toggleClass('d-none', $(this).find('.timeline-event:not(.d-none)').length === 0);
         });
     }
 
