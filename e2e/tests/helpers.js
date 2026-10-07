@@ -93,4 +93,27 @@ async function watchErrorToasts(page) {
   return toasts;
 }
 
-module.exports = { ENTRY_PAGE, FHIR_JSON, fixtures, login, logout, watchErrorToasts };
+/**
+ * Open the Edit modal of the patient shown, unless it is open already.
+ * @param {import('@playwright/test').Page} page
+ */
+async function openEdit(page) {
+  if (await page.locator('#editModal').isVisible()) return;
+  await page.locator('#editPatient').click();
+  await expect(page.locator('#editModal')).toBeVisible();
+}
+
+/**
+ * Save the Edit modal (opening it first if needed) and wait for the save to finish: the "Saved."
+ * toast shows, the modal closes and the toast goes away.
+ * @param {import('@playwright/test').Page} page
+ */
+async function save(page) {
+  await openEdit(page);
+  await page.locator('#updateData').click();
+  await expect(page.locator('.toast-success')).toBeVisible();
+  await expect(page.locator('#editModal')).toBeHidden();
+  await expect(page.locator('.toast-success')).toHaveCount(0);
+}
+
+module.exports = { ENTRY_PAGE, FHIR_JSON, fixtures, login, logout, openEdit, save, watchErrorToasts };
