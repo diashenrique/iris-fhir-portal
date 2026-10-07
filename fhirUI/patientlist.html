@@ -102,7 +102,7 @@
                     <div class="col-auto">
                       <label for="SSN" class="mb-0">SSN</label>
                     </div>
-                    <div class="col-auto">
+                    <div class="col col-sm-auto">
                       <div class="input-group input-group-sm">
                         <input type="text" class="form-control" id="SSN" readonly>
                         <div class="input-group-append">
@@ -112,7 +112,7 @@
                         </div>
                       </div>
                     </div>
-                    <div class="col-auto ml-auto">
+                    <div class="col-12 col-sm-auto ml-sm-auto mt-2 mt-sm-0 text-right">
                       <button type="button" class="btn btn-primary btn-sm" id="editPatient" data-toggle="modal" data-target="#editModal" disabled>
                         <i class="fas fa-pen" aria-hidden="true"></i> <span data-i18n="edit">Edit</span>
                       </button>
@@ -245,6 +245,7 @@
                       </thead>
                       <tbody></tbody>
                     </table>
+                    <button type="button" id="labShowAll" class="btn btn-link btn-sm card-show-all d-none" aria-controls="laboratoryTable" aria-expanded="false">Show all</button>
                   </div>
                 </section>
               </div>

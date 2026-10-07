@@ -79,6 +79,16 @@ test('on a phone the list and the chart take turns, without sideways scrolling',
   await expect(page.locator('#backToList')).toBeVisible();
   expect(await overflows(page)).toBe(false);
 
+  // The controls of the summary do not cover each other (Edit and FHIR JSON used to sit over the SSN)
+  const ids = ['#SSN', '#revealSSN', '#editPatient', '#showJSON'];
+  const boxes = await Promise.all(ids.map((id) => page.locator(id).boundingBox()));
+  const overlap = (a, b) => a.x < b.x + b.width - 1 && b.x < a.x + a.width - 1 && a.y < b.y + b.height - 1 && b.y < a.y + a.height - 1;
+  for (let i = 0; i < ids.length; i++) {
+    for (let j = i + 1; j < ids.length; j++) {
+      expect(overlap(boxes[i], boxes[j]), `${ids[i]} and ${ids[j]} overlap`).toBe(false);
+    }
+  }
+
   await page.locator('#backToList').click();
   await expect(page.locator('#listPane')).toBeVisible();
   await expect(page.locator('#chartPane')).toBeHidden();

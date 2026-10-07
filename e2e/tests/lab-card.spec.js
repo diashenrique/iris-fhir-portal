@@ -77,3 +77,27 @@ test('lab results are grouped by day, latest first, with their reference range a
     expect(await data.cleanup()).toEqual([]);
   }
 });
+
+test('the lab card shows the latest three days, and Show all the older ones', async ({ page }) => {
+  await login(page);
+  const data = fixtures(page);
+  try {
+    const id = await data.create({ resourceType: 'Patient', name: [{ given: ['Lab'], family: 'Days' }] });
+    for (const [date, value] of [['2021-01-10', 90], ['2021-02-10', 95], ['2021-03-10', 99], ['2021-04-10', 101]]) {
+      await data.create(lab(id, { code: glucose, effectiveDateTime: `${date}T08:00:00Z`, valueQuantity: { value, unit: 'mg/dL' } }));
+    }
+    await page.reload();
+    await page.locator(`[id="${id}"]`).click();
+    await expect(page.locator('#badgeLaboratory')).toHaveText('4');
+
+    const days = page.locator('#laboratoryTable tr.lab-date:visible th');
+    await expect(days).toHaveText(['Apr 10, 2021', 'Mar 10, 2021', 'Feb 10, 2021']);
+    const showAll = page.locator('#labShowAll');
+    await expect(showAll).toHaveText('Show all (4)');
+    await showAll.click();
+    await expect(days).toHaveText(['Apr 10, 2021', 'Mar 10, 2021', 'Feb 10, 2021', 'Jan 10, 2021']);
+    await expect(showAll).toHaveText('Show latest');
+  } finally {
+    expect(await data.cleanup()).toEqual([]);
+  }
+});

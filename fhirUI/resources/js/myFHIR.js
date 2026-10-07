@@ -91,7 +91,7 @@ $(document).ready(function () {
         const table = '#' + $(this).attr('aria-controls');
         const all = $(this).attr('aria-expanded') !== 'true';
         $(table + ' tbody .card-history').toggleClass('d-none', !all);
-        $(this).attr('aria-expanded', String(all)).text(all ? t('showLatest') : t('showAll', { n: $(table + ' tbody tr:not(.card-state)').length }));
+        $(this).attr('aria-expanded', String(all)).text(all ? t('showLatest') : t('showAll', { n: $(table + ' tbody tr:not(.card-state):not(.lab-date)').length }));
     });
 
     // Offer Show all when some rows of the table are history; total is every row
@@ -923,6 +923,7 @@ $(document).ready(function () {
                 appendBundles(result.bundles);
                 // Grouped by day, the latest day first; a row per test, its value flagged High or Low
                 const days = new Map();
+                let hiddenLabs = 0;
                 labTests = new Map();
                 result.entries.forEach((laboratory) => {
                     labRows(laboratory.resource).forEach((lab) => {
@@ -933,9 +934,12 @@ $(document).ready(function () {
                     });
                 });
                 const rows = [];
-                Array.from(days.keys()).reverse().forEach((day) => {
+                // The latest days in view, the older ones behind Show all
+                Array.from(days.keys()).reverse().forEach((day, dayIndex) => {
                     const labs = days.get(day);
-                    rows.push($('<tr class="lab-date">').append(
+                    const history = dayIndex >= RECENT_LAB_DAYS;
+                    if (history) hiddenLabs += labs.length;
+                    rows.push($('<tr class="lab-date">').toggleClass('card-history d-none', history).append(
                         $('<th scope="colgroup" colspan="4">').text(readableDate(labs[0].date) || t('lab.noDate')).attr('title', labs[0].date)
                     ));
                     labs.forEach((lab) => {
@@ -948,17 +952,22 @@ $(document).ready(function () {
                                 )
                             );
                         }
-                        rows.push($('<tr>').append($('<td>').text(lab.name), value, $('<td>').text(lab.unit), $('<td>').text(rangeText(lab.range))));
+                        rows.push($('<tr>').toggleClass('card-history d-none', history)
+                            .append($('<td>').text(lab.name), value, $('<td>').text(lab.unit), $('<td>').text(rangeText(lab.range))));
                     });
                 });
                 cardLoaded('laboratory', result.first.total || 0);
                 $("#laboratoryTable tbody").append(rows);
+                setShowAll('#labShowAll', rows.filter((r) => !r.hasClass('lab-date')).length, hiddenLabs);
                 if (result.entries.length > 0) loadLabOptions(patientId);
             })
             .catch((err) => {
                 if (isSelected(patientId)) cardError('laboratory', patientId, err);
             });
     };
+
+    // The lab card shows the results of the latest days; the rest is behind Show all
+    const RECENT_LAB_DAYS = 3;
 
     // ---- Lab chart of the Laboratory card: the tests and values come from /fhir/api (SQL, article 4),
     // drawn with Chart.js 4; the unit and reference range come from the FHIR results of the card (labTests)
