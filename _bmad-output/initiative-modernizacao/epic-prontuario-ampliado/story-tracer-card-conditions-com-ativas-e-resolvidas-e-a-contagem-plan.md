@@ -3,7 +3,7 @@ title: 'Tracer: card Conditions com ativas e resolvidas e a contagem no resumo'
 type: 'feature'
 ticket: '1'
 created: '2026-10-07'
-status: 'built'
+status: done
 baseline_revision: '6bc7d50d2f7f4a30bf6535d222f77b5bfc5df58e'
 route: 'oneshot'
 route_source: 'auto'
