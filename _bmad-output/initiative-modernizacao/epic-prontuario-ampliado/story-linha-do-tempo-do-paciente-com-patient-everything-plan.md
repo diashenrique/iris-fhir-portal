@@ -3,7 +3,7 @@ title: 'Linha do tempo do paciente com Patient/$everything'
 type: 'feature'
 ticket: '2'
 created: '2026-10-07'
-status: 'built'
+status: done
 baseline_revision: '40875ef58df4573c10a4cdb36954131480235ade'
 route: 'oneshot'
 route_source: 'auto'

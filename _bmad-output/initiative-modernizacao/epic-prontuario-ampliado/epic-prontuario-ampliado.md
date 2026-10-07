@@ -6,7 +6,7 @@ covers: [R6]
 after: []
 assignee: ""
 risk: medium
-status: in-progress
+status: done
 ---
 
 # Prontuário mostra condições, medicações, encontros e linha do tempo
@@ -89,3 +89,10 @@ Ficam de fora:
   - **Medicação:** o nome vem da Medication referenciada (`_include`).
   - **Estados e documentação:** a Timeline ganhou os estados da 8.4; cada entrada documenta no `EXPERIENCE.md` e no `DESIGN.md` o que acrescenta.
   - **Testes:** as checagens de selo e de vazio entraram no verify de todos os cards.
+- Fechado (2026-10-07), com a checagem de fechamento:
+  1. **MET.** Os quatro cards novos têm e2e com recursos criados pelo teste, selo de origem e estado de vazio: `conditions.spec.js`, `medications.spec.js` e `encounters.spec.js` (Encounters e Care plans), mais o `cards.spec.js` para o selo e o "Try again". O card de condições separa ativas e resolvidas, e o resumo mostra "N active conditions" (6.1, 6.3 e 6.4).
+  2. **MET.** `timeline.spec.js` cobre a ordem, os grupos por ano, o filtro, o selo do `$everything` e o erro com "Try again" (6.2).
+  3. **MET.** `i18n.spec.js` cobre a troca para português no mesmo paciente: `lang`, títulos, estados, toast, datas em pt-BR e o idioma mantido depois de recarregar (6.5).
+  4. **MET.** Os e2e de antes e os novos passam (49/49), assim como o smoke. O CI do PR do sweep fecha o "verde em `master`".
+
+  As 6 entradas estão `done`. Adiado: o comprimento do card de laboratório (`deferred-work.md`).

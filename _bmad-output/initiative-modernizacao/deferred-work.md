@@ -20,3 +20,6 @@
   summary: O `zpm "uninstall fhir-portal"` não desfaz o que a classe instaladora criou: ficam `/fhir/portal` e `/fhir/api` (apontando para classes e arquivos removidos), o papel `FHIRPortalAPI`, o usuário de demo e o grupo de sessão e o 8288 no `/fhir/r4`.
   evidence: Revisão quick da 4.2 (achado 4). O `module.xml` só tem o `<Invoke>` de Activate. Para o sweep (4.5): um `<Invoke>` de desinstalação que remove os dois web apps, e o README dizendo o que fica no `/fhir/r4`.
   status: resolvido na 4.5 (`Installer.Remove`, fase Unconfigure).
+- source_plan: `_bmad-output/initiative-modernizacao/epic-prontuario-ampliado/story-cards-encounters-e-care-plans-plan.md`
+  summary: O card de laboratório mostra todos os resultados agrupados por dia; num paciente com muitos exames, ele domina a página, agora que há oito cards.
+  evidence: Captura a 1440px na 6.4 (o paciente 3 tem 34 resultados). O comportamento caberia no "Show all" compartilhado da 6.3 (os dias mais recentes à vista, o resto no histórico), mas muda o que o card mostra, então não é limpeza: fica como uma story nova (6.7 ou backlog), não no sweep da 6.6.

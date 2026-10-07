@@ -3,7 +3,7 @@ title: 'Cards Encounters e Care plans'
 type: 'feature'
 ticket: '4'
 created: '2026-10-07'
-status: 'built'
+status: done
 baseline_revision: '5d10ece65a3451a8f6c5333b30a04ecf4a507589'
 route: 'oneshot'
 route_source: 'auto'

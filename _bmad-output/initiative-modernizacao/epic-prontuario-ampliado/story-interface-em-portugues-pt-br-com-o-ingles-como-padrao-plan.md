@@ -3,7 +3,7 @@ title: 'Interface em português (pt-BR), com o inglês como padrão'
 type: 'feature'
 ticket: '5'
 created: '2026-10-07'
-status: 'built'
+status: done
 baseline_revision: 'bc19f1ed8b36d1cdf85b4b509d1081a2c8dfd641'
 route: 'oneshot'
 route_source: 'auto'

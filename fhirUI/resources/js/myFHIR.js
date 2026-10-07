@@ -59,20 +59,13 @@ $(document).ready(function () {
         return age >= 0 ? String(age) : '';
     }
 
-    // The sex of the patient in the language; a code the dictionary does not know shows as it is
-    function genderText(gender) {
-        if (!gender) return '';
-        const text = t('gender.' + gender);
-        return text === 'gender.' + gender ? gender : text;
-    }
-
     // The summary at the top of the chart: who the patient is, at a glance
     function showSummary(r) {
         const name = displayName(r);
         const age = ageOf(r.birthDate);
         $("#patientName").text(name || t('noName')).attr('title', getName(r).trim());
         $("#patientAge").text(age ? t('years', { n: age }) : '');
-        $("#patientGender").text(genderText(r.gender));
+        $("#patientGender").text(codeText('gender.', r.gender));
         $("#patientBirthDate").text(r.birthDate ? t('summary.born', { date: readableDate(r.birthDate) }) : '');
         $("#patientFhirId").text('FHIR ID ' + r.id);
         $("#allergyAlert").addClass('d-none').text('');
@@ -555,7 +548,7 @@ $(document).ready(function () {
         const age = ageOf(resource.birthDate);
         const meta = [
             age ? t('years', { n: age }) : '',
-            genderText(resource.gender),
+            codeText('gender.', resource.gender),
             'ID ' + patientId
         ].filter((part) => part).join(' \u00b7 ');
         return $('<div class="list-group-item">')
@@ -676,12 +669,6 @@ $(document).ready(function () {
         return coding.code || 'active';
     }
 
-    // The clinical status in the language; a code the dictionary does not know shows as it is
-    function statusText(code) {
-        const text = t('status.' + code);
-        return text === 'status.' + code ? code : text;
-    }
-
     window.condition = function (patientId) {
         cardLoading('condition');
         searchAll({
@@ -702,7 +689,7 @@ $(document).ready(function () {
                 conditions.sort((a, b) => (b.active - a.active) || onset(b.r).localeCompare(onset(a.r)));
                 const rows = conditions.map((c) => textRow([
                     conceptText(c.r.code),
-                    statusText(c.status),
+                    codeText('status.', c.status),
                     onset(c.r),
                     abatement(c.r)
                 ], 2).each(function () {
@@ -742,11 +729,6 @@ $(document).ready(function () {
         return parts.join(' · ');
     }
 
-    function medicationStatusText(code) {
-        const text = t('medStatus.' + code);
-        return text === 'medStatus.' + code ? (code || '') : text;
-    }
-
     window.medication = function (patientId) {
         cardLoading('medication');
         searchAll({
@@ -770,7 +752,7 @@ $(document).ready(function () {
                     .map((r) => ({ r: r, active: r.status === 'active' }))
                     // Active first, then latest first
                     .sort((a, b) => (b.active - a.active) || (b.r.authoredOn || '').localeCompare(a.r.authoredOn || ''));
-                const rows = requests.map((m) => textRow([name(m.r), medicationStatusText(m.r.status), dosageText(m.r), m.r.authoredOn || ''], 3)
+                const rows = requests.map((m) => textRow([name(m.r), codeText('medStatus.', m.r.status), dosageText(m.r), m.r.authoredOn || ''], 3)
                     .toggleClass('card-history d-none', !m.active));
                 cardLoaded('medication', result.first.total || 0);
                 const active = requests.filter((m) => m.active).length;
@@ -794,7 +776,8 @@ $(document).ready(function () {
         return end && end.slice(0, 10) !== start.slice(0, 10) ? readableDate(start) + ' \u2013 ' + readableDate(end) : readableDate(start);
     }
 
-    // A code shown through the dictionary (prefix.code), or as the server sends it when the dictionary does not know it
+    // A code shown through the dictionary (prefix.code: gender., status., medStatus., cpStatus., class.),
+    // or as the server sends it when the dictionary does not know it
     function codeText(prefix, code, fallback) {
         const text = t(prefix + code);
         return text === prefix + code ? (fallback || code || '') : text;

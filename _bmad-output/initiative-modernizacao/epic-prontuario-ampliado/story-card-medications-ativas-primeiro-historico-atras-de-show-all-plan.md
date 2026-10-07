@@ -3,7 +3,7 @@ title: 'Card Medications: ativas primeiro, histórico atrás de Show all'
 type: 'feature'
 ticket: '3'
 created: '2026-10-07'
-status: 'built'
+status: done
 baseline_revision: 'a898275a1351ba27b2964e718b4acb24701c4f7f'
 route: 'oneshot'
 route_source: 'auto'
