@@ -234,6 +234,9 @@ $(document).ready(function () {
     // Perform a search to retrieve patient details for a specific patient
     window.loadForm = function (patientId) {
         selectedPatientId = patientId;
+        // Screen readers announce the selected patient of the list
+        $('#listgroup .stretched-link').removeAttr('aria-current');
+        $('#listgroup .list-group-item').filter((i, el) => el.id === String(patientId)).find('.stretched-link').attr('aria-current', 'true');
         client.search({
                 type: 'Patient',
                 query: {
@@ -288,6 +291,16 @@ $(document).ready(function () {
             });
     };
 
+    // Arrow keys move between the patients of the list, Home and End to the first and last; Enter opens one
+    $("#listgroup").on('keydown', '.stretched-link', function (e) {
+        const links = $('#listgroup .list-group-item:visible .stretched-link');
+        const at = links.index(this);
+        const to = { ArrowDown: at + 1, ArrowUp: at - 1, Home: 0, End: links.length - 1 }[e.key];
+        if (to === undefined || to < 0 || to >= links.length) return;
+        e.preventDefault();
+        links.eq(to).trigger('focus');
+    });
+
     // Perform a search to retrieve patient list, every page of it
     searchAll({
             type: 'Patient',
@@ -300,10 +313,12 @@ $(document).ready(function () {
                 const patientId = patient.resource.id;
                 const name = getName(patient.resource).trim();
                 const item = $('<div class="list-group-item" data-toggle="sidebar" data-sidebar="show">')
-                    .attr('id', patientId)
+                    .attr({ id: patientId, role: 'listitem' })
                     .on('click', () => loadForm(patientId))
                     .append(
-                        $('<a href="#" class="stretched-link"></a>'),
+                        // The link is what the keyboard reaches (Tab, then the arrows below); its name says who it opens
+                        $('<a href="#" class="stretched-link"></a>')
+                            .attr('aria-label', (name || '(no name)') + ', FHIR Patient ID ' + patientId),
                         $('<div class="list-group-item-figure">').append(
                             $('<div class="tile tile-circle bg-blue">').text(name ? name.slice(0, 1) : '?')
                         ),

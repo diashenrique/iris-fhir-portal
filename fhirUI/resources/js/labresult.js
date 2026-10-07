@@ -80,11 +80,22 @@ $(document).ready(function () {
         }).fail(failed('lab tests'));
     }
 
+    // The theme (theme.min.js) sets its font as a Chart.js 2 global, which Chart.js 4 ignores
+    Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Fira Sans", "Helvetica Neue", "Apple Color Emoji", sans-serif';
     var ctx = document.getElementById("myChart").getContext("2d");
     // One chart at a time: the previous one is destroyed before drawing the next
     var chart = null;
     // Only the latest search may draw: an older response arriving late is ignored
     var latestRequest = 0;
+
+    // Text alternative of the chart: its name on the canvas and every plotted point in a table only screen readers see
+    function describeChart(label, points) {
+        $("#myChart").attr('aria-label', 'Lab results chart of ' + label + ', ' + points.length + ' results, listed in the table below');
+        $("#labTable caption").text(label);
+        $("#labTable tbody").empty().append(points.map(function (e) {
+            return $('<tr>').append($('<td>').text(e.date), $('<td>').text(e.value));
+        }));
+    }
 
     function getResults() {
         var request = ++latestRequest;
@@ -109,7 +120,11 @@ $(document).ready(function () {
                         fill: true
                     }]
                 },
+                // No legend: the heading above names the test (the theme hid it with a Chart.js 2 global)
                 options: {
+                    plugins: {
+                        legend: { display: false }
+                    },
                     scales: {
                         x: {
                             type: 'time'
@@ -123,6 +138,7 @@ $(document).ready(function () {
             }
             chart = new Chart(ctx, config);
             $("#testName").text(label);
+            describeChart(label, points);
         }).fail(function (jqXHR) {
             if (request === latestRequest) failed('lab results')(jqXHR);
         });
