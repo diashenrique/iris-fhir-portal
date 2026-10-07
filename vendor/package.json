@@ -1,0 +1,11 @@
+{
+  "name": "fhir-portal-vendor",
+  "private": true,
+  "description": "Libraries served by fhirUI. vendor/sync.mjs copies the files listed in vendorFiles from node_modules to fhirUI/assets/vendor; see vendor/README.md.",
+  "dependencies": {
+    "jquery": "3.7.1"
+  },
+  "vendorFiles": {
+    "jquery/dist/jquery.min.js": "jquery/jquery.min.js"
+  }
+}
