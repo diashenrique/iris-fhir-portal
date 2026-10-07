@@ -3,9 +3,13 @@
   "private": true,
   "description": "Libraries served by fhirUI. vendor/sync.mjs copies the files listed in vendorFiles from node_modules to fhirUI/assets/vendor; see vendor/README.md.",
   "dependencies": {
+    "chart.js": "4.5.1",
+    "chartjs-adapter-date-fns": "3.0.0",
     "jquery": "3.7.1"
   },
   "vendorFiles": {
+    "chart.js/dist/chart.umd.min.js": "chart.js/chart.umd.min.js",
+    "chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js": "chart.js/chartjs-adapter-date-fns.bundle.min.js",
     "jquery/dist/jquery.min.js": "jquery/jquery.min.js"
   }
 }

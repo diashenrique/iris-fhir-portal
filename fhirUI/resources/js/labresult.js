@@ -97,21 +97,23 @@ $(document).ready(function () {
                 return e.value !== null && e.value !== '' && !isNaN(Number(e.value));
             });
 
+            // Chart.js 4: one {x, y} point per result on a time axis (the date adapter parses the ISO dates)
             var config = {
                 type: 'line',
                 data: {
-                    labels: points.map(function (e) { return e.date; }),
                     datasets: [{
                         label: label,
-                        data: points.map(function (e) { return Number(e.value); }),
-                        backgroundColor: 'rgba(0, 119, 204, 0.3)'
+                        data: points.map(function (e) { return { x: e.date, y: Number(e.value) }; }),
+                        borderColor: 'rgb(0, 119, 204)',
+                        backgroundColor: 'rgba(0, 119, 204, 0.3)',
+                        fill: true
                     }]
                 },
                 options: {
                     scales: {
-                        xAxes: [{
+                        x: {
                             type: 'time'
-                        }]
+                        }
                     }
                 }
             };
