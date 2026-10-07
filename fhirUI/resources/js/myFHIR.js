@@ -102,6 +102,12 @@ $(document).ready(function () {
         new Toast('error', 'toast-bottom-center', "Couldn't save the patient. Try again.")
     ];
 
+    // An error toast, also said by screen readers through the live region of the page
+    function toastError(message) {
+        toastr.error(message);
+        $("#liveStatus").text(message);
+    }
+
     toastr.options.positionClass = 'toast-top-full-width';
     toastr.options.extendedTimeOut = 0; //1000;
     toastr.options.timeOut = 2000;
@@ -112,6 +118,7 @@ $(document).ready(function () {
         var t = toasts[i];
         toastr.options.positionClass = t.css;
         toastr[t.type](t.msg);
+        if (t.type === 'error') $("#liveStatus").text(t.msg);
     }
 
     $("#updateData").click(function () {
@@ -394,12 +401,12 @@ $(document).ready(function () {
         if (unloading) return;
         const status = httpStatus(err);
         if (status === 0) {
-            toastr.error('Could not load ' + what + ' (no response from the server)');
+            toastError('Could not load ' + what + ' (no response from the server)');
         } else if (status) {
-            toastr.error('Could not load ' + what + ' (HTTP ' + status + ')');
+            toastError('Could not load ' + what + ' (HTTP ' + status + ')');
         } else {
             console.error('Could not load ' + what, err);
-            toastr.error('Could not load ' + what);
+            toastError('Could not load ' + what);
         }
     }
 
@@ -463,6 +470,8 @@ $(document).ready(function () {
                     $("#updateData").prop('disabled', false);
                     $("#editPatient").prop('disabled', false);
 
+                    // The chart is on screen: the focus goes to the patient's name, so it is announced
+                    if ($("#patientName").is(':visible')) $("#patientName").trigger('focus');
                     allergy(patient.resource.id);
                     vitalsigns(patient.resource.id);
                     laboratory(patient.resource.id);
@@ -473,6 +482,15 @@ $(document).ready(function () {
                 if (isSelected(patientId)) showError('patient', err);
             });
     };
+
+    // "/" goes to the patient search from anywhere but a field; on a phone, back to the list first
+    $(document).on('keydown', function (e) {
+        if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
+        if ($(e.target).is('input, textarea, select, [contenteditable]') || $('.modal.show').length) return;
+        e.preventDefault();
+        if ($("#portal").hasClass('show-chart') && !$("#listPane").is(':visible')) $("#backToList").trigger('click');
+        $("#searchClients").trigger('focus');
+    });
 
     // Arrow keys move between the patients of the list, Home and End to the first and last; Enter opens one
     $("#listgroup").on('keydown', '.stretched-link', function (e) {
@@ -586,7 +604,7 @@ $(document).ready(function () {
                     return;
                 }
                 sessionStorage.removeItem(redirectKey);
-                toastr.error('The FHIR server refused the request (HTTP ' + status + '). Check the /fhir/r4 configuration.');
+                toastError('The FHIR server refused the request (HTTP ' + status + '). Check the /fhir/r4 configuration.');
                 return;
             }
             showError('the patient list', err);
@@ -769,14 +787,14 @@ $(document).ready(function () {
                 return;
             }
             sessionStorage.removeItem(redirectKey);
-            toastr.error('The FHIR API refused the request (HTTP 401). Check the /fhir/api configuration.');
+            toastError('The FHIR API refused the request (HTTP 401). Check the /fhir/api configuration.');
         } else if (status === 0) {
-            toastr.error('Could not load ' + what + ' (no response from the server)');
+            toastError('Could not load ' + what + ' (no response from the server)');
         } else if (status) {
-            toastr.error('Could not load ' + what + ' (HTTP ' + status + ')');
+            toastError('Could not load ' + what + ' (HTTP ' + status + ')');
         } else {
             console.error('Could not load ' + what, jqXHR);
-            toastr.error('Could not load ' + what);
+            toastError('Could not load ' + what);
         }
     }
 

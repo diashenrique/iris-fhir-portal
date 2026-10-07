@@ -41,6 +41,9 @@
       </nav>
     </header>
 
+    <!-- Errors are also said here, for screen readers (toasts are not announced) -->
+    <div id="liveStatus" class="sr-only" role="status" aria-live="polite"></div>
+
     <main class="app-main">
       <!-- The list and the chart side by side from 992px; below that, one at a time (.show-chart) -->
       <div id="portal" class="portal container-fluid">
@@ -54,7 +57,7 @@
               <label class="input-group-prepend" for="searchClients">
                 <span class="input-group-text"><span class="oi oi-magnifying-glass" aria-hidden="true"></span></span>
               </label>
-              <input type="text" class="form-control" id="searchClients" placeholder="Find Patients" aria-label="Find patients by name or FHIR ID">
+              <input type="text" class="form-control" id="searchClients" placeholder="Find Patients (press /)" aria-label="Find patients by name or FHIR ID" aria-keyshortcuts="/">
               <div class="input-group-append">
                 <button id="reloadList" class="btn btn-primary" aria-label="Reload the patient list">
                   <i class="fas fa-sync-alt" aria-hidden="true"></i>
@@ -119,7 +122,7 @@
               <!-- Clinical cards, always open: two columns from 1200px -->
               <div class="row">
               <div class="col-xl-6">
-                <section class="card clinical-card" id="cardAllergies" aria-labelledby="cardAllergiesTitle">
+                <section class="card clinical-card" id="cardAllergies" aria-labelledby="cardAllergiesTitle badgeAllergy">
                   <header class="card-header d-flex align-items-center">
                     <h2 class="card-title h5 mb-0" id="cardAllergiesTitle">Allergies</h2>
                     <span id="badgeAllergy" class="badge badge-pill badge-primary ml-2"></span>
@@ -136,7 +139,7 @@
                 </section>
               </div>
               <div class="col-xl-6">
-                <section class="card clinical-card" id="cardVitalSigns" aria-labelledby="cardVitalSignsTitle">
+                <section class="card clinical-card" id="cardVitalSigns" aria-labelledby="cardVitalSignsTitle badgeVitalSigns">
                   <header class="card-header d-flex align-items-center">
                     <h2 class="card-title h5 mb-0" id="cardVitalSignsTitle">Vital signs</h2>
                     <span id="badgeVitalSigns" class="badge badge-pill badge-primary ml-2"></span>
@@ -155,7 +158,7 @@
                 </section>
               </div>
               <div class="col-xl-6">
-                <section class="card clinical-card" id="cardLaboratory" aria-labelledby="cardLaboratoryTitle">
+                <section class="card clinical-card" id="cardLaboratory" aria-labelledby="cardLaboratoryTitle badgeLaboratory">
                   <header class="card-header d-flex align-items-center">
                     <h2 class="card-title h5 mb-0" id="cardLaboratoryTitle">Laboratory</h2>
                     <span id="badgeLaboratory" class="badge badge-pill badge-primary ml-2"></span>
@@ -191,7 +194,7 @@
                 </section>
               </div>
               <div class="col-xl-6">
-                <section class="card clinical-card" id="cardImmunizations" aria-labelledby="cardImmunizationsTitle">
+                <section class="card clinical-card" id="cardImmunizations" aria-labelledby="cardImmunizationsTitle badgeImmunization">
                   <header class="card-header d-flex align-items-center">
                     <h2 class="card-title h5 mb-0" id="cardImmunizationsTitle">Immunizations</h2>
                     <span id="badgeImmunization" class="badge badge-pill badge-primary ml-2"></span>
