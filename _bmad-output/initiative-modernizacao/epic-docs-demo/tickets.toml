@@ -1,0 +1,68 @@
+# Breakdown of epic-docs-demo, in build order (approved under autonomy, 2026-10-07, after the set check)
+# Entries 1 to 3 rewrite the same README sections, in sequence; the article (4) only needs the README (2).
+#
+# Contract of the SQL examples (entry 1, kept by 2, 3 and 4): every ```sql block of README.md, README-JP.md and
+# misc/sql/example.sql is executed in FHIRSERVER by scripts/check-readme-sql.sh, which fails on the first negative
+# SQLCODE. Blocks use the literal schema names of the endpoint (HSFHIR_X0001_R / _S) and no ? parameters: a
+# sample patient comes from a subquery (SELECT TOP 1 ...). docs/ (the article draft) is prose and is not executed.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Tracer: exemplos SQL do README verificados no CI"
+description = "Acrescenta ao README a seção de como o portal lê os dados (fhir.js no /fhir/r4, SQL da /fhir/api com as funções do artigo 4 e $everything) com as consultas atuais em blocos sql pelo contrato acima, atualiza misc/sql/example.sql (o par do artigo 4) ao mesmo contrato, e cria scripts/check-readme-sql.sh, que executa cada bloco dos três arquivos no FHIRSERVER e falha no primeiro SQLCODE negativo; o CI roda o script nas duas pernas."
+verify = "O CI roda o script e passa nas duas pernas (o que prova o esquema X0001 também no fhir-server do template); trocar a tabela de um exemplo por um nome inexistente faz o script falhar localmente."
+covers = ["D1", "D2"]
+after = ["4.5"]                   # os dois caminhos de instalação finais, que o CI usa
+hitl = false
+risk = "medium"
+uncertainty = "Se o fhir-server do template (perna IPM) cria o mesmo esquema HSFHIR_X0001 que o iris.script; e como escrever as consultas da /fhir/api, que usam parâmetros ?, com uma subconsulta no lugar do id. O script segue o padrão de check-readonly.sh (SQLCODE impresso por bloco e lido no log) e roda como superusuário: a checagem de privilégios já é do check-readonly."
+references = ["scripts/check-readonly.sh", "misc/sql/example.sql"]
+
+[[entry]]
+id = 2
+type = "story"
+title = "Capturas reproduzíveis e o README do portal atual"
+description = "Um script Playwright (e2e/screenshots.js) gera as capturas do README a partir do container (lista e prontuário, Timeline, gráfico no card, celular, português); o README é reescrito com o portal atual (instalação por Docker e IPM, login de demonstração, o que o prontuário mostra, testes) usando essas capturas por caminho relativo (img/...), mantendo os blocos sql da entrada 1 no contrato, e as imagens antigas que nada referencia saem de img/."
+verify = "Todo caminho img/ do README.md existe e sai do script de capturas; nenhum arquivo de img/ fica sem referência; o README não fala de acordeão nem de página separada do gráfico; o check-readme-sql segue passando."
+covers = ["D1", "D3"]
+after = [1, "6.6"]                # o portal com todos os cards, a Timeline e o pt-BR, que o README descreve
+hitl = false
+risk = "low"
+uncertainty = "Se as capturas devem usar os dados Synthea do container (nomes sem sufixo) ou pacientes criados pelo script; os Synthea mostram o portal como o usuário o vê."
+
+[[entry]]
+id = 3
+type = "story"
+title = "README-JP e dev.md atuais"
+description = "O README-JP passa a ser a tradução do README da entrada 2, com os mesmos blocos sql (verificados pelo script) e as mesmas imagens relativas; o dev.md é reescrito com os comandos atuais (build, zpm load, vendor, smoke, e2e, check-readme-sql, ipm-install, docker compose restart por causa do cache do Web Gateway)."
+verify = "git grep -n 'fhirtemplate\\|PackageSample\\|I0001' -- README-JP.md dev.md não encontra nada; os links internos e os caminhos img/ dos dois arquivos existem; o check-readme-sql passa com o README-JP."
+covers = ["D4", "D5"]
+after = [2]
+hitl = false
+risk = "low"
+uncertainty = "Nenhuma relevante."
+
+[[entry]]
+id = 4
+type = "story"
+title = "Rascunho do artigo de atualização com a errata dos artigos 1 a 4"
+description = "Escreve em docs/ o rascunho de um artigo para a Developer Community (em inglês, como os anteriores) sobre a modernização: IRIS 2026.2 e JsonAdvSQL, login e sessão compartilhada, papel só de leitura da /fhir/api, IPM, layout, Timeline com $everything, i18n; com uma errata por artigo e links para o README; a instalação pelo registro é escrita como condicional à publicação da 1.1.0 (4.6); a publicação do artigo é do usuário."
+verify = "O rascunho está em docs/ com uma seção de errata para cada um dos quatro artigos e os links para o README resolvem."
+covers = ["D6"]
+after = [2]
+hitl = true                       # publicar o artigo é do usuário
+risk = "low"
+uncertainty = "O que cada artigo diz exatamente: a errata parte do avaliacao-do-projeto.md, que os leu."
+
+[[entry]]
+id = 5
+type = "story"
+title = "Refactor sweep"
+description = "Limpeza deixada para depois pelas entradas 1 a 4, com escopo definido ao começar; só limpeza."
+verify = "O CI segue verde e cada item de limpeza do plano está resolvido ou explicitamente adiado."
+covers = ["D1", "D2", "D3", "D4", "D5", "D6"]
+after = [1, 2, 3, 4]
+hitl = false
+risk = "low"
+uncertainty = "O escopo só é conhecido ao fim das entradas anteriores."

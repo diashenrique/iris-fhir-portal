@@ -61,5 +61,5 @@ id = 7
 slug = "epic-docs-demo"
 title = "Documentação e demo refletem o portal atual"
 covers = ["R7"]
-after = [{ epic = 4, needs = "os dois caminhos de instalação finais" }]
-description = "README, README-JP e dev.md atualizados; screenshots novos; errata ou novo artigo na Developer Community sobre a migração para JsonAdvSQL/2026.2; regenerar dados Synthea com script atual; decidir sobre demo pública."
+after = [{ epic = 4, needs = "os dois caminhos de instalação finais" }, { epic = 6, needs = "o portal com todos os cards, a Timeline e o pt-BR, que o README descreve" }]
+description = "README, README-JP e dev.md atualizados; screenshots novos e reproduzíveis; exemplos SQL verificados no CI; rascunho de artigo na Developer Community com a errata dos artigos 1 a 4 (publicação do usuário). Decidido na inception: sem demo pública e sem regerar os dados Synthea."
