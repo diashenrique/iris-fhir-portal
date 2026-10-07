@@ -72,6 +72,13 @@ $(document).ready(function () {
         $("#editError").addClass('d-none').text('');
     });
 
+    // Vital signs: the latest value of each measure, or the whole history
+    $("#vitalsShowAll").click(function () {
+        const all = $(this).attr('aria-expanded') !== 'true';
+        $("#vitalSignsTable tbody .vital-history").toggleClass('d-none', !all);
+        $(this).attr('aria-expanded', String(all)).text(all ? 'Show latest' : 'Show all (' + $("#vitalSignsTable tbody tr").length + ')');
+    });
+
     // Copy the FHIR JSON; without the Clipboard API (a page that is not https or localhost), select and copy
     $("#copyJSON").click(function () {
         const text = $("#fhirdatasource").val();
@@ -161,18 +168,78 @@ $(document).ready(function () {
         $("#revealSSN").prop('disabled', true);
     });
 
-    // Build a table row whose cells hold the values as text, never as HTML
-    function textRow(values) {
+    // A FHIR date or dateTime as people read it ("Sep 3, 2014"), from its own digits: no time zone shift
+    const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    function readableDate(value) {
+        const m = /^(\d{4})(?:-(\d{2}))?(?:-(\d{2}))?/.exec(value || '');
+        if (!m) return value || '';
+        if (!m[2]) return m[1];
+        const month = MONTHS[Number(m[2]) - 1];
+        return m[3] ? month + ' ' + Number(m[3]) + ', ' + m[1] : month + ' ' + m[1];
+    }
+
+    // A number shown with at most two decimals ("6.7188" -> "6.72"); anything else as it is
+    function roundValue(value) {
+        return /^-?\d+(\.\d+)?$/.test(value) ? String(Math.round(Number(value) * 100) / 100) : value;
+    }
+
+    // Build a table row whose cells hold the values as text, never as HTML.
+    // The cell at dateColumn shows a readable date, with the value as stored in its title.
+    function textRow(values, dateColumn) {
         const row = $('<tr>');
-        values.forEach((value) => {
-            row.append($('<td>').text(value));
+        values.forEach((value, i) => {
+            const cell = $('<td>');
+            if (i === dateColumn && value) {
+                cell.text(readableDate(value)).attr('title', value);
+            } else {
+                cell.text(value);
+            }
+            row.append(cell);
         });
         return row;
     }
 
-    // The row shown when a search finds nothing, spanning every column of its table
-    function noRecordsRow(colspan) {
-        return $('<tr>').append($('<td>').attr('colspan', colspan).text('No records'));
+    // The clinical cards: their table, columns, what they hold and what they say when empty
+    const CARDS = {
+        allergy: { table: '#allergyTable', badge: '#badgeAllergy', columns: 4, what: 'allergies', empty: 'No allergies recorded.' },
+        vitalsigns: { table: '#vitalSignsTable', badge: '#badgeVitalSigns', columns: 4, what: 'vital signs', empty: 'No vital signs recorded.' },
+        laboratory: { table: '#laboratoryTable', badge: '#badgeLaboratory', columns: 4, what: 'laboratory results', empty: 'No lab results recorded.' },
+        immunization: { table: '#immunizationTable', badge: '#badgeImmunization', columns: 2, what: 'immunizations', empty: 'No immunizations recorded.' }
+    };
+
+    // A row spanning every column of the card's table
+    function cardRow(card, content) {
+        return $('<tr class="card-state">').append($('<td>').attr('colspan', card.columns).append(content));
+    }
+
+    // Loading: a placeholder line, and no count yet
+    function cardLoading(key) {
+        const card = CARDS[key];
+        $(card.badge).text('');
+        $(card.table + ' tbody').empty().append(cardRow(card, $('<span class="skeleton-line" aria-hidden="true">'))).attr('aria-busy', 'true');
+    }
+
+    // Loaded: the rows, or the line that says there are none
+    function cardLoaded(key, total) {
+        const card = CARDS[key];
+        $(card.badge).text(total);
+        $(card.table + ' tbody').empty().removeAttr('aria-busy');
+        if (total === 0) {
+            $(card.table + ' tbody').append(cardRow(card, document.createTextNode(card.empty)));
+        }
+    }
+
+    // Failed: the toast (showError), and in the card itself what failed and a way to try again
+    function cardError(key, patientId, err) {
+        const card = CARDS[key];
+        showError(card.what, err);
+        $(card.table + ' tbody').empty().removeAttr('aria-busy').append(cardRow(card, [
+            document.createTextNode("Couldn't load " + card.what + '. '),
+            $('<button type="button" class="btn btn-link btn-sm p-0 card-retry">').text('Try again').on('click', () => {
+                if (isSelected(patientId)) window[key](patientId);
+            })
+        ]));
     }
 
     // The entries of a search bundle; a search without results has no entry at all
@@ -240,7 +307,7 @@ $(document).ready(function () {
         if (!key) return { value: '', unit: '' };
         const value = item[key];
         if (key === 'valueQuantity') {
-            const number = value.value == null ? '' : String(value.value);
+            const number = value.value == null ? '' : roundValue(String(value.value));
             return {
                 // A comparator such as "<" belongs to the value: "< 0.5"
                 value: value.comparator && number !== '' ? value.comparator + ' ' + number : number,
@@ -349,11 +416,8 @@ $(document).ready(function () {
 
                     $('#fhirdatasource').val(patientJSON(patient.resource));
 
-                    $("#allergyTable tbody").empty();
-                    $("#vitalSignsTable tbody").empty();
-                    $("#laboratoryTable tbody").empty();
-                    $("#immunizationTable tbody").empty();
                     $("#iconChart").empty();
+                    $("#vitalsShowAll").addClass('d-none');
                     $("#updateData").prop('disabled', false);
                     $("#editPatient").prop('disabled', false);
 
@@ -490,6 +554,7 @@ $(document).ready(function () {
 
     // Perform a search to Immunization list for a specific patient
     window.immunization = function (patientId) {
+        cardLoading('immunization');
         searchAll({
                 type: 'Immunization',
                 query: {
@@ -497,27 +562,22 @@ $(document).ready(function () {
                 }
             }).then((result) => {
                 if (!isSelected(patientId)) return;
-                $("#badgeImmunization").text(result.first.total || 0);
-
                 appendBundles(result.bundles);
-
-                if (result.entries.length === 0) {
-                    $("#immunizationTable tbody").append(noRecordsRow(2));
-                }
-                result.entries.forEach((immunization) => {
-                    $("#immunizationTable tbody").append(textRow([
-                        immunization.resource.vaccineCode["coding"][0].display,
-                        immunization.resource.occurrenceDateTime
-                    ]));
-                });
+                const rows = result.entries.map((immunization) => textRow([
+                    immunization.resource.vaccineCode["coding"][0].display,
+                    immunization.resource.occurrenceDateTime
+                ], 1));
+                cardLoaded('immunization', result.first.total || 0);
+                $("#immunizationTable tbody").append(rows);
             })
             .catch((err) => {
-                if (isSelected(patientId)) showError('immunizations', err);
+                if (isSelected(patientId)) cardError('immunization', patientId, err);
             });
     };
 
     // Perform a search to Allergy list for a specific patient
     window.allergy = function (patientId) {
+        cardLoading('allergy');
         searchAll({
                 type: 'AllergyIntolerance',
                 query: {
@@ -525,35 +585,30 @@ $(document).ready(function () {
                 }
             }).then((result) => {
                 if (!isSelected(patientId)) return;
-                $("#badgeAllergy").text(result.first.total || 0);
                 // The alert in the summary: how many allergies, a link to their card
                 const allergies = result.entries.length;
                 if (allergies > 0) {
                     $("#allergyAlert").removeClass('d-none').text(allergies + (allergies === 1 ? ' allergy' : ' allergies'));
                 }
 
-                if (result.entries.length === 0) {
-                    $("#allergyTable tbody").append(noRecordsRow(4));
-                } else {
-                    appendBundles(result.bundles);
-
-                    result.entries.forEach((allergy) => {
-                        $("#allergyTable tbody").append(textRow([
-                            allergy.resource.code.coding[0].display,
-                            allergy.resource.type,
-                            allergy.resource.category[0],
-                            allergy.resource.criticality
-                        ]));
-                    });
-                }
+                appendBundles(result.bundles);
+                const rows = result.entries.map((allergy) => textRow([
+                    allergy.resource.code.coding[0].display,
+                    allergy.resource.type,
+                    allergy.resource.category[0],
+                    allergy.resource.criticality
+                ]));
+                cardLoaded('allergy', result.first.total || 0);
+                $("#allergyTable tbody").append(rows);
             })
             .catch((err) => {
-                if (isSelected(patientId)) showError('allergies', err);
+                if (isSelected(patientId)) cardError('allergy', patientId, err);
             });
     };
 
     // Perform a search to Vital Signs list for a specific patient
     window.vitalsigns = function (patientId) {
+        cardLoading('vitalsigns');
         searchAll({
                 type: 'Observation',
                 query: {
@@ -563,25 +618,29 @@ $(document).ready(function () {
                 }
             }).then((result) => {
                 if (!isSelected(patientId)) return;
-                $("#badgeVitalSigns").text(result.first.total || 0);
-
                 appendBundles(result.bundles);
-
-                if (result.entries.length === 0) {
-                    $("#vitalSignsTable tbody").append(noRecordsRow(4));
-                }
+                // Oldest first (_sort=date): the last row of each measure is its latest value.
+                // The older ones stay in the table, hidden until Show all.
+                const values = [];
                 result.entries.forEach((vitalsigns) => {
-                    observationRows(vitalsigns.resource).forEach((values) => {
-                        $("#vitalSignsTable tbody").append(textRow(values));
-                    });
+                    observationRows(vitalsigns.resource).forEach((v) => values.push(v));
                 });
+                const latest = new Map();
+                values.forEach((v, i) => latest.set(v[0], i));
+                const rows = values.map((v, i) => textRow(v, 3).toggleClass('vital-history d-none', latest.get(v[0]) !== i));
+                cardLoaded('vitalsigns', result.first.total || 0);
+                $("#vitalSignsTable tbody").append(rows);
+                const history = values.length - latest.size;
+                $("#vitalsShowAll").toggleClass('d-none', history === 0).attr('aria-expanded', 'false')
+                    .text('Show all (' + values.length + ')');
             })
             .catch((err) => {
-                if (isSelected(patientId)) showError('vital signs', err);
+                if (isSelected(patientId)) cardError('vitalsigns', patientId, err);
             });
     };
 
     window.laboratory = function (patientId) {
+        cardLoading('laboratory');
         searchAll({
                 type: 'Observation',
                 query: {
@@ -591,7 +650,6 @@ $(document).ready(function () {
                 }
             }).then((result) => {
                 if (!isSelected(patientId)) return;
-                $("#badgeLaboratory").text(result.first.total || 0);
 
                 if (entries(result.first).length > 0) {
                     const icone = $('<a target="_blank"><span class="label label-info"><i class="fas fa-chart-line"></i></span></a>')
@@ -600,18 +658,15 @@ $(document).ready(function () {
                 }
 
                 appendBundles(result.bundles);
-
-                if (result.entries.length === 0) {
-                    $("#laboratoryTable tbody").append(noRecordsRow(4));
-                }
+                const rows = [];
                 result.entries.forEach((laboratory) => {
-                    observationRows(laboratory.resource).forEach((values) => {
-                        $("#laboratoryTable tbody").append(textRow(values));
-                    });
+                    observationRows(laboratory.resource).forEach((values) => rows.push(textRow(values, 3)));
                 });
+                cardLoaded('laboratory', result.first.total || 0);
+                $("#laboratoryTable tbody").append(rows);
             })
             .catch((err) => {
-                if (isSelected(patientId)) showError('laboratory results', err);
+                if (isSelected(patientId)) cardError('laboratory', patientId, err);
             });
     };
 

@@ -81,16 +81,16 @@ test('observations without valueQuantity show their value, one row per component
 
     await expect(page.locator('#laboratoryTable tbody tr')).toHaveCount(3);
     expect(await cells('#laboratoryTable')).toEqual([
-      ['SARS-CoV-2 RNA', 'Positive', '', '2020-01-01T10:00:00Z'],
-      ['Glucose', '< 0.5', 'mg/dL', '2020-01-02T10:00:00Z'],
-      ['Pending test', '', '', '2020-01-03T10:00:00Z'],
+      ['SARS-CoV-2 RNA', 'Positive', '', 'Jan 1, 2020'],
+      ['Glucose', '< 0.5', 'mg/dL', 'Jan 2, 2020'],
+      ['Pending test', '', '', 'Jan 3, 2020'],
     ]);
 
     await expect(page.locator('#vitalSignsTable tbody tr')).toHaveCount(3);
     expect(await cells('#vitalSignsTable')).toEqual([
-      ['Heart rate', 'normal', '', '2020-01-01T10:00:00Z'],
-      ['Systolic Blood Pressure', '120', 'mm[Hg]', '2020-01-02T10:00:00Z'],
-      ['Body position', 'Sitting', '', '2020-01-02T10:00:00Z'],
+      ['Heart rate', 'normal', '', 'Jan 1, 2020'],
+      ['Systolic Blood Pressure', '120', 'mm[Hg]', 'Jan 2, 2020'],
+      ['Body position', 'Sitting', '', 'Jan 2, 2020'],
     ]);
 
     expect(pageErrors, 'errors on the page').toEqual([]);

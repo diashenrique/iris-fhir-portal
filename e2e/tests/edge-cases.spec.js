@@ -35,17 +35,17 @@ test('a minimal patient without clinical records opens, shows empty tables and s
       await expect(page.locator(field), field).toHaveValue('');
     }
 
-    // Clinical tables: one "No records" row spanning the columns, and a zero badge
-    for (const [table, badge, columns] of [
-      ['#allergyTable', '#badgeAllergy', 4],
-      ['#vitalSignsTable', '#badgeVitalSigns', 4],
-      ['#laboratoryTable', '#badgeLaboratory', 4],
-      ['#immunizationTable', '#badgeImmunization', 2],
+    // Clinical cards: one line saying there is nothing, spanning the columns, and a zero badge
+    for (const [table, badge, columns, empty] of [
+      ['#allergyTable', '#badgeAllergy', 4, 'No allergies recorded.'],
+      ['#vitalSignsTable', '#badgeVitalSigns', 4, 'No vital signs recorded.'],
+      ['#laboratoryTable', '#badgeLaboratory', 4, 'No lab results recorded.'],
+      ['#immunizationTable', '#badgeImmunization', 2, 'No immunizations recorded.'],
     ]) {
       await expect(page.locator(badge), badge).toHaveText('0');
       const rows = page.locator(`${table} tbody tr`);
       await expect(rows, table).toHaveCount(1);
-      await expect(rows.locator('td'), table).toHaveText(['No records']);
+      await expect(rows.locator('td'), table).toHaveText([empty]);
       await expect(rows.locator('td'), table).toHaveAttribute('colspan', String(columns));
     }
     await expect(page.locator('#iconChart a')).toHaveCount(0);
