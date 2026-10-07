@@ -123,6 +123,7 @@
                   <header class="card-header d-flex align-items-center">
                     <h2 class="card-title h5 mb-0" id="cardAllergiesTitle">Allergies</h2>
                     <span id="badgeAllergy" class="badge badge-pill badge-primary ml-2"></span>
+                    <span class="badge badge-pill source-badge source-fhir ml-2" title="Loaded with fhir.js from /fhir/r4">FHIR · fhir.js</span>
                   </header>
                   <div class="card-body p-0">
                     <table id="allergyTable" class="table table-hover mb-0">
@@ -139,14 +140,17 @@
                   <header class="card-header d-flex align-items-center">
                     <h2 class="card-title h5 mb-0" id="cardVitalSignsTitle">Vital signs</h2>
                     <span id="badgeVitalSigns" class="badge badge-pill badge-primary ml-2"></span>
+                    <span class="badge badge-pill source-badge source-fhir ml-2" title="Loaded with fhir.js from /fhir/r4">FHIR · fhir.js</span>
                   </header>
                   <div class="card-body p-0">
-                    <table id="vitalSignsTable" class="table table-hover mb-0">
+                    <table id="vitalSignsTable" class="table table-hover mb-0" aria-describedby="vitalSignsHint">
                       <thead class="thead-light">
-                        <tr><th> Measure </th><th> Value </th><th> Unit </th><th> Date Time </th></tr>
+                        <tr><th> Measure </th><th> Value </th><th> Unit </th><th> Date </th></tr>
                       </thead>
                       <tbody></tbody>
                     </table>
+                    <p id="vitalSignsHint" class="sr-only">The latest value of each measure; Show all lists the history.</p>
+                    <button type="button" id="vitalsShowAll" class="btn btn-link btn-sm d-none" aria-controls="vitalSignsTable" aria-expanded="false">Show all</button>
                   </div>
                 </section>
               </div>
@@ -155,12 +159,13 @@
                   <header class="card-header d-flex align-items-center">
                     <h2 class="card-title h5 mb-0" id="cardLaboratoryTitle">Laboratory</h2>
                     <span id="badgeLaboratory" class="badge badge-pill badge-primary ml-2"></span>
+                    <span class="badge badge-pill source-badge source-fhir ml-2" title="Loaded with fhir.js from /fhir/r4">FHIR · fhir.js</span>
                     <span id="iconChart" class="ml-auto"></span>
                   </header>
                   <div class="card-body p-0">
                     <table id="laboratoryTable" class="table table-hover mb-0">
                       <thead class="thead-light">
-                        <tr><th> Test </th><th> Value </th><th> Unit </th><th> Date Time </th></tr>
+                        <tr><th> Test </th><th> Value </th><th> Unit </th><th> Reference range </th></tr>
                       </thead>
                       <tbody></tbody>
                     </table>
@@ -172,11 +177,12 @@
                   <header class="card-header d-flex align-items-center">
                     <h2 class="card-title h5 mb-0" id="cardImmunizationsTitle">Immunizations</h2>
                     <span id="badgeImmunization" class="badge badge-pill badge-primary ml-2"></span>
+                    <span class="badge badge-pill source-badge source-fhir ml-2" title="Loaded with fhir.js from /fhir/r4">FHIR · fhir.js</span>
                   </header>
                   <div class="card-body p-0">
                     <table id="immunizationTable" class="table table-hover mb-0">
                       <thead class="thead-light">
-                        <tr><th> Vaccine </th><th> Occurrence Date Time </th></tr>
+                        <tr><th> Vaccine </th><th> Date </th></tr>
                       </thead>
                       <tbody></tbody>
                     </table>

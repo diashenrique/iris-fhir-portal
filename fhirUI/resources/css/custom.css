@@ -143,7 +143,8 @@ canvas {
 }
 
 /* Placeholder items while the patient list loads */
-.list-skeleton .skeleton-line {
+.list-skeleton .skeleton-line,
+.card-state .skeleton-line {
     display: block;
     height: 12px;
     margin: 6px 0;
@@ -154,4 +155,38 @@ canvas {
 
 .list-skeleton .skeleton-line.short {
     width: 40%;
+}
+
+/* Where the data of a card comes from (DESIGN.md, source-badge) */
+.source-badge {
+    color: #fff;
+    font-weight: 500;
+}
+
+.source-badge.source-fhir {
+    background-color: #0179a8;
+}
+
+.source-badge.source-sql {
+    background-color: #5f4b8b;
+}
+
+/* Readable dates (their ISO value is in the title) stay on one line */
+.clinical-card td[title] {
+    white-space: nowrap;
+}
+
+/* Laboratory: a row per day, then its tests; a value out of range in red with an arrow and High or Low */
+.clinical-card tr.lab-date th {
+    background-color: #f6f7f9;
+    font-weight: 600;
+}
+
+.value-abnormal {
+    color: #ea6759;
+    font-weight: 600;
+}
+
+.value-flag-text {
+    font-size: 14px;
 }

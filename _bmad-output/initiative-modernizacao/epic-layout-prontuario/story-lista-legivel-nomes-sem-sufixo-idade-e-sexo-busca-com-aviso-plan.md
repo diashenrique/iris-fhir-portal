@@ -3,7 +3,7 @@ title: 'Lista legível: nomes sem sufixo, idade e sexo, busca com aviso'
 type: 'feature'
 ticket: '3'
 created: '2026-10-06'
-status: 'built'
+status: done
 baseline_revision: 'f6c55add929a514fc313ab337a199506b65a3850'
 route: 'oneshot'
 route_source: 'auto'
