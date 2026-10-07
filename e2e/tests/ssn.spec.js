@@ -1,6 +1,6 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
-const { FHIR_JSON, login, logout } = require('./helpers');
+const { FHIR_JSON, login, logout, openEdit, save } = require('./helpers');
 
 // End the session after each test: every login holds an IRIS license until its session ends
 test.afterEach(async ({ page }) => {
@@ -20,11 +20,6 @@ test('the SSN is masked, revealed on request, and the mask is never saved', asyn
 
   const ssn = page.locator('#SSN');
   const reveal = page.locator('#revealSSN');
-  const save = async () => {
-    await page.locator('#updateData').click();
-    await expect(page.locator('.toast-success')).toBeVisible();
-    await expect(page.locator('.toast-success')).toHaveCount(0);
-  };
 
   try {
     // Opens masked and read-only
@@ -38,8 +33,9 @@ test('the SSN is masked, revealed on request, and the mask is never saved', asyn
     expect(await page.locator('#fhirdatasource').inputValue()).not.toContain(realSSN);
 
     // Saving without revealing keeps the real SSN, not the mask
+    await openEdit(page);
     await page.locator('#city').fill(`${original.address[0].city} ssn`);
-    await save();
+    await save(page);
     expect((await readPatient()).identifier[2].value).toBe(realSSN);
 
     // Show reveals the real value and allows editing
@@ -50,7 +46,7 @@ test('the SSN is masked, revealed on request, and the mask is never saved', asyn
 
     // A revealed edit is saved, and the field goes back to the mask
     await ssn.fill('999-00-1234');
-    await save();
+    await save(page);
     expect((await readPatient()).identifier[2].value).toBe('999-00-1234');
     await expect(ssn).toHaveValue('***-**-1234');
     await expect(ssn).toHaveAttribute('readonly', '');

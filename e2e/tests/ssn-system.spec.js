@@ -1,6 +1,6 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
-const { FHIR_JSON, fixtures, login, logout } = require('./helpers');
+const { FHIR_JSON, fixtures, login, logout, openEdit, save } = require('./helpers');
 
 // End the session after each test: every login holds an IRIS license until its session ends
 test.afterEach(async ({ page }) => {
@@ -24,11 +24,6 @@ test('the SSN is found by its us-ssn system, wherever it sits, and added when mi
     await page.reload();
     await page.locator(`[id="${id}"]`).click();
     await expect(page.locator('#fhirId')).toHaveValue(String(id));
-  };
-  const save = async () => {
-    await page.locator('#updateData').click();
-    await expect(page.locator('.toast-success')).toBeVisible();
-    await expect(page.locator('.toast-success')).toHaveCount(0);
   };
 
   let failed = false;
@@ -54,15 +49,16 @@ test('the SSN is found by its us-ssn system, wherever it sits, and added when mi
     expect(modal).toContain('"value": "S99912345"');
 
     // Saving without revealing changes no identifier
+    await openEdit(page);
     await page.locator('#city').fill('Ssnville 2');
-    await save();
+    await save(page);
     expect((await readPatient(ssnFirst)).identifier).toEqual([{ system: US_SSN, value: '999-11-4321' }, ...others]);
 
     // A revealed edit changes only the us-ssn identifier
     await reveal.click();
     await expect(ssn).toHaveValue('999-11-4321');
     await ssn.fill('999-22-8765');
-    await save();
+    await save(page);
     expect((await readPatient(ssnFirst)).identifier).toEqual([{ system: US_SSN, value: '999-22-8765' }, ...others]);
     await expect(ssn).toHaveValue('***-**-8765');
 
@@ -74,14 +70,15 @@ test('the SSN is found by its us-ssn system, wherever it sits, and added when mi
     });
     await open(noSSN);
     await expect(ssn).toHaveValue('');
+    await openEdit(page);
     await page.locator('#city').fill('Nossnville');
-    await save();
+    await save(page);
     expect((await readPatient(noSSN)).identifier).toEqual(others);
 
     // Revealing, typing and saving appends the us-ssn identifier at the end
     await reveal.click();
     await ssn.fill('999-33-1111');
-    await save();
+    await save(page);
     expect((await readPatient(noSSN)).identifier).toEqual([...others, { system: US_SSN, value: '999-33-1111' }]);
 
     // A patient without any identifier gains the list with the SSN only
@@ -90,7 +87,7 @@ test('the SSN is found by its us-ssn system, wherever it sits, and added when mi
     await expect(ssn).toHaveValue('');
     await reveal.click();
     await ssn.fill('999-44-2222');
-    await save();
+    await save(page);
     expect((await readPatient(noIdentifier)).identifier).toEqual([{ system: US_SSN, value: '999-44-2222' }]);
 
     expect(pageErrors, 'errors on the page').toEqual([]);

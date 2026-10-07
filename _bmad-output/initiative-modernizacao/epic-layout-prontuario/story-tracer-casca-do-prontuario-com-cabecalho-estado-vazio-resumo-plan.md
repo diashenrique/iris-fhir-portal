@@ -3,7 +3,7 @@ title: 'Tracer: casca do prontuário com cabeçalho, estado vazio, resumo e card
 type: 'feature'
 ticket: '1'
 created: '2026-10-06'
-status: 'built'
+status: done
 baseline_revision: '944ae6e07bfbec9c7070a0be816fb621ccbb4627'
 route: 'oneshot'
 route_source: 'auto'

@@ -1,6 +1,6 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
-const { ENTRY_PAGE, login, logout } = require('./helpers');
+const { ENTRY_PAGE, login, logout, openEdit, save } = require('./helpers');
 
 // End the session after each test: every login holds an IRIS license until its session ends
 test.afterEach(async ({ page }) => {
@@ -86,17 +86,17 @@ test('patient chart: login, list, details, update, lab chart and logout', async 
   const editedCity = `${originalCity} e2e`;
 
   const reloadPatient = async () => {
-    await city.fill('');
+    // Empty the field, so only the reloaded patient can fill it again
+    await city.evaluate((el) => { el.value = ''; });
     await Promise.all([
       page.waitForResponse((r) => r.url().includes('/fhir/r4/Patient?') && r.ok()),
       patientItem.click(),
     ]);
   };
   const saveCity = async (value) => {
+    await openEdit(page);
     await city.fill(value);
-    await page.locator('#updateData').click();
-    await expect(page.locator('.toast-success')).toBeVisible();
-    await expect(page.locator('.toast-success')).toHaveCount(0);
+    await save(page);
     await expect(page.locator('#updateData')).toBeEnabled();
   };
 

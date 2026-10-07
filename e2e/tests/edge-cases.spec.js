@@ -1,6 +1,6 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
-const { FHIR_JSON, fixtures, login, logout, watchErrorToasts } = require('./helpers');
+const { FHIR_JSON, fixtures, login, logout, watchErrorToasts, openEdit, save } = require('./helpers');
 
 // End the session after each test: every login holds an IRIS license until its session ends
 test.afterEach(async ({ page }) => {
@@ -51,10 +51,9 @@ test('a minimal patient without clinical records opens, shows empty tables and s
     await expect(page.locator('#iconChart a')).toHaveCount(0);
 
     // Save with only the city: the resource gains address[0].city and nothing else
+    await openEdit(page);
     await page.locator('#city').fill('Edgeville');
-    await page.locator('#updateData').click();
-    await expect(page.locator('.toast-success')).toBeVisible();
-    await expect(page.locator('.toast-success')).toHaveCount(0);
+    await save(page);
 
     const saved = await (await page.request.get(url, { headers: FHIR_JSON })).json();
     expect(saved.address).toEqual([{ city: 'Edgeville' }]);
@@ -90,9 +89,7 @@ test('saving removes what the user cleared and never writes an empty SSN', async
     await page.locator(`[id="${id}"]`).click();
     await expect(page.locator('#fhirId')).toHaveValue(String(id));
     await edit();
-    await page.locator('#updateData').click();
-    await expect(page.locator('.toast-success')).toBeVisible();
-    await expect(page.locator('.toast-success')).toHaveCount(0);
+    await save(page);
   };
 
   let failed = false;
@@ -105,6 +102,7 @@ test('saving removes what the user cleared and never writes an empty SSN', async
     });
     await openAndSave(cityOnly, async () => {
       await expect(page.locator('#city')).toHaveValue('Clearville');
+      await openEdit(page);
       await page.locator('#city').fill('');
     });
     const cleared = await readPatient(cityOnly);

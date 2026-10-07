@@ -15,8 +15,9 @@ $(document).ready(function () {
         }
     });
 
+    // Reload asks the server again for the list, keeping the search typed
     $("#reloadList").click(function () {
-        location.reload();
+        loadList();
     });
 
     // The user of the IRIS session, in the header
@@ -52,9 +53,9 @@ $(document).ready(function () {
 
     // The summary at the top of the chart: who the patient is, at a glance
     function showSummary(r) {
-        const name = getName(r).trim();
+        const name = displayName(r);
         const age = ageOf(r.birthDate);
-        $("#patientName").text(name || '(no name)');
+        $("#patientName").text(name || '(no name)').attr('title', getName(r).trim());
         $("#patientAge").text(age ? age + ' years' : '');
         $("#patientGender").text(r.gender ? r.gender.charAt(0).toUpperCase() + r.gender.slice(1) : '');
         $("#patientBirthDate").text(r.birthDate ? 'Born ' + r.birthDate : '');
@@ -66,6 +67,23 @@ $(document).ready(function () {
 
     $("#updateData").prop('disabled', true);
 
+    // The Edit modal opens with no message from a previous save
+    $("#editModal").on('show.bs.modal', function () {
+        $("#editError").addClass('d-none').text('');
+    });
+
+    // Copy the FHIR JSON; without the Clipboard API (a page that is not https or localhost), select and copy
+    $("#copyJSON").click(function () {
+        const text = $("#fhirdatasource").val();
+        const copied = () => toastr.info('Copied.');
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(text).then(copied);
+        } else {
+            $("#fhirdatasource").trigger('select');
+            if (document.execCommand('copy')) copied();
+        }
+    });
+
     function Toast(type, css, msg) {
         this.type = type;
         this.css = css;
@@ -73,8 +91,8 @@ $(document).ready(function () {
     }
 
     var toasts = [
-        new Toast('success', 'toast-bottom-center', 'Updating patient successed!'),
-        new Toast('error', 'toast-bottom-center', 'An error happened while updating patient record.')
+        new Toast('success', 'toast-bottom-center', 'Saved.'),
+        new Toast('error', 'toast-bottom-center', "Couldn't save the patient. Try again.")
     ];
 
     toastr.options.positionClass = 'toast-top-full-width';
@@ -90,7 +108,7 @@ $(document).ready(function () {
     }
 
     $("#updateData").click(function () {
-        $("#updateData").prop('disabled', true);
+        $("#updateData").prop('disabled', true).text('Saving…');
         updatePatient($("#fhirId").val());
     });
 
@@ -106,6 +124,12 @@ $(document).ready(function () {
         }
 
         return name;
+    }
+
+    // The name to show: without the numeric suffix Synthea glues to each part ("Carroll471" -> "Carroll").
+    // Only digits at the end of a part that has something else before them go; the FHIR data is unchanged.
+    function displayName(r) {
+        return getName(r).trim().split(/\s+/).map((part) => part.replace(/^(.*\D)\d+$/, '$1')).join(' ');
     }
 
     // The SSN is protected health information: masked and read-only until the user asks to see it
@@ -269,6 +293,16 @@ $(document).ready(function () {
         }
     }
 
+    // The FHIR JSON panel shows the resource as stored, except the SSN, which stays masked
+    function patientJSON(resource) {
+        const shownPatient = JSON.parse(JSON.stringify(resource));
+        const shownSSN = findSSN(shownPatient);
+        if (shownSSN && shownSSN.value) {
+            shownSSN.value = maskSSN(shownSSN.value);
+        }
+        return JSON.stringify(shownPatient, undefined, 4);
+    }
+
     // The patient whose details are shown: results that arrive for another one are dropped
     let selectedPatientId = null;
 
@@ -304,20 +338,16 @@ $(document).ready(function () {
                     $("#firstName").val((name.given && name.given[0]) || '');
                     $("#lastName").val(name.family || '');
                     $("#dateofbirth").val(r.birthDate || '');
+                    // The date picker (the theme starts flatpickr on the field) opens on the patient's date
+                    const picker = $("#dateofbirth")[0]._flatpickr;
+                    if (picker) picker.setDate(r.birthDate || null, false);
                     $("#gender").val(r.gender || '');
                     $("#address").val((address.line && address.line[0]) || '');
                     $("#city").val(address.city || '');
                     $("#state").val(address.state || '');
                     $("#country").val(address.country || '');
 
-                    // The FHIR Data Source modal shows the resource as stored, except the SSN, which stays masked
-                    const shownPatient = JSON.parse(JSON.stringify(patient.resource));
-                    const shownSSN = findSSN(shownPatient);
-                    if (shownSSN && shownSSN.value) {
-                        shownSSN.value = maskSSN(shownSSN.value);
-                    }
-                    var textedJSON = JSON.stringify(shownPatient, undefined, 4);
-                    $('#fhirdatasource').val(textedJSON);
+                    $('#fhirdatasource').val(patientJSON(patient.resource));
 
                     $("#allergyTable tbody").empty();
                     $("#vitalSignsTable tbody").empty();
@@ -325,6 +355,7 @@ $(document).ready(function () {
                     $("#immunizationTable tbody").empty();
                     $("#iconChart").empty();
                     $("#updateData").prop('disabled', false);
+                    $("#editPatient").prop('disabled', false);
 
                     allergy(patient.resource.id);
                     vitalsigns(patient.resource.id);
@@ -347,38 +378,84 @@ $(document).ready(function () {
         links.eq(to).trigger('focus');
     });
 
-    // Perform a search to retrieve patient list, every page of it
-    searchAll({
+    // Search the patients typed in the box, by name (shown or original) and FHIR id;
+    // a search that matches nobody says so, with a way to clear it
+    function filterList() {
+        const term = $("#searchClients").val().trim().toLowerCase();
+        let shown = 0;
+        $("#listgroup .list-group-item").each(function () {
+            const match = !term || $(this).data('search').indexOf(term) >= 0;
+            $(this).toggle(match);
+            if (match) shown++;
+        });
+        $("#noMatch").toggleClass('d-none', !(term && shown === 0 && $("#listgroup .list-group-item").length > 0));
+        $("#noMatchTerm").text($("#searchClients").val().trim());
+    }
+
+    $("#searchClients").on('input keyup', filterList);
+    $("#clearSearch").click(function (e) {
+        e.preventDefault();
+        $("#searchClients").val('').trigger('focus');
+        filterList();
+    });
+
+    // A list item: initial, name, then age, sex and FHIR id
+    function listItem(resource) {
+        const patientId = resource.id;
+        const name = displayName(resource);
+        const original = getName(resource).trim();
+        const age = ageOf(resource.birthDate);
+        const meta = [
+            age ? age + ' years' : '',
+            resource.gender ? resource.gender.charAt(0).toUpperCase() + resource.gender.slice(1) : '',
+            'ID ' + patientId
+        ].filter((part) => part).join(' \u00b7 ');
+        return $('<div class="list-group-item">')
+            .attr({ id: patientId, role: 'listitem' })
+            .data('search', [name, original, patientId].join(' ').toLowerCase())
+            .on('click', (e) => {
+                e.preventDefault();
+                showChart();
+                loadForm(patientId);
+            })
+            .append(
+                // The link is what the keyboard reaches (Tab, then the arrows below); its name says who it opens
+                $('<a href="#" class="stretched-link"></a>')
+                    .attr('aria-label', (name || '(no name)') + ', FHIR Patient ID ' + patientId),
+                $('<div class="list-group-item-figure">').append(
+                    $('<div class="tile tile-circle bg-blue">').text(name ? name.slice(0, 1) : '?')
+                ),
+                $('<div class="list-group-item-body">').append(
+                    $('<h4 class="list-group-item-title">').text(name || '(no name)').attr('title', original),
+                    $('<p class="list-group-item-text">').text(meta)
+                )
+            );
+    }
+
+    // Perform a search to retrieve patient list, every page of it. While it runs, placeholder items
+    // stand in for the list and the search box waits; the typed search applies to the new list.
+    function loadList() {
+        $("#listgroup").empty().append(
+            [1, 2, 3, 4].map(() => $('<div class="list-skeleton px-3 py-2" aria-hidden="true">').append(
+                $('<div class="list-group-item-body">').append($('<span class="skeleton-line">'), $('<span class="skeleton-line short">'))
+            ))
+        ).attr('aria-busy', 'true');
+        $("#searchClients, #reloadList").prop('disabled', true);
+        $("#noMatch").addClass('d-none');
+
+        searchAll({
             type: 'Patient',
             query: {
                 _sort: '-_lastUpdated'
             }
         }).then((result) => {
             sessionStorage.removeItem(redirectKey);
-            result.entries.forEach((patient) => {
-                const patientId = patient.resource.id;
-                const name = getName(patient.resource).trim();
-                const item = $('<div class="list-group-item">')
-                    .attr({ id: patientId, role: 'listitem' })
-                    .on('click', (e) => {
-                        e.preventDefault();
-                        showChart();
-                        loadForm(patientId);
-                    })
-                    .append(
-                        // The link is what the keyboard reaches (Tab, then the arrows below); its name says who it opens
-                        $('<a href="#" class="stretched-link"></a>')
-                            .attr('aria-label', (name || '(no name)') + ', FHIR Patient ID ' + patientId),
-                        $('<div class="list-group-item-figure">').append(
-                            $('<div class="tile tile-circle bg-blue">').text(name ? name.slice(0, 1) : '?')
-                        ),
-                        $('<div class="list-group-item-body">').append(
-                            $('<h4 class="list-group-item-title">').text(' ' + (name || '(no name)')),
-                            $('<p class="list-group-item-text">').text(' FHIR Patient ID: ' + patientId + ' ')
-                        )
-                    );
-                $("#listgroup").append(item);
-            });
+            $("#listgroup").empty().append(result.entries.map((patient) => listItem(patient.resource)));
+            // The patient open in the chart stays marked
+            if (selectedPatientId) {
+                $('#listgroup .list-group-item').filter((i, el) => el.id === String(selectedPatientId)).find('.stretched-link').attr('aria-current', 'true');
+            }
+            filterList();
         })
         .catch((err) => {
             // No session (logged out or expired): the FHIR endpoint answers 401 (404 if the web app ever refuses it first).
@@ -399,7 +476,16 @@ $(document).ready(function () {
                 return;
             }
             showError('the patient list', err);
+        })
+        .then(() => {
+            $("#listgroup .list-skeleton").remove();
+            $("#listgroup").removeAttr('aria-busy');
+            $("#searchClients, #reloadList").prop('disabled', false);
         });
+    }
+
+    loadList();
+
 
 
     // Perform a search to Immunization list for a specific patient
@@ -617,16 +703,22 @@ $(document).ready(function () {
             type: "Patient",
             id: parseInt(patientId),
             resource: r
-        }).catch(function (e) {
-            showToast(1);
-            $("#updateData").prop('disabled', false);
-            throw e;
-        }).then(function (bundle) {
+        }).then(function (res) {
             showToast(0);
             showMaskedSSN();
-            $("#updateData").prop('disabled', false);
-
-            return bundle;
+            $("#updateData").prop('disabled', false).text('Save');
+            // The server's copy (a new meta.versionId) feeds the summary and the FHIR JSON panel
+            if (res && res.data && res.data.resourceType === 'Patient') {
+                objPatient.resource = res.data;
+            }
+            showSummary(objPatient.resource);
+            $('#fhirdatasource').val(patientJSON(objPatient.resource));
+            $("#editModal").modal('hide');
+        }, function () {
+            // The modal stays open with what was typed, and says what happened
+            showToast(1);
+            $("#editError").removeClass('d-none').text("Couldn't save the patient. Try again.");
+            $("#updateData").prop('disabled', false).text('Save');
         });
     };
 

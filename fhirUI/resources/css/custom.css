@@ -141,3 +141,17 @@ canvas {
         overflow-wrap: anywhere;
     }
 }
+
+/* Placeholder items while the patient list loads */
+.list-skeleton .skeleton-line {
+    display: block;
+    height: 12px;
+    margin: 6px 0;
+    width: 70%;
+    border-radius: 4px;
+    background: #e6e8ed;
+}
+
+.list-skeleton .skeleton-line.short {
+    width: 40%;
+}
