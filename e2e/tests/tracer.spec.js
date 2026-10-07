@@ -116,21 +116,15 @@ test('patient chart: login, list, details, update, lab chart and logout', async 
     expect(restored.ok(), 'restore the original city').toBeTruthy();
   }
 
-  // Lab chart opens in a new tab of the same session
-  const [labPage] = await Promise.all([
-    context.waitForEvent('page'),
-    page.locator('#iconChart a').click(),
-  ]);
-  await expect(labPage.locator('#fullName')).not.toHaveValue('');
-  const lastOption = labPage.locator('#labtest option').last();
+  // Lab chart, inside the Laboratory card: choosing a test draws it
+  const lastOption = page.locator('#labtest option').last();
   await expect(lastOption).toBeAttached();
   const testName = await lastOption.textContent();
-  await labPage.locator('#labtest').selectOption({ label: testName });
-  await labPage.locator('#labSearch').click();
-  await expect(labPage.locator('#testName')).toHaveText(testName);
+  await page.locator('#labtest').selectOption({ label: testName });
+  await expect(page.locator('#testName')).toHaveText(testName);
 
   await expect
-    .poll(() => labPage.evaluate(() => {
+    .poll(() => page.evaluate(() => {
       const chart = Object.values(window.Chart.instances)[0];
       return chart ? chart.data.datasets[0].data.length : 0;
     }))

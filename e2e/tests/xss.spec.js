@@ -115,18 +115,14 @@ test('FHIR data is shown as text in the list, details, tables, modal and chart o
     // The laboratory bundle reached the modal as JSON text, not as parsed HTML
     await expect(source).toHaveValue(new RegExp(escapeRegExp(`"display": "${LAB_PAYLOAD}"`)));
 
-    // Chart options of the lab result page
-    const [labPage] = await Promise.all([
-      context.waitForEvent('page'),
-      page.locator('#iconChart a').click(),
-    ]);
-    await expect(labPage.locator('#fullName')).toHaveValue(`${NAME_PAYLOAD} Xss`);
-    const option = labPage.locator('#labtest option', { hasText: LAB_PAYLOAD });
+    // Chart options of the Laboratory card, and the name in the summary
+    await expect(page.locator('#patientName')).toHaveText(`${NAME_PAYLOAD} Xss`);
+    const option = page.locator('#labtest option', { hasText: LAB_PAYLOAD });
     await expect(option).toHaveCount(1);
     await expect(option).toHaveAttribute('value', '2093-3');
 
     // Nothing ran: no image from a payload, no flag, no dialog
-    for (const p of [page, labPage]) {
+    for (const p of [page]) {
       await expect(p.locator('img[src="x"]')).toHaveCount(0);
       expect(await p.evaluate(() => /** @type {any} */ (window).__xss)).toBeUndefined();
     }

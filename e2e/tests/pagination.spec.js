@@ -157,7 +157,7 @@ test('the clinical tables follow link[next]: rows match the badge, in date order
     await expect(page.locator('#laboratoryTable tbody tr:not(.lab-date)')).toHaveCount(labDays.length);
     expect(await page.locator('#laboratoryTable tbody tr:not(.lab-date)').evaluateAll((rows) => rows.map((row) => row.querySelector('td').textContent)))
       .toEqual([7, 6, 5, 4, 3, 2, 1].map((d) => `Lab ${d}`));
-    await expect(page.locator('#iconChart a')).toHaveCount(1);
+    await expect(page.locator('#labChartSection')).toBeVisible();
 
     await expect(page.locator('#badgeVitalSigns')).toHaveText(String(vitalDays.length));
     await expect(page.locator('#vitalSignsTable tbody tr')).toHaveCount(vitalDays.length);

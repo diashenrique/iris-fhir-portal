@@ -54,7 +54,7 @@ test('the chart starts empty, then shows the summary and every card open', async
 
     // No accordion: every card and its table are on screen without a click
     for (const card of ['#cardAllergies', '#cardVitalSigns', '#cardLaboratory', '#cardImmunizations']) {
-      await expect(page.locator(`${card} table`), card).toBeVisible();
+      await expect(page.locator(`${card} table.table`), card).toBeVisible();
     }
     await expect(page.locator('#allergyTable tbody')).toContainText('Allergy to peanut');
     expect(await overflows(page)).toBe(false);

@@ -45,10 +45,10 @@ test('the lab chart has a text alternative with the plotted values', async ({ pa
       const numeric = results.filter((r) => r.value !== null && r.value !== '' && !isNaN(Number(r.value)));
       if (!numeric.length) continue;
 
-      await page.goto(`/fhir/portal/labresult.html?id=${id}`);
-      await expect(page.locator('#labtest option')).toHaveCount(options.length);
+      // The chart of the Laboratory card: choosing a test draws it
+      await page.locator(`[id="${id}"]`).click();
+      await expect(page.locator('#labtest option')).toHaveCount(options.length + 1);
       await page.locator('#labtest').selectOption(option.code);
-      await page.locator('#labSearch').click();
 
       const table = page.locator('#labTable');
       await expect(table.locator('caption')).toHaveText(option.name);

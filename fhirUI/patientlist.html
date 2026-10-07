@@ -160,9 +160,27 @@
                     <h2 class="card-title h5 mb-0" id="cardLaboratoryTitle">Laboratory</h2>
                     <span id="badgeLaboratory" class="badge badge-pill badge-primary ml-2"></span>
                     <span class="badge badge-pill source-badge source-fhir ml-2" title="Loaded with fhir.js from /fhir/r4">FHIR · fhir.js</span>
-                    <span id="iconChart" class="ml-auto"></span>
                   </header>
                   <div class="card-body p-0">
+                    <!-- Chart of one test: values from /fhir/api (SQL), unit and range from the FHIR results below -->
+                    <div id="labChartSection" class="lab-chart border-bottom p-3 d-none">
+                      <div class="d-flex flex-wrap align-items-center mb-2">
+                        <label for="labtest" class="mb-0 mr-2">Chart a test</label>
+                        <select id="labtest" class="custom-select custom-select-sm lab-test-select mr-2"></select>
+                        <span class="badge badge-pill source-badge source-sql" title="Loaded with SQL from /fhir/api">SQL · /fhir/api</span>
+                      </div>
+                      <h3 id="testName" class="h6 text-muted mb-2"></h3>
+                      <p id="chartEmpty" class="text-muted mb-0 d-none"></p>
+                      <div id="chartBox" class="chart-box">
+                        <canvas id="myChart" role="img" aria-label="Lab results chart"></canvas>
+                      </div>
+                      <!-- The same values as text, for screen readers -->
+                      <table id="labTable" class="sr-only">
+                        <caption></caption>
+                        <thead><tr><th scope="col">Date</th><th scope="col">Value</th></tr></thead>
+                        <tbody></tbody>
+                      </table>
+                    </div>
                     <table id="laboratoryTable" class="table table-hover mb-0">
                       <thead class="thead-light">
                         <tr><th> Test </th><th> Value </th><th> Unit </th><th> Reference range </th></tr>
@@ -296,6 +314,9 @@
   <script src="assets/vendor/flatpickr/plugins/monthSelect/index.js"></script>
   <!-- END PLUGINS JS -->
   <!-- BEGIN THEME JS -->
+  <script src="assets/vendor/chart.js/chart.umd.min.js"></script>
+  <!-- Date adapter for the time axis (bundles date-fns) -->
+  <script src="assets/vendor/chart.js/chartjs-adapter-date-fns.bundle.min.js"></script>
   <script src="assets/javascript/theme.min.js"></script> <!-- END THEME JS -->
   <!-- BEGIN FHIR -->
   <script src="assets/vendor/fhir.js/jqFhir.js"></script>

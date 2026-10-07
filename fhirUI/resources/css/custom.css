@@ -134,7 +134,8 @@ canvas {
         border-top: 1px solid rgba(20, 20, 31, .1);
     }
 
-    .clinical-card table td {
+    .clinical-card table td,
+    .clinical-card table tbody th {
         display: block;
         border: 0;
         padding: 0;
@@ -189,4 +190,15 @@ canvas {
 
 .value-flag-text {
     font-size: 14px;
+}
+
+/* The lab chart inside the Laboratory card */
+.lab-test-select {
+    flex: 1 1 200px;
+    min-width: 0;
+}
+
+.chart-box {
+    position: relative;
+    width: 100%;
 }

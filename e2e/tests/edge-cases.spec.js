@@ -48,7 +48,8 @@ test('a minimal patient without clinical records opens, shows empty tables and s
       await expect(rows.locator('td'), table).toHaveText([empty]);
       await expect(rows.locator('td'), table).toHaveAttribute('colspan', String(columns));
     }
-    await expect(page.locator('#iconChart a')).toHaveCount(0);
+    // No lab results: no lab chart either
+    await expect(page.locator('#labChartSection')).toBeHidden();
 
     // Save with only the city: the resource gains address[0].city and nothing else
     await openEdit(page);
