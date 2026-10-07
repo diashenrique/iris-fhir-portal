@@ -59,20 +59,13 @@ $(document).ready(function () {
         return age >= 0 ? String(age) : '';
     }
 
-    // The sex of the patient in the language; a code the dictionary does not know shows as it is
-    function genderText(gender) {
-        if (!gender) return '';
-        const text = t('gender.' + gender);
-        return text === 'gender.' + gender ? gender : text;
-    }
-
     // The summary at the top of the chart: who the patient is, at a glance
     function showSummary(r) {
         const name = displayName(r);
         const age = ageOf(r.birthDate);
         $("#patientName").text(name || t('noName')).attr('title', getName(r).trim());
         $("#patientAge").text(age ? t('years', { n: age }) : '');
-        $("#patientGender").text(genderText(r.gender));
+        $("#patientGender").text(codeText('gender.', r.gender));
         $("#patientBirthDate").text(r.birthDate ? t('summary.born', { date: readableDate(r.birthDate) }) : '');
         $("#patientFhirId").text('FHIR ID ' + r.id);
         $("#allergyAlert").addClass('d-none').text('');
@@ -92,12 +85,19 @@ $(document).ready(function () {
         $("#editError").addClass('d-none').text('');
     });
 
-    // Vital signs: the latest value of each measure, or the whole history
-    $("#vitalsShowAll").click(function () {
+    // Show all, shared by the cards with a history (vital signs, medications): the rows .card-history of the
+    // table the button controls stay hidden until it is pressed; the button names how many rows there are
+    $(document).on('click', '.card-show-all', function () {
+        const table = '#' + $(this).attr('aria-controls');
         const all = $(this).attr('aria-expanded') !== 'true';
-        $("#vitalSignsTable tbody .vital-history").toggleClass('d-none', !all);
-        $(this).attr('aria-expanded', String(all)).text(all ? t('showLatest') : t('showAll', { n: $("#vitalSignsTable tbody tr").length }));
+        $(table + ' tbody .card-history').toggleClass('d-none', !all);
+        $(this).attr('aria-expanded', String(all)).text(all ? t('showLatest') : t('showAll', { n: $(table + ' tbody tr:not(.card-state)').length }));
     });
+
+    // Offer Show all when some rows of the table are history; total is every row
+    function setShowAll(button, total, hidden) {
+        $(button).toggleClass('d-none', hidden === 0).attr('aria-expanded', 'false').text(t('showAll', { n: total }));
+    }
 
     // Copy the FHIR JSON; without the Clipboard API (a page that is not https or localhost), select and copy
     $("#copyJSON").click(function () {
@@ -218,6 +218,9 @@ $(document).ready(function () {
     // (what they hold and their empty line are the keys what.<card> and empty.<card> of i18n.js)
         allergy: { table: '#allergyTable', badge: '#badgeAllergy', columns: 4 },
         condition: { table: '#conditionTable', badge: '#badgeCondition', columns: 4 },
+        medication: { table: '#medicationTable', badge: '#badgeMedication', columns: 4 },
+        encounter: { table: '#encounterTable', badge: '#badgeEncounter', columns: 3 },
+        careplan: { table: '#carePlanTable', badge: '#badgeCarePlan', columns: 4 },
         vitalsigns: { table: '#vitalSignsTable', badge: '#badgeVitalSigns', columns: 4 },
         laboratory: { table: '#laboratoryTable', badge: '#badgeLaboratory', columns: 4 },
         immunization: { table: '#immunizationTable', badge: '#badgeImmunization', columns: 2 }
@@ -476,7 +479,7 @@ $(document).ready(function () {
 
                     $('#fhirdatasource').val(patientJSON(patient.resource));
 
-                    $("#vitalsShowAll").addClass('d-none');
+                    $(".card-show-all").addClass('d-none');
                     $("#updateData").prop('disabled', false);
                     $("#editPatient").prop('disabled', false);
 
@@ -484,6 +487,9 @@ $(document).ready(function () {
                     if ($("#patientName").is(':visible')) $("#patientName").trigger('focus');
                     allergy(patient.resource.id);
                     condition(patient.resource.id);
+                    medication(patient.resource.id);
+                    encounter(patient.resource.id);
+                    careplan(patient.resource.id);
                     vitalsigns(patient.resource.id);
                     laboratory(patient.resource.id);
                     immunization(patient.resource.id);
@@ -542,7 +548,7 @@ $(document).ready(function () {
         const age = ageOf(resource.birthDate);
         const meta = [
             age ? t('years', { n: age }) : '',
-            genderText(resource.gender),
+            codeText('gender.', resource.gender),
             'ID ' + patientId
         ].filter((part) => part).join(' \u00b7 ');
         return $('<div class="list-group-item">')
@@ -663,12 +669,6 @@ $(document).ready(function () {
         return coding.code || 'active';
     }
 
-    // The clinical status in the language; a code the dictionary does not know shows as it is
-    function statusText(code) {
-        const text = t('status.' + code);
-        return text === 'status.' + code ? code : text;
-    }
-
     window.condition = function (patientId) {
         cardLoading('condition');
         searchAll({
@@ -689,7 +689,7 @@ $(document).ready(function () {
                 conditions.sort((a, b) => (b.active - a.active) || onset(b.r).localeCompare(onset(a.r)));
                 const rows = conditions.map((c) => textRow([
                     conceptText(c.r.code),
-                    statusText(c.status),
+                    codeText('status.', c.status),
                     onset(c.r),
                     abatement(c.r)
                 ], 2).each(function () {
@@ -709,6 +709,138 @@ $(document).ready(function () {
             })
             .catch((err) => {
                 if (isSelected(patientId)) cardError('condition', patientId, err);
+            });
+    };
+
+    // Medications: the active prescriptions in view, the others (stopped, completed...) behind Show all.
+    // The name comes from medicationCodeableConcept, or from the Medication the search includes.
+    function dosageText(request) {
+        const d = (request.dosageInstruction || [])[0];
+        if (!d) return '';
+        if (d.text) return d.text;
+        const parts = [];
+        const dose = ((d.doseAndRate || [])[0] || {}).doseQuantity;
+        if (dose && dose.value != null) parts.push([roundValue(String(dose.value)), dose.unit || ''].join(' ').trim());
+        const repeat = (d.timing || {}).repeat;
+        if (repeat && repeat.frequency && repeat.period) {
+            parts.push(t('dose.timing', { frequency: repeat.frequency, period: repeat.period, unit: repeat.periodUnit || '' }).trim());
+        }
+        if (d.asNeededBoolean) parts.push(t('dose.asNeeded'));
+        return parts.join(' · ');
+    }
+
+    window.medication = function (patientId) {
+        cardLoading('medication');
+        searchAll({
+                type: 'MedicationRequest',
+                query: {
+                    patient: patientId,
+                    _include: 'MedicationRequest:medication'
+                }
+            }).then((result) => {
+                if (!isSelected(patientId)) return;
+                appendBundles(result.bundles);
+                const resources = result.entries.map((e) => e.resource);
+                const medications = new Map(resources.filter((r) => r.resourceType === 'Medication').map((r) => ['Medication/' + r.id, r]));
+                const name = (r) => {
+                    if (r.medicationCodeableConcept) return conceptText(r.medicationCodeableConcept);
+                    const ref = r.medicationReference || {};
+                    const included = medications.get(ref.reference);
+                    return (included && conceptText(included.code)) || ref.display || '';
+                };
+                const requests = resources.filter((r) => r.resourceType === 'MedicationRequest')
+                    .map((r) => ({ r: r, active: r.status === 'active' }))
+                    // Active first, then latest first
+                    .sort((a, b) => (b.active - a.active) || (b.r.authoredOn || '').localeCompare(a.r.authoredOn || ''));
+                const rows = requests.map((m) => textRow([name(m.r), codeText('medStatus.', m.r.status), dosageText(m.r), m.r.authoredOn || ''], 3)
+                    .toggleClass('card-history d-none', !m.active));
+                cardLoaded('medication', result.first.total || 0);
+                const active = requests.filter((m) => m.active).length;
+                // Prescriptions, none of them active: say so above the hidden history
+                if (requests.length > 0 && active === 0) {
+                    $("#medicationTable tbody").append(cardRow(CARDS.medication, document.createTextNode(t('meds.noActive'))));
+                }
+                $("#medicationTable tbody").append(rows);
+                setShowAll('#medicationsShowAll', requests.length, requests.length - active);
+            })
+            .catch((err) => {
+                if (isSelected(patientId)) cardError('medication', patientId, err);
+            });
+    };
+
+    // A period as people read it: its start, and its end when it is another day ("Sep 1, 2019 – Sep 3, 2019")
+    function periodText(period) {
+        const start = (period && period.start) || '';
+        const end = (period && period.end) || '';
+        if (!start) return end ? readableDate(end) : '';
+        return end && end.slice(0, 10) !== start.slice(0, 10) ? readableDate(start) + ' \u2013 ' + readableDate(end) : readableDate(start);
+    }
+
+    // A code shown through the dictionary (prefix.code: gender., status., medStatus., cpStatus., class.),
+    // or as the server sends it when the dictionary does not know it
+    function codeText(prefix, code, fallback) {
+        const text = t(prefix + code);
+        return text === prefix + code ? (fallback || code || '') : text;
+    }
+
+    // Encounters: the five most recent in view, the rest behind Show all
+    const RECENT_ENCOUNTERS = 5;
+
+    window.encounter = function (patientId) {
+        cardLoading('encounter');
+        searchAll({
+                type: 'Encounter',
+                query: {
+                    patient: patientId
+                }
+            }).then((result) => {
+                if (!isSelected(patientId)) return;
+                appendBundles(result.bundles);
+                const encounters = result.entries.map((e) => e.resource)
+                    .sort((a, b) => ((b.period && b.period.start) || '').localeCompare((a.period && a.period.start) || ''));
+                const rows = encounters.map((r, i) => {
+                    const row = textRow([
+                        conceptText((r.type || [])[0]) || '',
+                        r.class ? codeText('class.', r.class.code, r.class.display) : '',
+                        periodText(r.period)
+                    ]).toggleClass('card-history d-none', i >= RECENT_ENCOUNTERS);
+                    if (r.period && r.period.start) row.children().eq(2).attr('title', [r.period.start, r.period.end].filter((d) => d).join(' / '));
+                    return row;
+                });
+                cardLoaded('encounter', result.first.total || 0);
+                $("#encounterTable tbody").append(rows);
+                setShowAll('#encountersShowAll', encounters.length, Math.max(0, encounters.length - RECENT_ENCOUNTERS));
+            })
+            .catch((err) => {
+                if (isSelected(patientId)) cardError('encounter', patientId, err);
+            });
+    };
+
+    // Care plans: active first, then latest first; their activities by name
+    window.careplan = function (patientId) {
+        cardLoading('careplan');
+        searchAll({
+                type: 'CarePlan',
+                query: {
+                    patient: patientId
+                }
+            }).then((result) => {
+                if (!isSelected(patientId)) return;
+                appendBundles(result.bundles);
+                const plans = result.entries.map((e) => e.resource)
+                    .sort((a, b) => ((b.status === 'active') - (a.status === 'active'))
+                        || ((b.period && b.period.start) || '').localeCompare((a.period && a.period.start) || ''));
+                const rows = plans.map((r) => textRow([
+                    conceptText((r.category || [])[0]) || r.title || '',
+                    codeText('cpStatus.', r.status),
+                    periodText(r.period),
+                    (r.activity || []).map((a) => conceptText((a.detail || {}).code)).filter((name) => name).join(', ')
+                ]));
+                cardLoaded('careplan', result.first.total || 0);
+                $("#carePlanTable tbody").append(rows);
+            })
+            .catch((err) => {
+                if (isSelected(patientId)) cardError('careplan', patientId, err);
             });
     };
 
@@ -764,12 +896,11 @@ $(document).ready(function () {
                 });
                 const latest = new Map();
                 values.forEach((v, i) => latest.set(v[0], i));
-                const rows = values.map((v, i) => textRow(v, 3).toggleClass('vital-history d-none', latest.get(v[0]) !== i));
+                const rows = values.map((v, i) => textRow(v, 3).toggleClass('card-history d-none', latest.get(v[0]) !== i));
                 cardLoaded('vitalsigns', result.first.total || 0);
                 $("#vitalSignsTable tbody").append(rows);
                 const history = values.length - latest.size;
-                $("#vitalsShowAll").toggleClass('d-none', history === 0).attr('aria-expanded', 'false')
-                    .text(t('showAll', { n: values.length }));
+                setShowAll('#vitalsShowAll', values.length, history);
             })
             .catch((err) => {
                 if (isSelected(patientId)) cardError('vitalsigns', patientId, err);
