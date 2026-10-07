@@ -23,3 +23,6 @@
 - source_plan: `_bmad-output/initiative-modernizacao/epic-prontuario-ampliado/story-cards-encounters-e-care-plans-plan.md`
   summary: O card de laboratório mostra todos os resultados agrupados por dia; num paciente com muitos exames, ele domina a página, agora que há oito cards.
   evidence: Captura a 1440px na 6.4 (o paciente 3 tem 34 resultados). O comportamento caberia no "Show all" compartilhado da 6.3 (os dias mais recentes à vista, o resto no histórico), mas muda o que o card mostra, então não é limpeza: fica como uma story nova (6.7 ou backlog), não no sweep da 6.6.
+- source_plan: `_bmad-output/initiative-modernizacao/epic-docs-demo/story-capturas-reproduziveis-e-o-readme-do-portal-atual-plan.md`
+  summary: No celular (390px), o botão "Reveal" do SSN, no resumo do paciente, encosta no campo e o cobre em parte.
+  evidence: Captura `img/portal-mobile.png` da 7.2. Já existia antes dos épicos 6 e 7; é interface, não documentação, então não entra no sweep do epic-docs-demo. Cabe numa story do backlog (o input-group a 100% da largura abaixo de 576px).
