@@ -219,14 +219,32 @@ canvas {
     .app .custom-select,
     .app .form-control,
     .app .allergy-alert,
+    .app .condition-pill,
     #clearSearch {
         min-height: 44px;
     }
 
     .app .btn-link,
     .app .allergy-alert,
+    .app .condition-pill,
     #clearSearch {
         display: inline-flex;
         align-items: center;
     }
+}
+
+/* Active conditions in the summary: neutral, red is only for allergies and abnormal values */
+.condition-pill {
+    background-color: #346cb0;
+    color: #fff;
+}
+
+.condition-pill:hover,
+.condition-pill:focus {
+    color: #fff;
+}
+
+/* Resolved and inactive conditions, after the active ones */
+.clinical-card tr.condition-inactive td {
+    color: #888c9b;
 }

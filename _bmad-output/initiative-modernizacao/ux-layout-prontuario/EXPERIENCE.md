@@ -55,8 +55,9 @@ Comportamento; o visual está em `DESIGN.md.Components`.
 | Patient list item | Patient list | Mostra o nome sem os sufixos numéricos do Synthea ("Jorge Rosado" em vez de "Jorge203 Rosado690"), com o nome original no `title`, e embaixo idade, sexo e ID FHIR. Clique ou Enter abre o prontuário; as setas, Home e End movem o foco (5.5). O selecionado tem `aria-current`. |
 | Patient search | Patient list | Filtra enquanto se digita, por nome e ID. Sem resultado, mostra "No patients match "{termo}"." O recarregar mantém o termo. |
 | Patient summary | Patient chart | Nome, idade, sexo, data de nascimento, ID FHIR e SSN mascarado com "Reveal" (epic-seguranca). O selo de alergias aparece quando há alergias e leva ao card Allergies. Tem as ações "Edit" e "FHIR JSON". |
-| Clinical card | Patient chart | Allergies, Vital signs, Laboratory e Immunizations, sempre abertos, sem acordeão. Cada um tem título, contador e selo de origem, e carrega e falha sozinho, sem bloquear os outros. |
+| Clinical card | Patient chart | Allergies, Conditions, Vital signs, Laboratory e Immunizations, sempre abertos, sem acordeão. Cada um tem título, contador e selo de origem, e carrega e falha sozinho, sem bloquear os outros. |
 | Vital signs card | Patient chart | Mostra o último valor de cada sinal (pressão, frequência cardíaca, peso, altura, IMC...), com unidade, valor arredondado e data. "Show all" expande o histórico. |
+| Conditions card | Patient chart | As ativas primeiro (active, recurrence, relapse; sem `clinicalStatus` conta como ativa), depois as resolvidas e inativas em cinza, cada grupo do início mais recente para o mais antigo. Colunas: condição, status, início e resolução. O resumo mostra o selo "N active conditions", que leva ao card (epic-prontuario-ampliado, 6.1). |
 | Laboratory card | Patient chart | Exames agrupados por data, do mais recente ao mais antigo. Valor arredondado com unidade e faixa de referência quando o FHIR traz `referenceRange`. O valor fora da faixa (ou com `interpretation` alta ou baixa) é destacado. O seletor de exame desenha o gráfico logo abaixo. |
 | Lab chart | Laboratory card | Desenha ao trocar o exame, sem botão "Search". O eixo x mostra datas e o y a unidade; a faixa de referência aparece como banda quando existe. Mantém a tabela alternativa para leitores de tela (5.5). |
 | Edit patient | Modal | É o formulário de hoje (nome, nascimento, sexo, endereço). "Save" faz o `update` e fecha com "Saved."; em erro, o modal continua aberto com a mensagem. O SSN nunca é gravado mascarado (epic-seguranca). |
@@ -72,7 +73,7 @@ Comportamento; o visual está em `DESIGN.md.Components`.
 | Lista carregando | Patient list | Três ou quatro itens esqueleto; a busca fica desabilitada até a primeira página chegar |
 | Busca sem resultado | Patient list | "No patients match "{termo}"." e um link "Clear search" |
 | Card carregando | Cada card clínico | Esqueleto no corpo; o título e o selo já aparecem |
-| Card sem registros | Cada card clínico | Uma linha: "No allergies recorded.", "No vital signs recorded.", "No lab results recorded." ou "No immunizations recorded." |
+| Card sem registros | Cada card clínico | Uma linha: "No allergies recorded.", "No vital signs recorded.", "No lab results recorded.", "No immunizations recorded." ou "No conditions recorded." |
 | Card com erro | Cada card clínico | "Couldn't load {seção}." com "Try again" no próprio card, mais o toast de erro de hoje (epic-robustez-fhir) |
 | Exame sem valor numérico | Lab chart | Sem gráfico: "{exame} has no numeric results to chart." A tabela mostra os valores em texto |
 | Sessão expirada | Qualquer superfície | Volta à tela de login uma vez (epic-seguranca); o comportamento de hoje não muda |

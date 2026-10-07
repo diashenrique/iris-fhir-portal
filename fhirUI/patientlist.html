@@ -88,7 +88,8 @@
                 <div class="card-body">
                   <div class="d-flex flex-wrap align-items-center">
                     <h1 id="patientName" class="patient-name mb-0 mr-3" tabindex="-1"></h1>
-                    <a id="allergyAlert" class="badge badge-pill allergy-alert d-none" href="#cardAllergies"></a>
+                    <a id="allergyAlert" class="badge badge-pill allergy-alert d-none mr-2" href="#cardAllergies"></a>
+                    <a id="conditionAlert" class="badge badge-pill condition-pill d-none" href="#cardConditions"></a>
                   </div>
                   <p class="patient-meta text-muted mb-2">
                     <span id="patientAge"></span><span id="patientGender"></span><span id="patientBirthDate"></span><span id="patientFhirId"></span>
@@ -132,6 +133,23 @@
                     <table id="allergyTable" class="table table-hover mb-0">
                       <thead class="thead-light">
                         <tr><th> Allergy </th><th> Type </th><th> Category </th><th> Criticality </th></tr>
+                      </thead>
+                      <tbody></tbody>
+                    </table>
+                  </div>
+                </section>
+              </div>
+              <div class="col-xl-6">
+                <section class="card clinical-card" id="cardConditions" aria-labelledby="cardConditionsTitle badgeCondition">
+                  <header class="card-header d-flex align-items-center">
+                    <h2 class="card-title h5 mb-0" id="cardConditionsTitle">Conditions</h2>
+                    <span id="badgeCondition" class="badge badge-pill badge-primary ml-2"></span>
+                    <span class="badge badge-pill source-badge source-fhir ml-2" title="Loaded with fhir.js from /fhir/r4">FHIR · fhir.js</span>
+                  </header>
+                  <div class="card-body p-0">
+                    <table id="conditionTable" class="table table-hover mb-0">
+                      <thead class="thead-light">
+                        <tr><th> Condition </th><th> Status </th><th> Onset </th><th> Resolved </th></tr>
                       </thead>
                       <tbody></tbody>
                     </table>
