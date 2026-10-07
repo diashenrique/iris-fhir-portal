@@ -32,11 +32,17 @@ jobs:
           cache-dependency-path: vendor/package-lock.json
 
       # The files in fhirUI/assets/vendor must be the npm packages of vendor/package-lock.json, byte for byte
+      # Only files are copied: no package needs its install scripts
       - name: Vendor check
         working-directory: vendor
         run: |
-          npm ci
+          npm ci --ignore-scripts
           node sync.mjs --check
+
+      # Known advisories (moderate or worse) in any library the portal serves fail the build
+      - name: Vendor audit
+        working-directory: vendor
+        run: npm audit --audit-level=moderate
 
   build:
     # docker: the project's image (Dockerfile + iris.script); ipm: a clean IRIS for Health with the fhir-server
