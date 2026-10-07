@@ -1,0 +1,32 @@
+# The same release flow as musketeers-br/sentai-task: every push to master (and every release) raises the last
+# number of <Version> in module.xml, so the Open Exchange app, which publishes module.xml to the IPM registry,
+# always has a new version to send. The commit is pushed with GITHUB_TOKEN, so it does not trigger other workflows.
+name: versionbump
+
+on:
+  push:
+    branches:
+      - master
+  release:
+    types:
+      - released
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Bump version
+        run: |
+          git config --global user.name 'ProjectBot'
+          git config --global user.email 'bot@users.noreply.github.com'
+          VERSION=$(sed -n '0,/.*<Version>\(.*\)<\/Version>.*/s//\1/p' module.xml)
+          VERSION=`echo $VERSION | awk -F. '/[0-9]+\./{$NF++;print}' OFS=.`
+          sed -i "0,/<Version>\(.*\)<\/Version>/s//<Version>$VERSION<\/Version>/" module.xml
+          git add module.xml
+          git commit -m 'auto bump version'
+          git push

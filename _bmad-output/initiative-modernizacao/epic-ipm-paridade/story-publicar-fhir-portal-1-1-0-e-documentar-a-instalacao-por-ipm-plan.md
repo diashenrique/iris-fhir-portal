@@ -35,3 +35,9 @@ context: []
 ## Implementation Notes
 
 - Antes da publicação, `PORTAL_SOURCE=registry` falha de propósito: a 1.0.3 não escreve "fhir-portal: configured".
+- Decision (usuário, 2026-10-07): publicar pelo mesmo método do musketeers-br/sentai-task.
+  - O `bump-module-version.yml` incrementa a versão do `module.xml` a cada push no master (a 1.1.0 vira 1.1.1 no merge).
+  - O dono do app publica a versão nova no Open Exchange, que tem "Publish in Package Manager" ligado e manda o `module.xml` do GitHub para o registro.
+  - O sentai-task (1.0.18) e o próprio `fhir-portal` (1.0.3) estão no registro por esse caminho, com o `repository` apontando para o GitHub.
+  - A publicação no Open Exchange exige o login do usuário. O repositório não tem credencial do registro.
+- A issue #6 foi fechada a pedido do usuário (2026-10-07). A correção está no master e chega ao registro com a publicação.

@@ -67,3 +67,11 @@ With the container up:
 ```
 cd e2e && node screenshots.js
 ```
+
+## Releases to the IPM registry
+
+The same flow as [sentai-task](https://github.com/musketeers-br/sentai-task):
+
+1. Every push to `master` runs `.github/workflows/bump-module-version.yml`. It raises the last number of `<Version>` in `module.xml` (1.1.0 becomes 1.1.1) and commits it as ProjectBot.
+2. The maintainer publishes a new version of the app on [Open Exchange](https://openexchange.intersystems.com/package/iris-fhir-portal), which has "Publish in Package Manager" on. Open Exchange packages `module.xml` from GitHub and sends it to the registry (https://pm.community.intersystems.com/packages/fhir-portal).
+3. Run CI by hand with `portal_source: registry` (Actions → CI → Run workflow). Its IPM leg installs the published package on a clean IRIS for Health with the `fhir-server` package.
