@@ -15,8 +15,9 @@ $(document).ready(function () {
         }
     });
 
+    // Reload asks the server again for the list, keeping the search typed
     $("#reloadList").click(function () {
-        location.reload();
+        loadList();
     });
 
     // The user of the IRIS session, in the header
@@ -52,9 +53,9 @@ $(document).ready(function () {
 
     // The summary at the top of the chart: who the patient is, at a glance
     function showSummary(r) {
-        const name = getName(r).trim();
+        const name = displayName(r);
         const age = ageOf(r.birthDate);
-        $("#patientName").text(name || '(no name)');
+        $("#patientName").text(name || '(no name)').attr('title', getName(r).trim());
         $("#patientAge").text(age ? age + ' years' : '');
         $("#patientGender").text(r.gender ? r.gender.charAt(0).toUpperCase() + r.gender.slice(1) : '');
         $("#patientBirthDate").text(r.birthDate ? 'Born ' + r.birthDate : '');
@@ -123,6 +124,12 @@ $(document).ready(function () {
         }
 
         return name;
+    }
+
+    // The name to show: without the numeric suffix Synthea glues to each part ("Carroll471" -> "Carroll").
+    // Only digits at the end of a part that has something else before them go; the FHIR data is unchanged.
+    function displayName(r) {
+        return getName(r).trim().split(/\s+/).map((part) => part.replace(/^(.*\D)\d+$/, '$1')).join(' ');
     }
 
     // The SSN is protected health information: masked and read-only until the user asks to see it
@@ -371,38 +378,84 @@ $(document).ready(function () {
         links.eq(to).trigger('focus');
     });
 
-    // Perform a search to retrieve patient list, every page of it
-    searchAll({
+    // Search the patients typed in the box, by name (shown or original) and FHIR id;
+    // a search that matches nobody says so, with a way to clear it
+    function filterList() {
+        const term = $("#searchClients").val().trim().toLowerCase();
+        let shown = 0;
+        $("#listgroup .list-group-item").each(function () {
+            const match = !term || $(this).data('search').indexOf(term) >= 0;
+            $(this).toggle(match);
+            if (match) shown++;
+        });
+        $("#noMatch").toggleClass('d-none', !(term && shown === 0 && $("#listgroup .list-group-item").length > 0));
+        $("#noMatchTerm").text($("#searchClients").val().trim());
+    }
+
+    $("#searchClients").on('input keyup', filterList);
+    $("#clearSearch").click(function (e) {
+        e.preventDefault();
+        $("#searchClients").val('').trigger('focus');
+        filterList();
+    });
+
+    // A list item: initial, name, then age, sex and FHIR id
+    function listItem(resource) {
+        const patientId = resource.id;
+        const name = displayName(resource);
+        const original = getName(resource).trim();
+        const age = ageOf(resource.birthDate);
+        const meta = [
+            age ? age + ' years' : '',
+            resource.gender ? resource.gender.charAt(0).toUpperCase() + resource.gender.slice(1) : '',
+            'ID ' + patientId
+        ].filter((part) => part).join(' \u00b7 ');
+        return $('<div class="list-group-item">')
+            .attr({ id: patientId, role: 'listitem' })
+            .data('search', [name, original, patientId].join(' ').toLowerCase())
+            .on('click', (e) => {
+                e.preventDefault();
+                showChart();
+                loadForm(patientId);
+            })
+            .append(
+                // The link is what the keyboard reaches (Tab, then the arrows below); its name says who it opens
+                $('<a href="#" class="stretched-link"></a>')
+                    .attr('aria-label', (name || '(no name)') + ', FHIR Patient ID ' + patientId),
+                $('<div class="list-group-item-figure">').append(
+                    $('<div class="tile tile-circle bg-blue">').text(name ? name.slice(0, 1) : '?')
+                ),
+                $('<div class="list-group-item-body">').append(
+                    $('<h4 class="list-group-item-title">').text(name || '(no name)').attr('title', original),
+                    $('<p class="list-group-item-text">').text(meta)
+                )
+            );
+    }
+
+    // Perform a search to retrieve patient list, every page of it. While it runs, placeholder items
+    // stand in for the list and the search box waits; the typed search applies to the new list.
+    function loadList() {
+        $("#listgroup").empty().append(
+            [1, 2, 3, 4].map(() => $('<div class="list-skeleton px-3 py-2" aria-hidden="true">').append(
+                $('<div class="list-group-item-body">').append($('<span class="skeleton-line">'), $('<span class="skeleton-line short">'))
+            ))
+        ).attr('aria-busy', 'true');
+        $("#searchClients, #reloadList").prop('disabled', true);
+        $("#noMatch").addClass('d-none');
+
+        searchAll({
             type: 'Patient',
             query: {
                 _sort: '-_lastUpdated'
             }
         }).then((result) => {
             sessionStorage.removeItem(redirectKey);
-            result.entries.forEach((patient) => {
-                const patientId = patient.resource.id;
-                const name = getName(patient.resource).trim();
-                const item = $('<div class="list-group-item">')
-                    .attr({ id: patientId, role: 'listitem' })
-                    .on('click', (e) => {
-                        e.preventDefault();
-                        showChart();
-                        loadForm(patientId);
-                    })
-                    .append(
-                        // The link is what the keyboard reaches (Tab, then the arrows below); its name says who it opens
-                        $('<a href="#" class="stretched-link"></a>')
-                            .attr('aria-label', (name || '(no name)') + ', FHIR Patient ID ' + patientId),
-                        $('<div class="list-group-item-figure">').append(
-                            $('<div class="tile tile-circle bg-blue">').text(name ? name.slice(0, 1) : '?')
-                        ),
-                        $('<div class="list-group-item-body">').append(
-                            $('<h4 class="list-group-item-title">').text(' ' + (name || '(no name)')),
-                            $('<p class="list-group-item-text">').text(' FHIR Patient ID: ' + patientId + ' ')
-                        )
-                    );
-                $("#listgroup").append(item);
-            });
+            $("#listgroup").empty().append(result.entries.map((patient) => listItem(patient.resource)));
+            // The patient open in the chart stays marked
+            if (selectedPatientId) {
+                $('#listgroup .list-group-item').filter((i, el) => el.id === String(selectedPatientId)).find('.stretched-link').attr('aria-current', 'true');
+            }
+            filterList();
         })
         .catch((err) => {
             // No session (logged out or expired): the FHIR endpoint answers 401 (404 if the web app ever refuses it first).
@@ -423,7 +476,16 @@ $(document).ready(function () {
                 return;
             }
             showError('the patient list', err);
+        })
+        .then(() => {
+            $("#listgroup .list-skeleton").remove();
+            $("#listgroup").removeAttr('aria-busy');
+            $("#searchClients, #reloadList").prop('disabled', false);
         });
+    }
+
+    loadList();
+
 
 
     // Perform a search to Immunization list for a specific patient

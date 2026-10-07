@@ -54,13 +54,16 @@
               <label class="input-group-prepend" for="searchClients">
                 <span class="input-group-text"><span class="oi oi-magnifying-glass" aria-hidden="true"></span></span>
               </label>
-              <input type="text" class="form-control" id="searchClients" data-filter="#listgroup .list-group-item" placeholder="Find Patients">
+              <input type="text" class="form-control" id="searchClients" placeholder="Find Patients" aria-label="Find patients by name or FHIR ID">
               <div class="input-group-append">
                 <button id="reloadList" class="btn btn-primary" aria-label="Reload the patient list">
                   <i class="fas fa-sync-alt" aria-hidden="true"></i>
                 </button>
               </div>
             </div>
+            <p id="noMatch" class="text-muted d-none" role="status">
+              No patients match "<span id="noMatchTerm"></span>". <a href="#" id="clearSearch">Clear search</a>
+            </p>
             <div class="card list-card">
               <div id="listgroup" class="list-group list-group-flush list-group-divider" data-toggle="radiolist" role="list" aria-label="Patients">
               </div>
