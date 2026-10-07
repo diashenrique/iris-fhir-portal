@@ -4,7 +4,7 @@ status: final
 sources:
   - ../initiative-modernizacao.md
   - ../avaliacao-do-projeto.md
-updated: 2026-10-07
+updated: 2026-10-06
 ---
 
 # FHIR Patient Portal — Experience Spine
@@ -13,9 +13,9 @@ updated: 2026-10-07
 
 O portal é uma web responsiva de duas páginas estáticas, servidas pelo IRIS em `/fhir/portal` depois do login do IRIS. Usa jQuery 3.7 com Bootstrap 4.6 e o tema Looper (epic-frontend-deps). `DESIGN.md` é a referência visual, e este documento descreve o comportamento.
 
-**Público principal:** o desenvolvedor que lê os artigos da Developer Community ou instala o portal pelo IPM para ver o FHIR do IRIS for Health funcionando (decisão do usuário, 2026-10-07). O prontuário se comporta como um prontuário clínico real. A camada técnica fica sempre à vista, mas nunca na frente: o selo de origem em cada card, o JSON bruto a um clique e a edição que demonstra o `update` do fhir.js do artigo 3.
+**Público principal:** o desenvolvedor que lê os artigos da Developer Community ou instala o portal pelo IPM para ver o FHIR do IRIS for Health funcionando (decisão do usuário, 2026-10-06). O prontuário se comporta como um prontuário clínico real. A camada técnica fica sempre à vista, mas nunca na frente: o selo de origem em cada card, o JSON bruto a um clique e a edição que demonstra o `update` do fhir.js do artigo 3.
 
-**Idioma:** a interface é em inglês, como hoje e como nos artigos. O pt-BR fica para o i18n do epic-prontuario-ampliado (decisão do usuário, 2026-10-07).
+**Idioma:** a interface é em inglês, como hoje e como nos artigos. O pt-BR fica para o i18n do epic-prontuario-ampliado (decisão do usuário, 2026-10-06).
 
 ## Information Architecture
 
@@ -114,7 +114,7 @@ O contraste visual está no `DESIGN.md`. O piso é WCAG 2.2 AA.
 
 - **Mantido do portal de 2020:** a lista à esquerda, o modal docked com o JSON, a edição pelo fhir.js e o gráfico de exames. São as partes que os artigos ensinam.
 - **Rejeitado:** a página separada do gráfico, os quatro blocos recolhidos, o formulário vazio como tela inicial e as datas em ISO com fuso (avaliação, Layout e UX).
-- **Rejeitado:** esconder a camada técnica num "modo desenvolvedor". O público é desenvolvedor; a origem e o JSON ficam sempre à vista, discretos (decisão do usuário, 2026-10-07).
+- **Rejeitado:** esconder a camada técnica num "modo desenvolvedor". O público é desenvolvedor; a origem e o JSON ficam sempre à vista, discretos (decisão do usuário, 2026-10-06).
 
 ## Key Flows
 

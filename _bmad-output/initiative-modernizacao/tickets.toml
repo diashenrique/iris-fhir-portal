@@ -45,7 +45,7 @@ id = 8
 slug = "epic-layout-prontuario"
 title = "Layout de prontuário, legível e mobile-first"
 covers = ["R8"]
-after = [{ epic = 5, needs = "a base de frontend escolhida" }, { epic = 2, needs = "a tela de login, que o cabeçalho do app passa a exibir" }]
+after = [{ epic = 5, needs = "a base de frontend escolhida" }, { epic = 2, needs = "a tela de login, que o cabeçalho do app passa a exibir" }, { epic = 3, needs = "os toasts de erro das buscas (3.5), que os cards passam a complementar" }]
 description = "Corrigir o overflow horizontal em 390px; estado vazio 'Selecione um paciente'; cabeçalho de resumo (nome sem sufixos Synthea, idade, sexo, alerta de alergia) com edição em modo ou modal separado; trocar o acordeão recolhido por cards ou abas com os resultados recentes à vista; datas legíveis, valores arredondados, exames agrupados por data, faixa de referência e destaque de valor alterado; gráfico de laboratório inline, que renderiza ao trocar de exame e mostra unidade; lista com idade e sexo e feedback de busca vazia; cabeçalho do app com usuário logado e logout, identidade 'IRIS for Health' e loader discreto. Começar com bmad-ux (DESIGN.md e EXPERIENCE.md) antes da inception."
 
 [[epic]]

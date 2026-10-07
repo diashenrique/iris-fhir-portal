@@ -2,7 +2,7 @@
 name: FHIR Patient Portal
 description: Prontuário de demonstração do FHIR no InterSystems IRIS for Health, sobre o tema Looper (Bootstrap 4); este DESIGN.md fixa os tokens do tema que o portal usa e o pouco que acrescenta.
 status: final
-updated: 2026-10-07
+updated: 2026-10-06
 colors:
   # Herdadas do theme.min.css (Looper). O portal não redefine nenhuma.
   primary: '#346CB0'
@@ -99,7 +99,7 @@ components:
 
 O FHIR Patient Portal é uma demonstração para desenvolvedores: mostra o que o IRIS for Health entrega por FHIR e por SQL, com a cara de um prontuário de verdade. A postura é a de uma ferramenta clínica sóbria, com uma camada técnica à vista: cada dado diz de onde veio, e o JSON bruto está a um clique.
 
-O visual é o do tema Looper (Bootstrap 4), refinado, sem redesenho (decisão do usuário, 2026-10-07). Os componentes do Bootstrap e do tema (cards, botões, badges, modal, list-group) ficam como são; este documento fixa os tokens que o portal usa e os poucos componentes próprios.
+O visual é o do tema Looper (Bootstrap 4), refinado, sem redesenho (decisão do usuário, 2026-10-06). Os componentes do Bootstrap e do tema (cards, botões, badges, modal, list-group) ficam como são; este documento fixa os tokens que o portal usa e os poucos componentes próprios.
 
 ## Colors
 

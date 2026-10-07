@@ -2,7 +2,7 @@
 title: 'Demais bibliotecas no manifesto e npm audit no CI'
 type: 'chore'
 ticket: '4'
-created: '2026-10-07'
+created: '2026-10-06'
 status: done
 baseline_revision: '5504994fa525e5a9941ce03b1b149cb064609c60'
 route: 'oneshot'

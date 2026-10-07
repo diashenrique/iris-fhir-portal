@@ -1,0 +1,99 @@
+# Breakdown of epic-layout-prontuario, in build order (approved under autonomy, 2026-10-06, after the set check)
+# One lane: every entry edits patientlist.html and myFHIR.js, so they run in sequence.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Tracer: casca do prontuário com cabeçalho, estado vazio, resumo e cards abertos, sem rolagem a 390px"
+description = "Reorganiza o patientlist.html na casca do EXPERIENCE.md: cabeçalho do app com o usuário logado (de uma rota nova GET /fhir/api/session, que devolve {user} da sessão) e Log out; lista e prontuário lado a lado a partir de 992px, cards em duas colunas a partir de 1200px, e uma tela por vez abaixo de 992px com Back to patients, que volta mantendo a busca e a posição da lista; o estado vazio sem paciente; o resumo do paciente (nome, idade, sexo, nascimento, ID, SSN mascarado com Reveal e o selo N allergies, que leva ao card Allergies); os quatro blocos clínicos como cards abertos, sem acordeão, com as tabelas virando listas empilhadas abaixo de 992px; o formulário de edição fica na página, abaixo do resumo, até a entrada 2."
+verify = "Um e2e a 390x844 e a 1440x900 confirma o estado vazio, o usuário no cabeçalho, o resumo e o selo de alergias de um paciente criado pelo teste com uma AllergyIntolerance, os quatro cards visíveis sem clique, a volta à lista no mobile com a busca mantida e scrollWidth <= clientWidth; o smoke checa /fhir/api/session com e sem login; os e2e de antes, adaptados, passam."
+covers = ["L1", "L2", "L4"]
+after = ["2.2", "2.6", "5.3", "5.5"]   # login e sessão; SSN mascarado com Reveal; Bootstrap 4.6; a lista acessível
+hitl = false
+risk = "medium"
+uncertainty = "Como o tema Looper monta o layout de duas colunas (page-sidebar e has-sidebar) e se ele serve para a tela única no mobile ou precisa de CSS próprio."
+references = ["_bmad-output/initiative-modernizacao/ux-layout-prontuario/EXPERIENCE.md#information-architecture"]
+
+[[entry]]
+id = 2
+type = "story"
+title = "Edição no modal Edit e JSON no painel FHIR JSON"
+description = "Move o formulário de edição para o modal Edit (Save com Saving..., Saved., erro com o modal aberto, foco preso e devolvido a Edit), deixa o painel FHIR JSON com Copy e o SSN mascarado, Esc fecha o modal e o painel e devolve o foco ao botão que os abriu, e adapta os e2e de update e de SSN ao modal."
+verify = "O e2e do tracer e os de SSN passam pelo modal Edit, gravam e veem o resumo e o JSON atualizados; Esc fecha o modal e o painel e devolve o foco ao botão de origem."
+covers = ["L2", "L7"]
+after = [1]
+hitl = false
+risk = "medium"
+uncertainty = "Se o flatpickr da data de nascimento funciona dentro do modal do Bootstrap 4.6 sem ajuste de z-index."
+
+[[entry]]
+id = 3
+type = "story"
+title = "Lista legível: nomes sem sufixo, idade e sexo, busca com aviso"
+description = "Cada paciente da lista mostra o nome sem os sufixos numéricos do Synthea (o original no title), idade, sexo e ID; enquanto a lista carrega aparecem itens esqueleto e a busca fica desabilitada até a primeira página; a busca filtra por nome e ID, mostra No patients match com Clear search quando nada bate, e o recarregar mantém o termo."
+verify = "Um e2e com um paciente criado pelo teste confirma o nome limpo, o title original, idade e sexo, o aviso de busca sem resultado e o termo mantido depois do recarregar."
+covers = ["L3"]
+after = [2]
+hitl = false
+risk = "low"
+uncertainty = "Se algum nome real termina em dígitos que não são sufixo Synthea (a limpeza tira só dígitos colados ao fim de cada parte do nome)."
+
+[[entry]]
+id = 4
+type = "story"
+title = "Cards clínicos: estados, selo de origem, datas legíveis e últimos sinais vitais"
+description = "Cada card ganha contador, o selo de origem FHIR · fhir.js, esqueleto ao carregar, linha de vazio e erro com Try again no próprio card (além do toast da 3.5); as datas ficam legíveis com o ISO no title; o card de sinais vitais mostra o último valor de cada tipo com unidade, arredondado e com a data, e Show all mostra o histórico."
+verify = "Um e2e confirma o selo e o contador em cada card, a linha de vazio num paciente sem registros, Try again depois de uma falha simulada e o último valor de cada sinal vital com unidade e data."
+covers = ["L4"]
+after = [3, "3.5"]                # os toasts de erro da 3.5
+hitl = false
+risk = "medium"
+uncertainty = "Como agrupar os sinais vitais por tipo: pelo code.coding LOINC ou pelo texto; a pressão arterial vem em component."
+
+[[entry]]
+id = 5
+type = "story"
+title = "Card de laboratório: agrupado por data, faixa de referência e valor alterado"
+description = "Os exames aparecem agrupados por data, mais recente primeiro, com valor arredondado, unidade e, quando o FHIR traz referenceRange, a faixa; um valor fora da faixa ou com interpretation alta ou baixa aparece destacado com cor, seta e o texto High ou Low; o card guarda as Observations de laboratório que carrega, por código, com unidade e referenceRange, para o gráfico da entrada 6 (handoff)."
+verify = "Um e2e cria uma Observation de laboratório com referenceRange e valor acima dela e confirma o agrupamento por data, a faixa e o destaque High; uma sem faixa aparece sem destaque."
+covers = ["L5"]
+after = [4]
+hitl = false
+risk = "medium"
+uncertainty = "Os dados Synthea do projeto não têm referenceRange nem interpretation; o caminho só é exercitado pelas Observations do teste."
+
+[[entry]]
+id = 6
+type = "story"
+title = "Gráfico do exame dentro do card de laboratório"
+description = "O card de laboratório ganha o seletor de exame (opções do /fhir/api/laboptions) e desenha o gráfico (Chart.js 4, valores do /fhir/api) logo abaixo ao trocar o exame, com o selo SQL · /fhir/api, a unidade no eixo e a faixa de referência como banda, ambas lidas das Observations da entrada 5; um exame sem valor numérico mostra {exame} has no numeric results to chart; a tabela alternativa da 5.5 continua; o patientlist.html passa a abrir o paciente de ?id=X, e o labresult.html redireciona para lá; o lab-chart.spec.js e a parte do gráfico do a11y.spec.js passam a usar o card."
+verify = "O e2e do gráfico escolhe um exame no card e vê o gráfico e o selo SQL sem clicar em Search; um exame sem valor numérico mostra o aviso; labresult.html?id=X leva ao prontuário de X; a tabela alternativa continua certa."
+covers = ["L6"]
+after = [5, "5.2"]                # Chart.js 4
+hitl = false
+risk = "medium"
+uncertainty = "O labresult.js tem o próprio tratamento de 401 (redirect único); ao juntar no myFHIR.js, ele precisa seguir o mesmo guarda de redirect da 2.2."
+
+[[entry]]
+id = 7
+type = "story"
+title = "Acessibilidade e acabamento: foco no paciente, aria-live, toques de 44px e carregamento discreto"
+description = "Ao abrir um paciente o foco vai ao nome (h1); cada card é uma section com h2 e contador no nome acessível; os toasts de erro entram num aria-live; alvos de toque com 44px; / leva à busca; o Pace passa à barra fina no topo."
+verify = "Um e2e confirma o foco no nome ao abrir um paciente, os nomes acessíveis dos cards, o aria-live com o erro e o atalho /; uma checagem de tamanho confirma os alvos de 44px a 390px."
+covers = ["L1", "L7"]
+after = [6]
+hitl = false
+risk = "low"
+uncertainty = "Se o tema minimal do pace-js 1.2 já está no pacote npm ou se a barra é CSS próprio."
+
+[[entry]]
+id = 8
+type = "story"
+title = "Refactor sweep"
+description = "Limpeza deixada para depois pelas entradas 1 a 7, com escopo definido ao começar, a partir dos planos e das revisões; só limpeza."
+verify = "O CI segue verde e cada item de limpeza do plano está resolvido ou explicitamente adiado."
+covers = ["L1", "L2", "L3", "L4", "L5", "L6", "L7"]
+after = [1, 2, 3, 4, 5, 6, 7]
+hitl = false
+risk = "low"
+uncertainty = "O escopo só é conhecido ao fim das entradas anteriores."
