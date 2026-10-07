@@ -12,8 +12,8 @@
   <link href="https://fonts.googleapis.com/css?family=Fira+Sans:400,500,600" rel="stylesheet"><!-- End GOOGLE FONT -->
   <!-- BEGIN PLUGINS STYLES -->
   <link rel="stylesheet" href="assets/vendor/open-iconic/css/open-iconic-bootstrap.min.css">
-  <link rel="stylesheet" href="assets/stylesheets/toastr.min.css">
-  <link rel="stylesheet" href="assets/vendor/fontawesome/css/all.css">
+  <link rel="stylesheet" href="assets/vendor/toastr/toastr.min.css">
+  <link rel="stylesheet" href="assets/vendor/fontawesome/css/all.min.css">
   <link rel="stylesheet" href="assets/vendor/flatpickr/flatpickr.min.css">
   <link rel="stylesheet" href="resources/css/custom.css">
   <!-- END PLUGINS STYLES -->
@@ -116,11 +116,12 @@
   <script src="assets/vendor/bootstrap/js/popper.min.js"></script>
   <script src="assets/vendor/bootstrap/js/bootstrap.min.js"></script> <!-- END BASE JS -->
   <!-- BEGIN PLUGINS JS -->
-  <script src="assets/javascript/toastr.min.js"></script>
+  <script src="assets/vendor/toastr/toastr.min.js"></script>
   <script src="assets/vendor/pace/pace.min.js"></script>
   <script src="assets/vendor/stacked-menu/stacked-menu.min.js"></script>
-  <script src="assets/vendor/chart.js/Chart.bundle.min.js"></script> <!-- END PLUGINS JS -->
-  <script src="assets/vendor/chart.js/utils.js"></script> <!-- END PLUGINS JS -->
+  <script src="assets/vendor/chart.js/chart.umd.min.js"></script>
+  <!-- Date adapter for the time axis (bundles date-fns) -->
+  <script src="assets/vendor/chart.js/chartjs-adapter-date-fns.bundle.min.js"></script> <!-- END PLUGINS JS -->
   <!-- BEGIN THEME JS -->
   <script src="assets/javascript/theme.min.js"></script> <!-- END THEME JS -->
   <!-- BEGIN FHIR -->
