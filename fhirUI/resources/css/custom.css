@@ -134,7 +134,8 @@ canvas {
         border-top: 1px solid rgba(20, 20, 31, .1);
     }
 
-    .clinical-card table td {
+    .clinical-card table td,
+    .clinical-card table tbody th {
         display: block;
         border: 0;
         padding: 0;
@@ -189,4 +190,43 @@ canvas {
 
 .value-flag-text {
     font-size: 14px;
+}
+
+/* The lab chart inside the Laboratory card */
+.lab-test-select {
+    flex: 1 1 200px;
+    min-width: 0;
+}
+
+.chart-box {
+    position: relative;
+    width: 100%;
+}
+
+/* Loading: the thin bar under the header only, not the spinner in the corner */
+.pace .pace-activity {
+    display: none;
+}
+
+/* The focus moves to the patient's name when a chart opens; the name is not a control */
+.patient-name:focus {
+    outline: none;
+}
+
+/* Phones: every control at least 44px high */
+@media (max-width: 575.98px) {
+    .app .btn,
+    .app .custom-select,
+    .app .form-control,
+    .app .allergy-alert,
+    #clearSearch {
+        min-height: 44px;
+    }
+
+    .app .btn-link,
+    .app .allergy-alert,
+    #clearSearch {
+        display: inline-flex;
+        align-items: center;
+    }
 }

@@ -36,7 +36,7 @@ test('every card says where its data comes from, how many records it has, and re
     await page.locator(`[id="${id}"]`).click();
 
     for (const card of ['#cardAllergies', '#cardVitalSigns', '#cardLaboratory', '#cardImmunizations']) {
-      await expect(page.locator(`${card} .source-badge`), card).toHaveText('FHIR · fhir.js');
+      await expect(page.locator(`${card} .card-header .source-badge`), card).toHaveText('FHIR · fhir.js');
     }
     await expect(page.locator('#badgeAllergy')).toHaveText('0');
 

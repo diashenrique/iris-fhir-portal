@@ -6,7 +6,7 @@ covers: [R8]
 after: []
 assignee: ""
 risk: medium
-status: in-progress
+status: done
 ---
 
 # Layout de prontuário, legível e mobile-first
@@ -109,3 +109,11 @@ No escopo: `fhirUI/patientlist.html`, `fhirUI/labresult.html`, `fhirUI/resources
   - fez da unidade e da faixa do gráfico um handoff das Observations do card de laboratório (5), porque a rota de resultados do `Dispatch` devolve só nome, data e valor;
   - pôs o deep-link `?id=X` do `patientlist.html` na entrada 6;
   - trocou o pré-requisito "5.6" pelas entradas que entregam cada coisa: 2.2, 2.6, 3.5, 5.2, 5.3 e 5.5.
+- Fechado (2026-10-06), com a checagem de fechamento:
+  1. **MET.** `layout.spec.js` a 390×844 confirma `scrollWidth <= clientWidth` na lista e no prontuário, e que "Back to patients" volta mantendo a busca (8.1).
+  2. **MET.** `layout.spec.js` cobre o estado vazio e o resumo com idade, sexo e "1 allergy" de um paciente criado pelo teste (8.1).
+  3. **MET.** `layout.spec.js` e `cards.spec.js` confirmam os quatro cards sem clique, com o selo de origem. `lab-card.spec.js` cobre o agrupamento por dia e os valores "High" e "Low" (8.4 e 8.5).
+  4. **MET.** `lab-chart.spec.js` cobre o gráfico ao trocar o exame, sem "Search", e o `labresult.html?id=X` abrindo o prontuário de X (8.6).
+  5. **MET.** Os e2e de antes, adaptados, passam junto com os novos (40/40), assim como o smoke. O CI do PR do sweep fecha o "verde em `master`".
+
+  As 8 entradas estão `done`. Adiados: o 404 do ícone da página de login do IRIS, fora do escopo, e as capturas e o README, para o epic-docs-demo.

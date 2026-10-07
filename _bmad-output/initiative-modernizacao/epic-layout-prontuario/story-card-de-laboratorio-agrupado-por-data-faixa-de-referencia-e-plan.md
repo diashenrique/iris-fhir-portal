@@ -3,7 +3,7 @@ title: 'Card de laboratório: agrupado por data, faixa de referência e valor al
 type: 'feature'
 ticket: '5'
 created: '2026-10-06'
-status: 'built'
+status: done
 baseline_revision: 'd24e3b968cc4ea379da99c245310d16c24310aa1'
 route: 'oneshot'
 route_source: 'auto'

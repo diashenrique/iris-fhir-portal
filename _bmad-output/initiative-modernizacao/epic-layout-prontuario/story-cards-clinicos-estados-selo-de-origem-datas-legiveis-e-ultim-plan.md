@@ -3,7 +3,7 @@ title: 'Cards clínicos: estados, selo de origem, datas legíveis e últimos sin
 type: 'feature'
 ticket: '4'
 created: '2026-10-06'
-status: 'built'
+status: done
 baseline_revision: '06959d7bd601e2bae5bf370cb6c11b96e5a43a1c'
 route: 'oneshot'
 route_source: 'auto'

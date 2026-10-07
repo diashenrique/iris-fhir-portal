@@ -41,6 +41,9 @@
       </nav>
     </header>
 
+    <!-- Errors are also said here, for screen readers (toasts are not announced) -->
+    <div id="liveStatus" class="sr-only" role="status" aria-live="polite"></div>
+
     <main class="app-main">
       <!-- The list and the chart side by side from 992px; below that, one at a time (.show-chart) -->
       <div id="portal" class="portal container-fluid">
@@ -54,7 +57,7 @@
               <label class="input-group-prepend" for="searchClients">
                 <span class="input-group-text"><span class="oi oi-magnifying-glass" aria-hidden="true"></span></span>
               </label>
-              <input type="text" class="form-control" id="searchClients" placeholder="Find Patients" aria-label="Find patients by name or FHIR ID">
+              <input type="text" class="form-control" id="searchClients" placeholder="Find Patients (press /)" aria-label="Find patients by name or FHIR ID" aria-keyshortcuts="/">
               <div class="input-group-append">
                 <button id="reloadList" class="btn btn-primary" aria-label="Reload the patient list">
                   <i class="fas fa-sync-alt" aria-hidden="true"></i>
@@ -119,7 +122,7 @@
               <!-- Clinical cards, always open: two columns from 1200px -->
               <div class="row">
               <div class="col-xl-6">
-                <section class="card clinical-card" id="cardAllergies" aria-labelledby="cardAllergiesTitle">
+                <section class="card clinical-card" id="cardAllergies" aria-labelledby="cardAllergiesTitle badgeAllergy">
                   <header class="card-header d-flex align-items-center">
                     <h2 class="card-title h5 mb-0" id="cardAllergiesTitle">Allergies</h2>
                     <span id="badgeAllergy" class="badge badge-pill badge-primary ml-2"></span>
@@ -136,7 +139,7 @@
                 </section>
               </div>
               <div class="col-xl-6">
-                <section class="card clinical-card" id="cardVitalSigns" aria-labelledby="cardVitalSignsTitle">
+                <section class="card clinical-card" id="cardVitalSigns" aria-labelledby="cardVitalSignsTitle badgeVitalSigns">
                   <header class="card-header d-flex align-items-center">
                     <h2 class="card-title h5 mb-0" id="cardVitalSignsTitle">Vital signs</h2>
                     <span id="badgeVitalSigns" class="badge badge-pill badge-primary ml-2"></span>
@@ -155,14 +158,32 @@
                 </section>
               </div>
               <div class="col-xl-6">
-                <section class="card clinical-card" id="cardLaboratory" aria-labelledby="cardLaboratoryTitle">
+                <section class="card clinical-card" id="cardLaboratory" aria-labelledby="cardLaboratoryTitle badgeLaboratory">
                   <header class="card-header d-flex align-items-center">
                     <h2 class="card-title h5 mb-0" id="cardLaboratoryTitle">Laboratory</h2>
                     <span id="badgeLaboratory" class="badge badge-pill badge-primary ml-2"></span>
                     <span class="badge badge-pill source-badge source-fhir ml-2" title="Loaded with fhir.js from /fhir/r4">FHIR · fhir.js</span>
-                    <span id="iconChart" class="ml-auto"></span>
                   </header>
                   <div class="card-body p-0">
+                    <!-- Chart of one test: values from /fhir/api (SQL), unit and range from the FHIR results below -->
+                    <div id="labChartSection" class="lab-chart border-bottom p-3 d-none">
+                      <div class="d-flex flex-wrap align-items-center mb-2">
+                        <label for="labtest" class="mb-0 mr-2">Chart a test</label>
+                        <select id="labtest" class="custom-select custom-select-sm lab-test-select mr-2"></select>
+                        <span class="badge badge-pill source-badge source-sql" title="Loaded with SQL from /fhir/api">SQL · /fhir/api</span>
+                      </div>
+                      <h3 id="testName" class="h6 text-muted mb-2"></h3>
+                      <p id="chartEmpty" class="text-muted mb-0 d-none"></p>
+                      <div id="chartBox" class="chart-box">
+                        <canvas id="myChart" role="img" aria-label="Lab results chart"></canvas>
+                      </div>
+                      <!-- The same values as text, for screen readers -->
+                      <table id="labTable" class="sr-only">
+                        <caption></caption>
+                        <thead><tr><th scope="col">Date</th><th scope="col">Value</th></tr></thead>
+                        <tbody></tbody>
+                      </table>
+                    </div>
                     <table id="laboratoryTable" class="table table-hover mb-0">
                       <thead class="thead-light">
                         <tr><th> Test </th><th> Value </th><th> Unit </th><th> Reference range </th></tr>
@@ -173,7 +194,7 @@
                 </section>
               </div>
               <div class="col-xl-6">
-                <section class="card clinical-card" id="cardImmunizations" aria-labelledby="cardImmunizationsTitle">
+                <section class="card clinical-card" id="cardImmunizations" aria-labelledby="cardImmunizationsTitle badgeImmunization">
                   <header class="card-header d-flex align-items-center">
                     <h2 class="card-title h5 mb-0" id="cardImmunizationsTitle">Immunizations</h2>
                     <span id="badgeImmunization" class="badge badge-pill badge-primary ml-2"></span>
@@ -296,6 +317,9 @@
   <script src="assets/vendor/flatpickr/plugins/monthSelect/index.js"></script>
   <!-- END PLUGINS JS -->
   <!-- BEGIN THEME JS -->
+  <script src="assets/vendor/chart.js/chart.umd.min.js"></script>
+  <!-- Date adapter for the time axis (bundles date-fns) -->
+  <script src="assets/vendor/chart.js/chartjs-adapter-date-fns.bundle.min.js"></script>
   <script src="assets/javascript/theme.min.js"></script> <!-- END THEME JS -->
   <!-- BEGIN FHIR -->
   <script src="assets/vendor/fhir.js/jqFhir.js"></script>

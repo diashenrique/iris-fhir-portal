@@ -91,16 +91,11 @@ $(document).ready(function () {
         }
     });
 
-    function Toast(type, css, msg) {
-        this.type = type;
-        this.css = css;
-        this.msg = msg;
+    // An error toast, also said by screen readers through the live region of the page
+    function toastError(message) {
+        toastr.error(message);
+        $("#liveStatus").text(message);
     }
-
-    var toasts = [
-        new Toast('success', 'toast-bottom-center', 'Saved.'),
-        new Toast('error', 'toast-bottom-center', "Couldn't save the patient. Try again.")
-    ];
 
     toastr.options.positionClass = 'toast-top-full-width';
     toastr.options.extendedTimeOut = 0; //1000;
@@ -108,10 +103,16 @@ $(document).ready(function () {
     toastr.options.fadeOut = 250;
     toastr.options.fadeIn = 250;
 
-    function showToast(i) {
-        var t = toasts[i];
-        toastr.options.positionClass = t.css;
-        toastr[t.type](t.msg);
+    // The result of a save, at the bottom of the screen (only for this toast: the others stay on top)
+    function saveToast(saved) {
+        const options = { positionClass: 'toast-bottom-center' };
+        if (saved) {
+            toastr.success('Saved.', '', options);
+        } else {
+            const message = "Couldn't save the patient. Try again.";
+            toastr.error(message, '', options);
+            $("#liveStatus").text(message);
+        }
     }
 
     $("#updateData").click(function () {
@@ -282,7 +283,7 @@ $(document).ready(function () {
         return client.search(params).then(collect);
     }
 
-    // Append the JSON of every page to the FHIR Data Source modal
+    // Append the JSON of every page to the FHIR JSON panel
     function appendBundles(bundles) {
         bundles.forEach((bundle) => {
             $('#fhirdatasource').val($('#fhirdatasource').val() + JSON.stringify(bundle, undefined, 4));
@@ -394,12 +395,12 @@ $(document).ready(function () {
         if (unloading) return;
         const status = httpStatus(err);
         if (status === 0) {
-            toastr.error('Could not load ' + what + ' (no response from the server)');
+            toastError('Could not load ' + what + ' (no response from the server)');
         } else if (status) {
-            toastr.error('Could not load ' + what + ' (HTTP ' + status + ')');
+            toastError('Could not load ' + what + ' (HTTP ' + status + ')');
         } else {
             console.error('Could not load ' + what, err);
-            toastr.error('Could not load ' + what);
+            toastError('Could not load ' + what);
         }
     }
 
@@ -459,11 +460,12 @@ $(document).ready(function () {
 
                     $('#fhirdatasource').val(patientJSON(patient.resource));
 
-                    $("#iconChart").empty();
                     $("#vitalsShowAll").addClass('d-none');
                     $("#updateData").prop('disabled', false);
                     $("#editPatient").prop('disabled', false);
 
+                    // The chart is on screen: the focus goes to the patient's name, so it is announced
+                    if ($("#patientName").is(':visible')) $("#patientName").trigger('focus');
                     allergy(patient.resource.id);
                     vitalsigns(patient.resource.id);
                     laboratory(patient.resource.id);
@@ -474,6 +476,15 @@ $(document).ready(function () {
                 if (isSelected(patientId)) showError('patient', err);
             });
     };
+
+    // "/" goes to the patient search from anywhere but a field; on a phone, back to the list first
+    $(document).on('keydown', function (e) {
+        if (e.key !== '/' || e.ctrlKey || e.metaKey || e.altKey) return;
+        if ($(e.target).is('input, textarea, select, [contenteditable]') || $('.modal.show').length) return;
+        e.preventDefault();
+        if ($("#portal").hasClass('show-chart') && !$("#listPane").is(':visible')) $("#backToList").trigger('click');
+        $("#searchClients").trigger('focus');
+    });
 
     // Arrow keys move between the patients of the list, Home and End to the first and last; Enter opens one
     $("#listgroup").on('keydown', '.stretched-link', function (e) {
@@ -541,6 +552,8 @@ $(document).ready(function () {
 
     // Perform a search to retrieve patient list, every page of it. While it runs, placeholder items
     // stand in for the list and the search box waits; the typed search applies to the new list.
+    let deepLinked = false;
+
     function loadList() {
         $("#listgroup").empty().append(
             [1, 2, 3, 4].map(() => $('<div class="list-skeleton px-3 py-2" aria-hidden="true">').append(
@@ -563,6 +576,12 @@ $(document).ready(function () {
                 $('#listgroup .list-group-item').filter((i, el) => el.id === String(selectedPatientId)).find('.stretched-link').attr('aria-current', 'true');
             }
             filterList();
+            const linked = new URLSearchParams(window.location.search).get('id');
+            if (linked && !deepLinked) {
+                deepLinked = true;
+                showChart();
+                loadForm(linked);
+            }
         })
         .catch((err) => {
             // No session (logged out or expired): the FHIR endpoint answers 401 (404 if the web app ever refuses it first).
@@ -579,7 +598,7 @@ $(document).ready(function () {
                     return;
                 }
                 sessionStorage.removeItem(redirectKey);
-                toastr.error('The FHIR server refused the request (HTTP ' + status + '). Check the /fhir/r4 configuration.');
+                toastError('The FHIR server refused the request (HTTP ' + status + '). Check the /fhir/r4 configuration.');
                 return;
             }
             showError('the patient list', err);
@@ -684,6 +703,7 @@ $(document).ready(function () {
 
     window.laboratory = function (patientId) {
         cardLoading('laboratory');
+        resetLabChart();
         searchAll({
                 type: 'Observation',
                 query: {
@@ -693,12 +713,6 @@ $(document).ready(function () {
                 }
             }).then((result) => {
                 if (!isSelected(patientId)) return;
-
-                if (entries(result.first).length > 0) {
-                    const icone = $('<a target="_blank"><span class="label label-info"><i class="fas fa-chart-line"></i></span></a>')
-                        .attr('href', 'labresult.html?id=' + encodeURIComponent(patientId));
-                    $("#iconChart").append(icone);
-                }
 
                 appendBundles(result.bundles);
                 // Grouped by day, the latest day first; a row per test, its value flagged High or Low
@@ -733,11 +747,141 @@ $(document).ready(function () {
                 });
                 cardLoaded('laboratory', result.first.total || 0);
                 $("#laboratoryTable tbody").append(rows);
+                if (result.entries.length > 0) loadLabOptions(patientId);
             })
             .catch((err) => {
                 if (isSelected(patientId)) cardError('laboratory', patientId, err);
             });
     };
+
+    // ---- Lab chart of the Laboratory card: the tests and values come from /fhir/api (SQL, article 4),
+    // drawn with Chart.js 4; the unit and reference range come from the FHIR results of the card (labTests)
+
+    // The theme (theme.min.js) sets its font as a Chart.js 2 global, which Chart.js 4 ignores
+    if (window.Chart) {
+        Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Fira Sans", "Helvetica Neue", "Apple Color Emoji", sans-serif';
+        // Numbers and dates on the axes in English, like the rest of the interface
+        Chart.defaults.locale = 'en-US';
+    }
+
+    // One chart at a time: the previous one is destroyed before drawing the next
+    let chart = null;
+    // Only the latest request may draw: an older response arriving late is ignored
+    let latestLabRequest = 0;
+
+    // A failed /fhir/api call: 401 means the session ended (back to the login, once, like the list);
+    // anything else is a toast "Could not load <what> (HTTP <status>)"
+    function apiFailed(what, jqXHR) {
+        if (unloading) return;
+        const status = jqXHR && typeof jqXHR.status === 'number' ? jqXHR.status : null;
+        if (status === 401) {
+            if (!sessionStorage.getItem(redirectKey)) {
+                sessionStorage.setItem(redirectKey, '1');
+                window.location.href = entryPage;
+                return;
+            }
+            sessionStorage.removeItem(redirectKey);
+            toastError('The FHIR API refused the request (HTTP 401). Check the /fhir/api configuration.');
+        } else if (status === 0) {
+            toastError('Could not load ' + what + ' (no response from the server)');
+        } else if (status) {
+            toastError('Could not load ' + what + ' (HTTP ' + status + ')');
+        } else {
+            console.error('Could not load ' + what, jqXHR);
+            toastError('Could not load ' + what);
+        }
+    }
+
+    function resetLabChart() {
+        latestLabRequest++;
+        if (chart) {
+            chart.destroy();
+            chart = null;
+        }
+        $("#labChartSection").addClass('d-none');
+        $("#labtest").empty();
+        $("#testName, #chartEmpty").text('');
+        $("#chartEmpty").addClass('d-none');
+        $("#chartBox").removeClass('d-none');
+        describeChart('', []);
+    }
+
+    // The tests of the patient, from /fhir/api/laboptions; choosing one draws its chart
+    function loadLabOptions(patientId) {
+        $.getJSON('/fhir/api/laboptions/' + encodeURIComponent(patientId), function (options) {
+            if (!isSelected(patientId)) return;
+            $("#labtest").empty().append($('<option value="">').text('Choose a test…'),
+                options.map((o) => $('<option>').val(o.code).text(o.name)));
+            $("#labChartSection").toggleClass('d-none', options.length === 0);
+        }).fail(function (jqXHR) {
+            if (isSelected(patientId)) apiFailed('lab tests', jqXHR);
+        });
+    }
+
+    $("#labtest").on('change', function () {
+        if ($(this).val()) drawLabChart(selectedPatientId, $(this).val(), $(this).find('option:selected').text());
+    });
+
+    // Text alternative of the chart: its name on the canvas and every plotted point in a table only screen readers see
+    function describeChart(label, points) {
+        $("#myChart").attr('aria-label', label
+            ? 'Lab results chart of ' + label + ', ' + points.length + ' results, listed in the table below'
+            : 'Lab results chart');
+        $("#labTable caption").text(label);
+        $("#labTable tbody").empty().append(points.map((e) => $('<tr>').append($('<td>').text(e.date), $('<td>').text(e.value))));
+    }
+
+    function drawLabChart(patientId, code, label) {
+        const request = ++latestLabRequest;
+        $.getJSON('/fhir/api/patient/' + encodeURIComponent(patientId) + '/lab/' + encodeURIComponent(code), function (results) {
+            if (request !== latestLabRequest || !isSelected(patientId)) return;
+            // Only numeric results can be plotted
+            const points = results.filter((e) => e.value !== null && e.value !== '' && !isNaN(Number(e.value)));
+            const test = labTests.get(code) || {};
+            if (chart) {
+                chart.destroy();
+                chart = null;
+            }
+            $("#testName").text(label);
+            describeChart(label, points);
+            $("#chartEmpty").toggleClass('d-none', points.length > 0).text(points.length ? '' : label + ' has no numeric results to chart.');
+            $("#chartBox").toggleClass('d-none', points.length === 0);
+            if (!points.length) return;
+
+            const data = points.map((e) => ({ x: e.date, y: Number(e.value) }));
+            const datasets = [{
+                label: label,
+                data: data,
+                borderColor: 'rgb(52, 108, 176)',
+                backgroundColor: 'rgba(52, 108, 176, 0.15)',
+                fill: true
+            }];
+            // The reference range as a band behind the line, from the first to the last date
+            const range = test.range || {};
+            const low = range.low && range.low.value;
+            const high = range.high && range.high.value;
+            if (typeof low === 'number' && typeof high === 'number') {
+                const edges = [data[0].x, data[data.length - 1].x];
+                const band = { pointRadius: 0, borderWidth: 0, borderColor: 'transparent' };
+                datasets.push(Object.assign({ label: 'Reference low', data: edges.map((x) => ({ x: x, y: low })), fill: false }, band));
+                datasets.push(Object.assign({ label: 'Reference range', data: edges.map((x) => ({ x: x, y: high })), fill: '-1', backgroundColor: 'rgba(0, 162, 138, 0.12)' }, band));
+            }
+            chart = new Chart(document.getElementById('myChart'), {
+                type: 'line',
+                data: { datasets: datasets },
+                options: {
+                    // No legend: the heading above names the test
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { type: 'time' },
+                        y: { title: { display: Boolean(test.unit), text: test.unit || '' } }
+                    }
+                }
+            });
+        }).fail(function (jqXHR) {
+            if (request === latestLabRequest) apiFailed('lab results', jqXHR);
+        });
+    }
 
     // Set a field to the value typed, or remove it when left empty: FHIR does not accept empty strings
     function setOrRemove(obj, key, value) {
@@ -828,7 +972,7 @@ $(document).ready(function () {
             id: parseInt(patientId),
             resource: r
         }).then(function (res) {
-            showToast(0);
+            saveToast(true);
             showMaskedSSN();
             $("#updateData").prop('disabled', false).text('Save');
             // The server's copy (a new meta.versionId) feeds the summary and the FHIR JSON panel
@@ -840,7 +984,7 @@ $(document).ready(function () {
             $("#editModal").modal('hide');
         }, function () {
             // The modal stays open with what was typed, and says what happened
-            showToast(1);
+            saveToast(false);
             $("#editError").removeClass('d-none').text("Couldn't save the patient. Try again.");
             $("#updateData").prop('disabled', false).text('Save');
         });
