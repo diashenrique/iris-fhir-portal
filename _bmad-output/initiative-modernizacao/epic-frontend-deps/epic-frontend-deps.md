@@ -6,7 +6,7 @@ covers: [R5]
 after: []
 assignee: ""
 risk: medium
-status: in-progress
+status: done
 ---
 
 # Dependências de frontend mantidas e inventariadas
@@ -64,3 +64,11 @@ Ficam no escopo as bibliotecas e os arquivos do `fhirUI` que as carregam, o scri
 - Unknown: qual adaptador de datas do Chart.js 4 serve sem bundler (há builds UMD do `chartjs-adapter-date-fns`).
 - Decision (autonomia, 2026-10-06): a validação do breakdown (set check) dividiu a entrada das "demais bibliotecas" em Bootstrap mais inventário (3) e o resto mais o `npm audit` (4). Também fez cada entrada remover os arquivos antigos da biblioteca que move, em vez de uma limpeza geral no tracer, pôs a acessibilidade depois da 4, que mexe nos mesmos HTML, e pôs o tracer depois da 4.5, que mexe no `ci.yml`.
 - Decision (autonomia, 2026-10-06): a 1.1.0 do IPM sai com o vendor que estiver no `master` quando o usuário publicar; o épico não espera a publicação.
+- Fechado (2026-10-07), com a checagem de fechamento:
+  1. **MET.** O job "Vendored frontend libraries" fica verde, e um `//x` acrescentado ao `jquery.min.js` faz o `--check` falhar (5.1).
+  2. **MET.** `npm audit --audit-level=moderate` encontra 0 vulnerabilidades e roda no job de vendor (5.4).
+  3. **MET.** As páginas carregam jQuery 3.7.1, Bootstrap 4.6.2 e Chart.js 4.5.1, conferidos no navegador, e o e2e passa (5.1 a 5.3).
+  4. **MET.** `e2e/tests/a11y.spec.js` cobre a lista só por teclado e a tabela alternativa do gráfico (5.5).
+  5. **MET.** O CI ficou verde no #27, a última PR do épico.
+
+  As 6 entradas estão `done`. Ficam com o usuário: a licença do tema Looper (`vendor/INVENTORY.md`). Ficam com o epic-layout-prontuario: o 404 do ícone da página de login do IRIS e o Font Awesome 6.

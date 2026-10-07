@@ -3,7 +3,7 @@ title: 'Acessibilidade básica: lista por teclado e alternativa em texto do grá
 type: 'feature'
 ticket: '5'
 created: '2026-10-07'
-status: 'built'
+status: done
 baseline_revision: 'b41fcf8eab5a7b5dccd8acff351ff69e396e1bd1'
 route: 'oneshot'
 route_source: 'auto'
