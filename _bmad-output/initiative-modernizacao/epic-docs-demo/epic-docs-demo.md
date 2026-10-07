@@ -6,7 +6,7 @@ covers: [R7]
 after: []
 assignee: ""
 risk: low
-status: in-progress
+status: done
 ---
 
 # Documentação e demo refletem o portal atual
@@ -84,3 +84,11 @@ Ficam de fora:
   - trocou as imagens do README por caminhos relativos (`img/...`);
   - ajustou os `after`;
   - deixou a instalação pelo registro como condicional à 4.6.
+- Fechado (2026-10-07), com a checagem de fechamento:
+  1. **MET.** O `check-readme-sql.sh` roda no CI, nas duas pernas, com 10 exemplos (2 do README, 2 do README-JP e 6 do `example.sql`). Trocar a tabela de um bloco por `NoSuchTable` o faz falhar (7.1).
+  2. **MET.** Os 6 caminhos `img/` do README existem e saem do `e2e/screenshots.js`, e as 13 imagens antigas saíram (7.2). Nenhum dos quatro artigos usa imagens do repositório; elas ficam hospedadas na Developer Community.
+  3. **MET.** O README-JP e o `dev.md` descrevem o portal atual, sem `fhirtemplate`, `PackageSample` nem `I0001`, e os links internos existem (7.3).
+  4. **MET.** `docs/article-2026-update.md` traz uma errata para cada artigo (7.4).
+  5. **MET.** O CI do PR do épico fecha o "verde em `master`".
+
+  As 5 entradas estão `done`. Ficam com o usuário: publicar o rascunho do artigo e a 1.1.0 no registro IPM (4.6). Adiado: o botão "Reveal" no celular (`deferred-work.md`).

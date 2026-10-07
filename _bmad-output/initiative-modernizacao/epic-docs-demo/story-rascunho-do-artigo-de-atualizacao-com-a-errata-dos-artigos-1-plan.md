@@ -3,7 +3,7 @@ title: 'Rascunho do artigo de atualização com a errata dos artigos 1 a 4'
 type: 'docs'
 ticket: '4'
 created: '2026-10-07'
-status: 'built'
+status: done
 baseline_revision: '52d898bfb2a79a2878971c1fc841c451aefd455b'
 route: 'oneshot'
 route_source: 'auto'

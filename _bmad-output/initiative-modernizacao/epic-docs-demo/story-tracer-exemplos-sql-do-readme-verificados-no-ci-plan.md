@@ -3,7 +3,7 @@ title: 'Tracer: exemplos SQL do README verificados no CI'
 type: 'chore'
 ticket: '1'
 created: '2026-10-07'
-status: 'built'
+status: done
 baseline_revision: '2012f9f8050662fe54b85fd1ceb4755f7ac3702f'
 route: 'oneshot'
 route_source: 'auto'

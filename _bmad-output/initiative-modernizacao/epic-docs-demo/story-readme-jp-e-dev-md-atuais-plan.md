@@ -3,7 +3,7 @@ title: 'README-JP e dev.md atuais'
 type: 'docs'
 ticket: '3'
 created: '2026-10-07'
-status: 'built'
+status: done
 baseline_revision: 'dcac83bc8d8acc2fa226d4c5fc7d354ae173dc27'
 route: 'oneshot'
 route_source: 'auto'

@@ -3,7 +3,7 @@ title: 'Capturas reproduzíveis e o README do portal atual'
 type: 'docs'
 ticket: '2'
 created: '2026-10-07'
-status: 'built'
+status: done
 baseline_revision: '33cee1ff55ed1262d463ea2562b1847f922cb534'
 route: 'oneshot'
 route_source: 'auto'
