@@ -3,13 +3,19 @@
   "private": true,
   "description": "Libraries served by fhirUI. vendor/sync.mjs copies the files listed in vendorFiles from node_modules to fhirUI/assets/vendor; see vendor/README.md.",
   "dependencies": {
+    "bootstrap": "4.6.2",
     "chart.js": "4.5.1",
     "chartjs-adapter-date-fns": "3.0.0",
-    "jquery": "3.7.1"
+    "jquery": "3.7.1",
+    "popper.js": "1.16.1",
+    "stacked-menu": "1.1.12"
   },
   "vendorFiles": {
+    "bootstrap/dist/js/bootstrap.min.js": "bootstrap/js/bootstrap.min.js",
     "chart.js/dist/chart.umd.min.js": "chart.js/chart.umd.min.js",
     "chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js": "chart.js/chartjs-adapter-date-fns.bundle.min.js",
-    "jquery/dist/jquery.min.js": "jquery/jquery.min.js"
+    "jquery/dist/jquery.min.js": "jquery/jquery.min.js",
+    "popper.js/dist/umd/popper.min.js": "bootstrap/js/popper.min.js",
+    "stacked-menu/dist/js/stacked-menu.min.js": "stacked-menu/stacked-menu.min.js"
   }
 }
