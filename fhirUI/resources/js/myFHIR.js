@@ -92,12 +92,19 @@ $(document).ready(function () {
         $("#editError").addClass('d-none').text('');
     });
 
-    // Vital signs: the latest value of each measure, or the whole history
-    $("#vitalsShowAll").click(function () {
+    // Show all, shared by the cards with a history (vital signs, medications): the rows .card-history of the
+    // table the button controls stay hidden until it is pressed; the button names how many rows there are
+    $(document).on('click', '.card-show-all', function () {
+        const table = '#' + $(this).attr('aria-controls');
         const all = $(this).attr('aria-expanded') !== 'true';
-        $("#vitalSignsTable tbody .vital-history").toggleClass('d-none', !all);
-        $(this).attr('aria-expanded', String(all)).text(all ? t('showLatest') : t('showAll', { n: $("#vitalSignsTable tbody tr").length }));
+        $(table + ' tbody .card-history').toggleClass('d-none', !all);
+        $(this).attr('aria-expanded', String(all)).text(all ? t('showLatest') : t('showAll', { n: $(table + ' tbody tr:not(.card-state)').length }));
     });
+
+    // Offer Show all when some rows of the table are history; total is every row
+    function setShowAll(button, total, hidden) {
+        $(button).toggleClass('d-none', hidden === 0).attr('aria-expanded', 'false').text(t('showAll', { n: total }));
+    }
 
     // Copy the FHIR JSON; without the Clipboard API (a page that is not https or localhost), select and copy
     $("#copyJSON").click(function () {
@@ -218,6 +225,7 @@ $(document).ready(function () {
     // (what they hold and their empty line are the keys what.<card> and empty.<card> of i18n.js)
         allergy: { table: '#allergyTable', badge: '#badgeAllergy', columns: 4 },
         condition: { table: '#conditionTable', badge: '#badgeCondition', columns: 4 },
+        medication: { table: '#medicationTable', badge: '#badgeMedication', columns: 4 },
         vitalsigns: { table: '#vitalSignsTable', badge: '#badgeVitalSigns', columns: 4 },
         laboratory: { table: '#laboratoryTable', badge: '#badgeLaboratory', columns: 4 },
         immunization: { table: '#immunizationTable', badge: '#badgeImmunization', columns: 2 }
@@ -476,7 +484,7 @@ $(document).ready(function () {
 
                     $('#fhirdatasource').val(patientJSON(patient.resource));
 
-                    $("#vitalsShowAll").addClass('d-none');
+                    $(".card-show-all").addClass('d-none');
                     $("#updateData").prop('disabled', false);
                     $("#editPatient").prop('disabled', false);
 
@@ -484,6 +492,7 @@ $(document).ready(function () {
                     if ($("#patientName").is(':visible')) $("#patientName").trigger('focus');
                     allergy(patient.resource.id);
                     condition(patient.resource.id);
+                    medication(patient.resource.id);
                     vitalsigns(patient.resource.id);
                     laboratory(patient.resource.id);
                     immunization(patient.resource.id);
@@ -712,6 +721,67 @@ $(document).ready(function () {
             });
     };
 
+    // Medications: the active prescriptions in view, the others (stopped, completed...) behind Show all.
+    // The name comes from medicationCodeableConcept, or from the Medication the search includes.
+    function dosageText(request) {
+        const d = (request.dosageInstruction || [])[0];
+        if (!d) return '';
+        if (d.text) return d.text;
+        const parts = [];
+        const dose = ((d.doseAndRate || [])[0] || {}).doseQuantity;
+        if (dose && dose.value != null) parts.push([roundValue(String(dose.value)), dose.unit || ''].join(' ').trim());
+        const repeat = (d.timing || {}).repeat;
+        if (repeat && repeat.frequency && repeat.period) {
+            parts.push(t('dose.timing', { frequency: repeat.frequency, period: repeat.period, unit: repeat.periodUnit || '' }).trim());
+        }
+        if (d.asNeededBoolean) parts.push(t('dose.asNeeded'));
+        return parts.join(' · ');
+    }
+
+    function medicationStatusText(code) {
+        const text = t('medStatus.' + code);
+        return text === 'medStatus.' + code ? (code || '') : text;
+    }
+
+    window.medication = function (patientId) {
+        cardLoading('medication');
+        searchAll({
+                type: 'MedicationRequest',
+                query: {
+                    patient: patientId,
+                    _include: 'MedicationRequest:medication'
+                }
+            }).then((result) => {
+                if (!isSelected(patientId)) return;
+                appendBundles(result.bundles);
+                const resources = result.entries.map((e) => e.resource);
+                const medications = new Map(resources.filter((r) => r.resourceType === 'Medication').map((r) => ['Medication/' + r.id, r]));
+                const name = (r) => {
+                    if (r.medicationCodeableConcept) return conceptText(r.medicationCodeableConcept);
+                    const ref = r.medicationReference || {};
+                    const included = medications.get(ref.reference);
+                    return (included && conceptText(included.code)) || ref.display || '';
+                };
+                const requests = resources.filter((r) => r.resourceType === 'MedicationRequest')
+                    .map((r) => ({ r: r, active: r.status === 'active' }))
+                    // Active first, then latest first
+                    .sort((a, b) => (b.active - a.active) || (b.r.authoredOn || '').localeCompare(a.r.authoredOn || ''));
+                const rows = requests.map((m) => textRow([name(m.r), medicationStatusText(m.r.status), dosageText(m.r), m.r.authoredOn || ''], 3)
+                    .toggleClass('card-history d-none', !m.active));
+                cardLoaded('medication', result.first.total || 0);
+                const active = requests.filter((m) => m.active).length;
+                // Prescriptions, none of them active: say so above the hidden history
+                if (requests.length > 0 && active === 0) {
+                    $("#medicationTable tbody").append(cardRow(CARDS.medication, document.createTextNode(t('meds.noActive'))));
+                }
+                $("#medicationTable tbody").append(rows);
+                setShowAll('#medicationsShowAll', requests.length, requests.length - active);
+            })
+            .catch((err) => {
+                if (isSelected(patientId)) cardError('medication', patientId, err);
+            });
+    };
+
     // Perform a search to Allergy list for a specific patient
     window.allergy = function (patientId) {
         cardLoading('allergy');
@@ -764,12 +834,11 @@ $(document).ready(function () {
                 });
                 const latest = new Map();
                 values.forEach((v, i) => latest.set(v[0], i));
-                const rows = values.map((v, i) => textRow(v, 3).toggleClass('vital-history d-none', latest.get(v[0]) !== i));
+                const rows = values.map((v, i) => textRow(v, 3).toggleClass('card-history d-none', latest.get(v[0]) !== i));
                 cardLoaded('vitalsigns', result.first.total || 0);
                 $("#vitalSignsTable tbody").append(rows);
                 const history = values.length - latest.size;
-                $("#vitalsShowAll").toggleClass('d-none', history === 0).attr('aria-expanded', 'false')
-                    .text(t('showAll', { n: values.length }));
+                setShowAll('#vitalsShowAll', values.length, history);
             })
             .catch((err) => {
                 if (isSelected(patientId)) cardError('vitalsigns', patientId, err);

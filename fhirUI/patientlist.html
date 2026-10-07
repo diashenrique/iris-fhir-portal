@@ -176,6 +176,24 @@
                 </section>
               </div>
               <div class="col-xl-6">
+                <section class="card clinical-card" id="cardMedications" aria-labelledby="cardMedicationsTitle badgeMedication">
+                  <header class="card-header d-flex align-items-center">
+                    <h2 class="card-title h5 mb-0" id="cardMedicationsTitle" data-i18n="card.medications">Medications</h2>
+                    <span id="badgeMedication" class="badge badge-pill badge-primary ml-2"></span>
+                    <span class="badge badge-pill source-badge source-fhir ml-2" title="Loaded with fhir.js from /fhir/r4" data-i18n-attr="title:source.fhir">FHIR · fhir.js</span>
+                  </header>
+                  <div class="card-body p-0">
+                    <table id="medicationTable" class="table table-hover mb-0">
+                      <thead class="thead-light">
+                        <tr><th data-i18n="col.medication"> Medication </th><th data-i18n="col.status"> Status </th><th data-i18n="col.dose"> Dose </th><th data-i18n="col.date"> Date </th></tr>
+                      </thead>
+                      <tbody></tbody>
+                    </table>
+                    <button type="button" id="medicationsShowAll" class="btn btn-link btn-sm card-show-all d-none" aria-controls="medicationTable" aria-expanded="false">Show all</button>
+                  </div>
+                </section>
+              </div>
+              <div class="col-xl-6">
                 <section class="card clinical-card" id="cardVitalSigns" aria-labelledby="cardVitalSignsTitle badgeVitalSigns">
                   <header class="card-header d-flex align-items-center">
                     <h2 class="card-title h5 mb-0" id="cardVitalSignsTitle" data-i18n="card.vitals">Vital signs</h2>
@@ -190,7 +208,7 @@
                       <tbody></tbody>
                     </table>
                     <p id="vitalSignsHint" class="sr-only" data-i18n="vitals.hint">The latest value of each measure; Show all lists the history.</p>
-                    <button type="button" id="vitalsShowAll" class="btn btn-link btn-sm d-none" aria-controls="vitalSignsTable" aria-expanded="false">Show all</button>
+                    <button type="button" id="vitalsShowAll" class="btn btn-link btn-sm card-show-all d-none" aria-controls="vitalSignsTable" aria-expanded="false">Show all</button>
                   </div>
                 </section>
               </div>
