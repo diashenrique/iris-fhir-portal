@@ -77,6 +77,48 @@ $ bash scripts/ipm-install.sh
 $ BASE_URL=http://localhost:42783 bash scripts/smoke.sh
 ```
 
+## How the portal reads FHIR data
+
+The portal reads the same FHIR data three ways, and every card says which one it uses:
+
+- **FHIR REST with [fhir.js](https://github.com/FHIR/fhir.js)** (badge *FHIR · fhir.js*): the patient list, the summary and the clinical cards search `/fhir/r4`, and Edit saves the patient with a FHIR `update`. These are articles 1 to 3.
+- **SQL through `/fhir/api`** (badge *SQL · /fhir/api*): the lab chart. The REST class `diashenrique.fhir.portal.Dispatch` runs SQL on the tables of the FHIR server, with the JSON functions `GetJSON`, `GetProp` and `GetAtJSON` of article 4 (`src/User/SQLvar.cls`). It asks the storage strategy of `/fhir/r4` for the table names, and the role of `/fhir/api` can only read them.
+- **`Patient/$everything`** (badge *FHIR · $everything*): the Timeline, from one call.
+
+The FHIR server uses the JsonAdvSQL storage strategy: `HSFHIR_X0001_R.Rsrc` holds every resource as JSON, and `HSFHIR_X0001_S.<Resource>` holds its search parameters. These are the queries of `/fhir/api`, with a sample patient in place of the `?` parameter.
+
+The lab tests of a patient, for the chart picker (`GET /fhir/api/laboptions/:id`):
+
+```sql
+SELECT DISTINCT
+  GetProp(GetJSON(GetAtJSON(GetJSON(GetJSON(r.ResourceString,'code'),'coding'),0),'code'),'code') AS testCode,
+  GetProp(GetJSON(GetAtJSON(GetJSON(GetJSON(r.ResourceString,'code'),'coding'),0),'display'),'display') AS testName
+FROM HSFHIR_X0001_S.Observation s
+JOIN HSFHIR_X0001_R.Rsrc r ON r.Key = s.Key
+WHERE s.patient_Reference = (SELECT TOP 1 patient_Reference FROM HSFHIR_X0001_S.Observation)
+  AND r.ResourceType = 'Observation' AND r.Deleted = 0
+  AND GetProp(GetJSON(GetAtJSON(GetJSON(GetJSON(r.ResourceString,'category'),'code'),0),'code'),'code') = 'laboratory'
+ORDER BY testName
+```
+
+The results of one test, for the chart (`GET /fhir/api/patient/:id/lab/:code`, here LOINC 718-7, hemoglobin):
+
+```sql
+SELECT
+  GetProp(GetJSON(GetAtJSON(GetJSON(GetJSON(r.ResourceString,'code'),'coding'),0),'display'),'display') AS testName,
+  GetProp(GetJSON(r.ResourceString,'effectiveDateTime'),'effectiveDateTime') AS effectiveDateTimeValue,
+  GetProp(GetJSON(r.ResourceString,'valueQuantity'),'value') AS valueQuant
+FROM HSFHIR_X0001_S.Observation s
+JOIN HSFHIR_X0001_R.Rsrc r ON r.Key = s.Key
+WHERE s.patient_Reference = (SELECT TOP 1 patient_Reference FROM HSFHIR_X0001_S.Observation)
+  AND r.ResourceType = 'Observation' AND r.Deleted = 0
+  AND GetProp(GetJSON(GetAtJSON(GetJSON(GetJSON(r.ResourceString,'category'),'code'),0),'code'),'code') = 'laboratory'
+  AND GetProp(GetJSON(GetAtJSON(GetJSON(GetJSON(r.ResourceString,'code'),'coding'),0),'code'),'code') = '718-7'
+ORDER BY effectiveDateTimeValue
+```
+
+[misc/sql/example.sql](misc/sql/example.sql) has the step-by-step examples of article 4. CI runs every SQL example of this README, of README-JP and of that file against the FHIR server (`bash scripts/check-readme-sql.sh`), so they keep working.
+
 ## Testing the FHIR Application
 
 Open URL http://localhost:32783/fhir/portal/diashenrique.fhir.portal.Home.cls and sign in as `fhirportal` / `fhirportal`.

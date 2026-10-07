@@ -111,6 +111,10 @@ jobs:
       - name: Read-only /fhir/api
         run: bash scripts/check-readonly.sh
 
+      # Every SQL example of README.md, README-JP.md and misc/sql/example.sql runs against this server
+      - name: Documentation SQL examples
+        run: bash scripts/check-readme-sql.sh
+
       - uses: actions/setup-node@v7
         with:
           node-version: 22
