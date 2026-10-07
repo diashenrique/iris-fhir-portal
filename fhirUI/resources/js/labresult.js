@@ -80,6 +80,8 @@ $(document).ready(function () {
         }).fail(failed('lab tests'));
     }
 
+    // The theme (theme.min.js) sets its font as a Chart.js 2 global, which Chart.js 4 ignores
+    Chart.defaults.font.family = '-apple-system, BlinkMacSystemFont, "Fira Sans", "Helvetica Neue", "Apple Color Emoji", sans-serif';
     var ctx = document.getElementById("myChart").getContext("2d");
     // One chart at a time: the previous one is destroyed before drawing the next
     var chart = null;
@@ -118,7 +120,11 @@ $(document).ready(function () {
                         fill: true
                     }]
                 },
+                // No legend: the heading above names the test (the theme hid it with a Chart.js 2 global)
                 options: {
+                    plugins: {
+                        legend: { display: false }
+                    },
                     scales: {
                         x: {
                             type: 'time'

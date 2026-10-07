@@ -44,6 +44,8 @@ $ npx playwright test
 
 On a fresh Linux machine, use `npx playwright install --with-deps chromium` to also get the browser's system libraries.
 
+The frontend libraries come from npm through `vendor/` (see [vendor/README.md](vendor/README.md) and [vendor/INVENTORY.md](vendor/INVENTORY.md)). CI checks that the files in `fhirUI/assets/vendor` match the lockfile and runs `npm audit` on them. To run the same check locally: `cd vendor && npm ci --ignore-scripts && node sync.mjs --check`.
+
 ## Installation via IPM
 
 The portal needs IRIS for Health with a FHIR R4 server at `/fhir/r4` that uses the JsonAdvSQL storage strategy, for example the `fhir-server` package of [iris-fhir-template](https://github.com/intersystems-community/iris-fhir-template). Install the portal in the namespace of that server, after it:
