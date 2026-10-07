@@ -86,6 +86,15 @@ $(document).ready(function () {
     // Only the latest search may draw: an older response arriving late is ignored
     var latestRequest = 0;
 
+    // Text alternative of the chart: its name on the canvas and every plotted point in a table only screen readers see
+    function describeChart(label, points) {
+        $("#myChart").attr('aria-label', 'Lab results chart of ' + label + ', ' + points.length + ' results, listed in the table below');
+        $("#labTable caption").text(label);
+        $("#labTable tbody").empty().append(points.map(function (e) {
+            return $('<tr>').append($('<td>').text(e.date), $('<td>').text(e.value));
+        }));
+    }
+
     function getResults() {
         var request = ++latestRequest;
         var label = $("#labtest option:selected").text();
@@ -123,6 +132,7 @@ $(document).ready(function () {
             }
             chart = new Chart(ctx, config);
             $("#testName").text(label);
+            describeChart(label, points);
         }).fail(function (jqXHR) {
             if (request === latestRequest) failed('lab results')(jqXHR);
         });

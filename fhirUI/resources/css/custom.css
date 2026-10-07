@@ -40,3 +40,7 @@ canvas {
     -webkit-user-select: none;
     -ms-user-select: none;
 }
+/* Keyboard focus on a patient of the list: its link is empty (it stretches over the item), so the item shows the ring */
+#listgroup .list-group-item:focus-within {
+    box-shadow: inset 0 0 0 2px #346cb0;
+}

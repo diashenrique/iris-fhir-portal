@@ -99,7 +99,13 @@
                     <div class="card-body">
                       <h5 id="testName" class="card-title text-muted"></h5>
                       <div style="width: 100%;">
-                        <canvas id="myChart"></canvas>
+                        <canvas id="myChart" role="img" aria-label="Lab results chart"></canvas>
+                        <!-- The same values as text, for screen readers -->
+                        <table id="labTable" class="sr-only">
+                          <caption></caption>
+                          <thead><tr><th scope="col">Date</th><th scope="col">Value</th></tr></thead>
+                          <tbody></tbody>
+                        </table>
                       </div>
                     </div><!-- /.card-body -->
                   </div><!-- /.card -->
