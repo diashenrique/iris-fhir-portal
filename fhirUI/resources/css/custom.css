@@ -346,3 +346,10 @@ html .pace .pace-activity {
         white-space: nowrap;
     }
 }
+
+/* Phones: the SSN group is as tall as its 44px controls, so the line of Edit and FHIR JSON starts below it */
+@media (max-width: 575.98px) {
+    .patient-summary .input-group {
+        min-height: 44px;
+    }
+}
