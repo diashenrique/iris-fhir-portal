@@ -3,7 +3,7 @@ title: 'Edição no modal Edit e JSON no painel FHIR JSON'
 type: 'feature'
 ticket: '2'
 created: '2026-10-06'
-status: 'built'
+status: done
 baseline_revision: '9b2def9697af258a42943baff742c35b5898fdd9'
 route: 'oneshot'
 route_source: 'auto'
