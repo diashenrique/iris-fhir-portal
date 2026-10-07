@@ -76,6 +76,10 @@ components:
     background: '{colors.surface}'
     radius: '{rounded.DEFAULT}'
     shadow: '0 0 0 1px rgba(20,20,31,.05), 0 1px 3px 0 rgba(20,20,31,.15)'
+  condition-pill:
+    background: '{colors.primary}'
+    foreground: '{colors.surface}'
+    radius: '{rounded.pill}'
   allergy-alert:
     background: '{colors.red}'
     foreground: '{colors.surface}'
@@ -146,6 +150,7 @@ Próprios do portal:
 - **Patient summary:** o nome em `{typography.patient-name}`. Numa linha `{typography.meta}`: idade, sexo, data de nascimento, ID FHIR e SSN mascarado com o botão de revelar. As ações "Edit" e "FHIR JSON" ficam à direita. O selo de alergias fica à direita do nome quando há alergias.
 - **Clinical card:** título, contador e selo de origem no cabeçalho; o corpo sempre visível, sem acordeão.
 - **Allergy alert:** pill `{colors.red}` com o número de alergias ("2 allergies").
+- **Condition pill:** pill `{colors.primary}` com o número de condições ativas ("2 active conditions"), ao lado do selo de alergias. É azul porque não é alerta: o vermelho fica só para alergia e valor alterado. As condições resolvidas aparecem no card em `{colors.text-muted}`.
 - **Value abnormal:** o valor em `{colors.red}` com uma seta (↑ ou ↓) e o texto "High" ou "Low" para leitores de tela. A cor nunca carrega a informação sozinha.
 - **Source badge:** pill pequeno no cabeçalho do card; FHIR em `{colors.source-fhir}`, SQL em `{colors.source-sql}`.
 - **Focus ring:** 2px `{colors.primary}`, já usado na lista (5.5); vale para todo item clicável sem contorno próprio.

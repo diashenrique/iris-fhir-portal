@@ -35,7 +35,7 @@ test('every card says where its data comes from, how many records it has, and re
       failures-- > 0 ? route.fulfill({ status: 500, body: '' }) : route.continue());
     await page.locator(`[id="${id}"]`).click();
 
-    for (const card of ['#cardAllergies', '#cardVitalSigns', '#cardLaboratory', '#cardImmunizations']) {
+    for (const card of ['#cardAllergies', '#cardConditions', '#cardVitalSigns', '#cardLaboratory', '#cardImmunizations']) {
       await expect(page.locator(`${card} .card-header .source-badge`), card).toHaveText('FHIR · fhir.js');
     }
     await expect(page.locator('#badgeAllergy')).toHaveText('0');
@@ -46,8 +46,19 @@ test('every card says where its data comes from, how many records it has, and re
     await immunizations.getByRole('button', { name: 'Try again' }).click();
     await expect(immunizations).toHaveText('No immunizations recorded.');
     await expect(page.locator('#badgeImmunization')).toHaveText('0');
+
+    // The Conditions card recovers the same way
+    let conditionFailures = 1;
+    await page.route('**/fhir/r4/Condition?**', (route) =>
+      conditionFailures-- > 0 ? route.fulfill({ status: 500, body: '' }) : route.continue());
+    await page.locator(`[id="${id}"]`).click();
+    const conditions = page.locator('#conditionTable tbody');
+    await expect(conditions).toHaveText(/Couldn't load conditions\./);
+    await conditions.getByRole('button', { name: 'Try again' }).click();
+    await expect(conditions).toHaveText('No conditions recorded.');
   } finally {
     await page.unroute('**/fhir/r4/Immunization?**');
+    await page.unroute('**/fhir/r4/Condition?**');
     expect(await data.cleanup()).toEqual([]);
   }
 });

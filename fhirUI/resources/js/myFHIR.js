@@ -61,6 +61,7 @@ $(document).ready(function () {
         $("#patientBirthDate").text(r.birthDate ? 'Born ' + r.birthDate : '');
         $("#patientFhirId").text('FHIR ID ' + r.id);
         $("#allergyAlert").addClass('d-none').text('');
+        $("#conditionAlert").addClass('d-none').text('');
         $("#emptyState").addClass('d-none');
         $("#patientChart").removeClass('d-none');
     }
@@ -204,6 +205,7 @@ $(document).ready(function () {
     // The clinical cards: their table, columns, what they hold and what they say when empty
     const CARDS = {
         allergy: { table: '#allergyTable', badge: '#badgeAllergy', columns: 4, what: 'allergies', empty: 'No allergies recorded.' },
+        condition: { table: '#conditionTable', badge: '#badgeCondition', columns: 4, what: 'conditions', empty: 'No conditions recorded.' },
         vitalsigns: { table: '#vitalSignsTable', badge: '#badgeVitalSigns', columns: 4, what: 'vital signs', empty: 'No vital signs recorded.' },
         laboratory: { table: '#laboratoryTable', badge: '#badgeLaboratory', columns: 4, what: 'laboratory results', empty: 'No lab results recorded.' },
         immunization: { table: '#immunizationTable', badge: '#badgeImmunization', columns: 2, what: 'immunizations', empty: 'No immunizations recorded.' }
@@ -467,6 +469,7 @@ $(document).ready(function () {
                     // The chart is on screen: the focus goes to the patient's name, so it is announced
                     if ($("#patientName").is(':visible')) $("#patientName").trigger('focus');
                     allergy(patient.resource.id);
+                    condition(patient.resource.id);
                     vitalsigns(patient.resource.id);
                     laboratory(patient.resource.id);
                     immunization(patient.resource.id);
@@ -637,6 +640,58 @@ $(document).ready(function () {
             });
     };
 
+    // Conditions: the active ones first, then the resolved and inactive, each group latest onset first.
+    // A condition without clinicalStatus counts as active (the safer reading for a chart).
+    const ACTIVE_CONDITION = ['active', 'recurrence', 'relapse'];
+
+    function conditionStatus(resource) {
+        const coding = ((resource.clinicalStatus || {}).coding || [])[0] || {};
+        return coding.code || 'active';
+    }
+
+    window.condition = function (patientId) {
+        cardLoading('condition');
+        searchAll({
+                type: 'Condition',
+                query: {
+                    patient: patientId
+                }
+            }).then((result) => {
+                if (!isSelected(patientId)) return;
+                appendBundles(result.bundles);
+                const onset = (r) => r.onsetDateTime || (r.onsetPeriod && r.onsetPeriod.start) || '';
+                const abatement = (r) => r.abatementDateTime || (r.abatementPeriod && r.abatementPeriod.start) || '';
+                const conditions = result.entries.map((e) => e.resource).map((r) => ({
+                    r: r,
+                    status: conditionStatus(r),
+                    active: ACTIVE_CONDITION.indexOf(conditionStatus(r)) >= 0
+                }));
+                conditions.sort((a, b) => (b.active - a.active) || onset(b.r).localeCompare(onset(a.r)));
+                const rows = conditions.map((c) => textRow([
+                    conceptText(c.r.code),
+                    c.status.charAt(0).toUpperCase() + c.status.slice(1),
+                    onset(c.r),
+                    abatement(c.r)
+                ], 2).each(function () {
+                    // The resolution date is a date column too
+                    const cell = $(this).children().eq(3);
+                    const value = cell.text();
+                    if (value) cell.text(readableDate(value)).attr('title', value);
+                }).toggleClass('condition-inactive', !c.active));
+                cardLoaded('condition', result.first.total || 0);
+                $("#conditionTable tbody").append(rows);
+
+                // The count in the summary: how many are active, a link to their card
+                const active = conditions.filter((c) => c.active).length;
+                if (active > 0) {
+                    $("#conditionAlert").removeClass('d-none').text(active + (active === 1 ? ' active condition' : ' active conditions'));
+                }
+            })
+            .catch((err) => {
+                if (isSelected(patientId)) cardError('condition', patientId, err);
+            });
+    };
+
     // Perform a search to Allergy list for a specific patient
     window.allergy = function (patientId) {
         cardLoading('allergy');
@@ -802,7 +857,8 @@ $(document).ready(function () {
         $("#labtest").empty();
         $("#testName, #chartEmpty").text('');
         $("#chartEmpty").addClass('d-none');
-        $("#chartBox").removeClass('d-none');
+        // No space for the chart until a test is drawn
+        $("#chartBox").addClass('d-none');
         describeChart('', []);
     }
 
