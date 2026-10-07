@@ -203,8 +203,8 @@ canvas {
     width: 100%;
 }
 
-/* Loading: the thin bar under the header only, not the spinner in the corner */
-.pace .pace-activity {
+/* Loading: the thin bar under the header only, not the spinner in the corner (html: theme.min.css loads after this file) */
+html .pace .pace-activity {
     display: none;
 }
 
@@ -321,4 +321,28 @@ canvas {
 /* The focus ring of the tabs only for the keyboard, not after a click */
 .chart-tabs.nav-tabs .nav-link:focus:not(:focus-visible) {
     outline: none;
+}
+
+/* Language of the interface, in the header (.app-header: the theme sets .custom-select to 100%) */
+.app-header .lang-select {
+    width: 7.5rem;
+}
+
+/* The header keeps the language and Log out whole: they do not shrink or wrap */
+.app-header .lang-select,
+.app-header #logout {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+/* Phones: Log out shows its icon only (the text stays for screen readers), so the header fits in one line */
+@media (max-width: 575.98px) {
+    .app-header .logout-text {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+    }
 }

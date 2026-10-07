@@ -32,6 +32,7 @@
     "chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js": "chart.js/chartjs-adapter-date-fns.bundle.min.js",
     "flatpickr/dist/flatpickr.min.css": "flatpickr/flatpickr.min.css",
     "flatpickr/dist/flatpickr.min.js": "flatpickr/flatpickr.min.js",
+    "flatpickr/dist/l10n/pt.js": "flatpickr/l10n/pt.js",
     "flatpickr/dist/plugins/monthSelect/index.js": "flatpickr/plugins/monthSelect/index.js",
     "jquery/dist/jquery.min.js": "jquery/jquery.min.js",
     "open-iconic/font/css/open-iconic-bootstrap.min.css": "open-iconic/css/open-iconic-bootstrap.min.css",

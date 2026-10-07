@@ -15,7 +15,10 @@ O portal é uma web responsiva de duas páginas estáticas, servidas pelo IRIS e
 
 **Público principal:** o desenvolvedor que lê os artigos da Developer Community ou instala o portal pelo IPM para ver o FHIR do IRIS for Health funcionando (decisão do usuário, 2026-10-06). O prontuário se comporta como um prontuário clínico real. A camada técnica fica sempre à vista, mas nunca na frente: o selo de origem em cada card, o JSON bruto a um clique e a edição que demonstra o `update` do fhir.js do artigo 3.
 
-**Idioma:** a interface é em inglês, como hoje e como nos artigos. O pt-BR fica para o i18n do epic-prontuario-ampliado (decisão do usuário, 2026-10-06).
+**Idioma:** a interface é em inglês por padrão, como nos artigos (decisão do usuário, 2026-10-06). Desde o epic-prontuario-ampliado (6.5), um seletor no cabeçalho troca para português (pt-BR):
+- **Persistência:** a escolha fica guardada no navegador. Trocar recarrega a página no mesmo paciente (`patientlist.html?id=`).
+- **O que muda:** os textos da interface, o `<html lang>`, as datas ("Sep 3, 2014" ou "3 de set. de 2014") e os números ("6.72" ou "6,72"), inclusive no gráfico e no calendário do Edit.
+- **O que não muda:** os dados clínicos aparecem como o FHIR os envia, sem tradução.
 
 ## Information Architecture
 
