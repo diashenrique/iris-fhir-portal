@@ -3,7 +3,7 @@ title: UX do layout do prontuário
 initiative: initiative-modernizacao
 epic: epic-layout-prontuario
 status: final
-updated: 2026-10-07
+updated: 2026-10-06
 ---
 
 # UX do layout do prontuário
