@@ -1,0 +1,75 @@
+# Breakdown of epic-prontuario-ampliado, in build order (approved under autonomy, 2026-10-07, after the set check)
+# One lane: every entry edits patientlist.html and myFHIR.js, so they run in sequence.
+# The pt-BR entry (5) comes right after the Timeline, so the cards that follow add their texts to both dictionaries.
+
+[[entry]]
+id = 1
+type = "story"
+title = "Tracer: card Conditions com ativas e resolvidas e a contagem no resumo"
+description = "Acrescenta o card Conditions no padrão da 8.4 (CARDS, estados, selo FHIR · fhir.js, Try again): condições ativas primeiro, depois as resolvidas, com início e resolução legíveis; a contagem de ativas entra no resumo do paciente como um selo neutro (o vermelho é só de alergia e valor alterado); documenta o card no EXPERIENCE.md (Component Patterns e State Patterns) e o selo no DESIGN.md (Components); e estende o cards.spec.js (laço dos selos e Try again) ao card novo."
+verify = "Um e2e cria um paciente com uma condição ativa e uma resolvida e confirma a ordem, as datas, o selo do card e N active conditions no resumo; um paciente sem condições mostra No conditions recorded; o cards.spec.js cobre o selo e o Try again do card novo."
+covers = ["A1"]
+after = ["8.8"]                   # o padrão de card e o layout do epic-layout-prontuario
+hitl = false
+risk = "medium"
+uncertainty = "O clinicalStatus das condições Synthea vem como active, resolved ou inactive; a separação usa o código, e um status ausente conta como ativo."
+
+[[entry]]
+id = 2
+type = "story"
+title = "Linha do tempo do paciente com Patient/$everything"
+description = "Abas Chart e Timeline no resumo alternam os cards e a vista Timeline, que lista os eventos datados do $everything (encontros, início de condições, procedimentos, vacinas, prescrições e laudos) do mais recente ao mais antigo, agrupados por ano, com filtro por tipo e o selo FHIR · $everything; segue link[next] quando houver; tem os estados da 8.4 (esqueleto ao carregar, No events recorded., Couldn't load the timeline. com Try again); e documenta a vista no EXPERIENCE.md (Information Architecture, Component Patterns, State Patterns) e as abas, o cabeçalho de ano, o filtro e o selo no DESIGN.md (Components)."
+verify = "Um e2e cria um paciente com recursos de tipos e anos diferentes, abre Timeline e confirma a ordem, os grupos por ano, o filtro e o selo; uma falha simulada do $everything mostra o erro com Try again; a vista Chart continua igual."
+covers = ["A5"]
+after = [1]
+hitl = false
+risk = "medium"
+uncertainty = "Se o $everything do IRIS pagina e quantos recursos devolve num paciente Synthea grande; e qual data usar por tipo (period.start, onsetDateTime, performedDateTime ou performedPeriod.start, occurrenceDateTime, authoredOn, effectiveDateTime)."
+
+[[entry]]
+id = 5
+type = "story"
+title = "Interface em português (pt-BR), com o inglês como padrão"
+description = "Um seletor de idioma no cabeçalho troca entre English e Português (pt-BR) e guarda a escolha no navegador: todos os textos da interface saem de um dicionário por idioma (o HTML, os CARDS.empty e CARDS.what, os toasts, o resumo com o selo de condições, as abas e os tipos da Timeline, o MONTHS de readableDate), o <html lang> acompanha o idioma, datas e números seguem o idioma (readableDate, Chart.js, o locale pt do flatpickr pelo manifesto do vendor) e os dados clínicos ficam como vêm do FHIR; o EXPERIENCE.md registra a regra e o DESIGN.md o seletor e a data em pt-BR."
+verify = "Um e2e troca para Português e confirma títulos, estados, um toast, uma data no formato pt-BR e o lang da página, e que o idioma continua depois de recarregar; os e2e de antes seguem em inglês."
+covers = ["A6"]
+after = [2]
+hitl = false
+risk = "medium"
+uncertainty = "O tema Looper não mostra texto próprio; o flatpickr precisa do arquivo de locale pt, que entra no manifesto do vendor."
+
+[[entry]]
+id = 3
+type = "story"
+title = "Card Medications: ativas primeiro, histórico atrás de Show all"
+description = "Acrescenta o card Medications (MedicationRequest): as ativas visíveis e as demais atrás de Show all, que esta entrada transforma num Show all reutilizável por card (os sinais vitais passam a usá-lo); o nome vem do medicationCodeableConcept ou da Medication referenciada (_include=MedicationRequest:medication, com o display da referência só como último recurso), mais a dose quando houver e a data legível; os textos entram nos dois dicionários; e documenta o card no EXPERIENCE.md."
+verify = "Um e2e cria uma prescrição ativa e uma encerrada (uma delas por medicationReference) e confirma que só a ativa aparece até Show all, com o nome da Medication, a dose e a data; um paciente sem prescrições mostra a linha de vazio; o selo é FHIR · fhir.js; os sinais vitais seguem com Show all."
+covers = ["A2"]
+after = [5]
+hitl = false
+risk = "low"
+uncertainty = "Se as prescrições Synthea usam medicationCodeableConcept ou medicationReference (a busca com _include cobre as duas)."
+
+[[entry]]
+id = 4
+type = "story"
+title = "Cards Encounters e Care plans"
+description = "Acrescenta o card Encounters (os cinco mais recentes com tipo, classe e período, o resto atrás do Show all reutilizável da entrada 3) e o card Care plans (status, categoria e período), ambos no padrão da 8.4, com os textos nos dois dicionários; e documenta os dois no EXPERIENCE.md, inclusive quantos encontros aparecem antes de Show all."
+verify = "Um e2e cria dois encontros e um plano de cuidado e confirma tipo, classe, período, Show all, e status, categoria e período do plano, com os selos FHIR · fhir.js; um paciente sem registros mostra as linhas de vazio dos dois cards."
+covers = ["A3", "A4"]
+after = [3]
+hitl = false
+risk = "low"
+uncertainty = "Como mostrar a classe do encontro (um Coding, não um CodeableConcept, em R4): o display ou o código."
+
+[[entry]]
+id = 6
+type = "story"
+title = "Refactor sweep"
+description = "Limpeza deixada para depois pelas entradas 1 a 5, com escopo definido ao começar, a partir dos planos e das revisões; só limpeza."
+verify = "O CI segue verde e cada item de limpeza do plano está resolvido ou explicitamente adiado."
+covers = ["A1", "A2", "A3", "A4", "A5", "A6"]
+after = [1, 2, 3, 4, 5]
+hitl = false
+risk = "low"
+uncertainty = "O escopo só é conhecido ao fim das entradas anteriores."
