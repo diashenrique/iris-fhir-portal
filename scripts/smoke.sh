@@ -45,10 +45,14 @@ grep -q 'name="IRISUsername"' "$page" && pass "Portal entry asks for login" || f
 denied "FHIR Patient search without login" "$(http_code -H 'Accept: application/fhir+json' "$BASE_URL/fhir/r4/Patient")"
 denied "FHIR Patient search without login or Accept header" "$(http_code "$BASE_URL/fhir/r4/Patient")"
 [ "$(http_code "$BASE_URL/fhir/api/laboptions/1")" = "401" ] && pass "REST /fhir/api without login answers 401" || fail "REST /fhir/api without login answers 401"
+[ "$(http_code "$BASE_URL/fhir/api/session")" = "401" ] && pass "REST /fhir/api/session without login answers 401" || fail "REST /fhir/api/session without login answers 401"
 [ "$(http_code "$BASE_URL/csp/user/fhirUI/patientlist.html")" = "404" ] \
   && pass "Old anonymous /csp/user/fhirUI is gone" || fail "Old anonymous /csp/user/fhirUI is gone"
 
 if login; then pass "Login as demo user"; else fail "Login as demo user"; fi
+
+# The user of the session, for the header of the portal
+[[ "$(session "$BASE_URL/fhir/api/session")" == '{"user":"'"${PORTAL_USER:-fhirportal}"'"}' ]]   && pass "REST /fhir/api/session returns the logged-in user" || fail "REST /fhir/api/session returns the logged-in user"
 
 # FHIR server, with the session
 [ "$(session_code "$BASE_URL/fhir/r4/metadata")" = "200" ] && pass "FHIR metadata answers 200" || fail "FHIR metadata answers 200"

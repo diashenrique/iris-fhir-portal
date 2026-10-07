@@ -44,3 +44,100 @@ canvas {
 #listgroup .list-group-item:focus-within {
     box-shadow: inset 0 0 0 2px #346cb0;
 }
+
+/* ---- Layout of the patient chart (ux-layout-prontuario: DESIGN.md and EXPERIENCE.md) ---- */
+
+.app-brand {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.app-brand .app-name {
+    font-weight: 600;
+    color: #346cb0;
+}
+
+.app-brand .app-platform {
+    font-size: 14px;
+    color: #888c9b;
+}
+
+/* Phones: the header stays one line high (the theme fixes its height), so the platform name goes */
+.app-header .navbar > .container-fluid {
+    flex-wrap: nowrap;
+}
+
+@media (max-width: 575.98px) {
+    .app-brand .app-platform,
+    .app-header #currentUser {
+        display: none;
+    }
+}
+
+.list-card .list-group-item {
+    cursor: pointer;
+}
+
+.empty-state {
+    padding: 48px 16px;
+    text-align: center;
+}
+
+.patient-name {
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+/* Age · Sex · Born ... · FHIR ID ...: a dot between the parts that have a value */
+.patient-meta span:not(:empty) + span:not(:empty)::before {
+    content: "\00a0\00b7\00a0";
+}
+
+.allergy-alert {
+    background-color: #ea6759;
+    color: #fff;
+}
+
+.allergy-alert:hover,
+.allergy-alert:focus {
+    color: #fff;
+}
+
+/* Below 992px: one surface at a time, the list until a patient is chosen */
+@media (max-width: 991.98px) {
+    .portal .chart-pane {
+        display: none;
+    }
+
+    .portal.show-chart .chart-pane {
+        display: block;
+    }
+
+    .portal.show-chart .list-pane {
+        display: none;
+    }
+
+    .portal .empty-state {
+        display: none;
+    }
+
+    /* Tables become stacked lists: one block per row, no header */
+    .clinical-card table thead {
+        display: none;
+    }
+
+    .clinical-card table tr {
+        display: block;
+        padding: 8px 16px;
+        border-top: 1px solid rgba(20, 20, 31, .1);
+    }
+
+    .clinical-card table td {
+        display: block;
+        border: 0;
+        padding: 0;
+        overflow-wrap: anywhere;
+    }
+}

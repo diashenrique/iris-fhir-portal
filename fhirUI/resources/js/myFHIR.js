@@ -19,6 +19,51 @@ $(document).ready(function () {
         location.reload();
     });
 
+    // The user of the IRIS session, in the header
+    $.getJSON('/fhir/api/session', function (session) {
+        $("#currentUser").text(session.user || '');
+    });
+
+    // Below 992px the list and the chart take turns (.show-chart); Back returns to the list where it was
+    let listScroll = 0;
+
+    function showChart() {
+        listScroll = window.scrollY;
+        $("#portal").addClass('show-chart');
+        window.scrollTo(0, 0);
+    }
+
+    $("#backToList").click(function () {
+        $("#portal").removeClass('show-chart');
+        window.scrollTo(0, listScroll);
+    });
+
+    // Age in whole years from a FHIR date (YYYY, YYYY-MM or YYYY-MM-DD); empty when unknown
+    function ageOf(birthDate) {
+        const m = /^(\d{4})(?:-(\d{2}))?(?:-(\d{2}))?/.exec(birthDate || '');
+        if (!m) return '';
+        const today = new Date();
+        const month = m[2] ? Number(m[2]) : 1;
+        const day = m[3] ? Number(m[3]) : 1;
+        let age = today.getFullYear() - Number(m[1]);
+        if (today.getMonth() + 1 < month || (today.getMonth() + 1 === month && today.getDate() < day)) age--;
+        return age >= 0 ? String(age) : '';
+    }
+
+    // The summary at the top of the chart: who the patient is, at a glance
+    function showSummary(r) {
+        const name = getName(r).trim();
+        const age = ageOf(r.birthDate);
+        $("#patientName").text(name || '(no name)');
+        $("#patientAge").text(age ? age + ' years' : '');
+        $("#patientGender").text(r.gender ? r.gender.charAt(0).toUpperCase() + r.gender.slice(1) : '');
+        $("#patientBirthDate").text(r.birthDate ? 'Born ' + r.birthDate : '');
+        $("#patientFhirId").text('FHIR ID ' + r.id);
+        $("#allergyAlert").addClass('d-none').text('');
+        $("#emptyState").addClass('d-none');
+        $("#patientChart").removeClass('d-none');
+    }
+
     $("#updateData").prop('disabled', true);
 
     function Toast(type, css, msg) {
@@ -252,6 +297,7 @@ $(document).ready(function () {
                     const ssn = findSSN(r) || {};
                     const name = (r.name && r.name[0]) || {};
                     const address = (r.address && r.address[0]) || {};
+                    showSummary(r);
                     $("#fhirId").val(r.id);
                     ssnValue = ssn.value || '';
                     showMaskedSSN();
@@ -312,9 +358,13 @@ $(document).ready(function () {
             result.entries.forEach((patient) => {
                 const patientId = patient.resource.id;
                 const name = getName(patient.resource).trim();
-                const item = $('<div class="list-group-item" data-toggle="sidebar" data-sidebar="show">')
+                const item = $('<div class="list-group-item">')
                     .attr({ id: patientId, role: 'listitem' })
-                    .on('click', () => loadForm(patientId))
+                    .on('click', (e) => {
+                        e.preventDefault();
+                        showChart();
+                        loadForm(patientId);
+                    })
                     .append(
                         // The link is what the keyboard reaches (Tab, then the arrows below); its name says who it opens
                         $('<a href="#" class="stretched-link"></a>')
@@ -390,6 +440,11 @@ $(document).ready(function () {
             }).then((result) => {
                 if (!isSelected(patientId)) return;
                 $("#badgeAllergy").text(result.first.total || 0);
+                // The alert in the summary: how many allergies, a link to their card
+                const allergies = result.entries.length;
+                if (allergies > 0) {
+                    $("#allergyAlert").removeClass('d-none').text(allergies + (allergies === 1 ? ' allergy' : ' allergies'));
+                }
 
                 if (result.entries.length === 0) {
                     $("#allergyTable tbody").append(noRecordsRow(4));

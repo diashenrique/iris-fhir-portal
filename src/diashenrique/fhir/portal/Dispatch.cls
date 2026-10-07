@@ -10,6 +10,7 @@ XData UrlMap [ XMLNamespace = "http://www.intersystems.com/urlmap" ]
 <Route Url="/patient/:id" Method="GET" Call="getPatient"/>
 <Route Url="/patient/:id/lab/:code" Method="GET" Call="getLabResult"/>
 <Route Url="/laboptions/:id" Method="GET" Call="getOptions"/>
+<Route Url="/session" Method="GET" Call="getSession"/>
 </Routes>
 }
 
@@ -111,6 +112,14 @@ ClassMethod getPatient(pPatientId) As %Status
     }
 
     Write arrPatient.%ToJSON()
+    Quit $$$OK
+}
+
+/// The user of the IRIS session, for the header of the portal; the web app already requires a login
+ClassMethod getSession() As %Status
+{
+    Set %response.ContentType = "application/json"
+    Write {"user":($Username)}.%ToJSON()
     Quit $$$OK
 }
 
