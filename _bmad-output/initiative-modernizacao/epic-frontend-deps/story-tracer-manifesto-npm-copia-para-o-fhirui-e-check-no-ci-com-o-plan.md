@@ -3,7 +3,7 @@ title: 'Tracer: manifesto npm, cópia para o fhirUI e check no CI, com o jQuery 
 type: 'chore'
 ticket: '1'
 created: '2026-10-07'
-status: 'built'
+status: done
 baseline_revision: '89d487344e393a945f12b4f26c83d864491971e8'
 route: 'oneshot'
 route_source: 'auto'
