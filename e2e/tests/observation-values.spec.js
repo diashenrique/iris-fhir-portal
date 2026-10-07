@@ -79,11 +79,16 @@ test('observations without valueQuantity show their value, one row per component
       page.locator(`${table} tbody tr`).evaluateAll((rows) =>
         rows.map((row) => Array.from(row.querySelectorAll('td'), (td) => td.textContent)));
 
-    await expect(page.locator('#laboratoryTable tbody tr')).toHaveCount(3);
-    expect(await cells('#laboratoryTable')).toEqual([
-      ['SARS-CoV-2 RNA', 'Positive', '', 'Jan 1, 2020'],
-      ['Glucose', '< 0.5', 'mg/dL', 'Jan 2, 2020'],
-      ['Pending test', '', '', 'Jan 3, 2020'],
+    // Grouped by day, the latest first: a day row, then its tests (test, value, unit, reference range)
+    await expect(page.locator('#laboratoryTable tbody tr')).toHaveCount(6);
+    expect(await page.locator('#laboratoryTable tbody tr').evaluateAll((rows) =>
+      rows.map((row) => Array.from(row.querySelectorAll('th, td'), (cell) => cell.textContent)))).toEqual([
+      ['Jan 3, 2020'],
+      ['Pending test', '', '', ''],
+      ['Jan 2, 2020'],
+      ['Glucose', '< 0.5', 'mg/dL', ''],
+      ['Jan 1, 2020'],
+      ['SARS-CoV-2 RNA', 'Positive', '', ''],
     ]);
 
     await expect(page.locator('#vitalSignsTable tbody tr')).toHaveCount(3);

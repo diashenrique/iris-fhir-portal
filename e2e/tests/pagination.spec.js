@@ -153,8 +153,10 @@ test('the clinical tables follow link[next]: rows match the badge, in date order
       page.locator(`${table} tbody tr`).evaluateAll((rows) => rows.map((row) => row.querySelector('td').textContent));
 
     await expect(page.locator('#badgeLaboratory')).toHaveText(String(labDays.length));
-    await expect(page.locator('#laboratoryTable tbody tr')).toHaveCount(labDays.length);
-    expect(await names('#laboratoryTable')).toEqual([1, 2, 3, 4, 5, 6, 7].map((d) => `Lab ${d}`));
+    // The lab card groups by day, the latest first: one day row (.lab-date) before each test
+    await expect(page.locator('#laboratoryTable tbody tr:not(.lab-date)')).toHaveCount(labDays.length);
+    expect(await page.locator('#laboratoryTable tbody tr:not(.lab-date)').evaluateAll((rows) => rows.map((row) => row.querySelector('td').textContent)))
+      .toEqual([7, 6, 5, 4, 3, 2, 1].map((d) => `Lab ${d}`));
     await expect(page.locator('#iconChart a')).toHaveCount(1);
 
     await expect(page.locator('#badgeVitalSigns')).toHaveText(String(vitalDays.length));

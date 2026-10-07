@@ -175,3 +175,18 @@ canvas {
 .clinical-card td[title] {
     white-space: nowrap;
 }
+
+/* Laboratory: a row per day, then its tests; a value out of range in red with an arrow and High or Low */
+.clinical-card tr.lab-date th {
+    background-color: #f6f7f9;
+    font-weight: 600;
+}
+
+.value-abnormal {
+    color: #ea6759;
+    font-weight: 600;
+}
+
+.value-flag-text {
+    font-size: 14px;
+}

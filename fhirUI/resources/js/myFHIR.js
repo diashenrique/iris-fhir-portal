@@ -333,6 +333,49 @@ $(document).ready(function () {
         return [row(resource)];
     }
 
+    // The reference range of an Observation or component as text ("4–10", "≥ 4", "≤ 10" or its text)
+    function rangeText(range) {
+        if (!range) return '';
+        const low = range.low && range.low.value;
+        const high = range.high && range.high.value;
+        if (low != null && high != null) return roundValue(String(low)) + '\u2013' + roundValue(String(high));
+        if (low != null) return '\u2265 ' + roundValue(String(low));
+        if (high != null) return '\u2264 ' + roundValue(String(high));
+        return range.text || '';
+    }
+
+    // High or Low: from the interpretation when the server gives one, else from the number against the range
+    function abnormalFlag(item, range) {
+        const codes = ((item.interpretation || [])[0] || {}).coding || [];
+        const code = (codes[0] && codes[0].code) || '';
+        if (/^(H|HH|HU|>)$/.test(code)) return 'High';
+        if (/^(L|LL|LU|<)$/.test(code)) return 'Low';
+        const quantity = item.valueQuantity;
+        if (!range || !quantity || typeof quantity.value !== 'number' || quantity.comparator) return '';
+        if (range.high && typeof range.high.value === 'number' && quantity.value > range.high.value) return 'High';
+        if (range.low && typeof range.low.value === 'number' && quantity.value < range.low.value) return 'Low';
+        return '';
+    }
+
+    // The lab rows of an Observation, one per component when it has no value[x]:
+    // { name, value, unit, date, code, range, flag }
+    function labRows(resource) {
+        const date = resource.effectiveDateTime || '';
+        const row = (item) => {
+            const v = observationValue(item);
+            const range = (item.referenceRange || [])[0];
+            const coding = ((item.code || {}).coding || [])[0] || {};
+            return { name: conceptText(item.code), value: v.value, unit: v.unit, date, code: coding.code || '', range, flag: abnormalFlag(item, range) };
+        };
+        if (!valueKey(resource) && resource.component && resource.component.length > 0) {
+            return resource.component.map(row);
+        }
+        return [row(resource)];
+    }
+
+    // The unit and reference range of each lab test, from its latest result: the chart uses them (8.6)
+    let labTests = new Map();
+
     // The HTTP status of a failed FHIR request, if it has one. The jQuery adapter of fhir.js
     // rejects with { error: jqXHR }, so the status is on err.error; 0 means no answer from the server.
     function httpStatus(err) {
@@ -658,9 +701,35 @@ $(document).ready(function () {
                 }
 
                 appendBundles(result.bundles);
-                const rows = [];
+                // Grouped by day, the latest day first; a row per test, its value flagged High or Low
+                const days = new Map();
+                labTests = new Map();
                 result.entries.forEach((laboratory) => {
-                    observationRows(laboratory.resource).forEach((values) => rows.push(textRow(values, 3)));
+                    labRows(laboratory.resource).forEach((lab) => {
+                        const day = lab.date.slice(0, 10);
+                        if (!days.has(day)) days.set(day, []);
+                        days.get(day).push(lab);
+                        if (lab.code) labTests.set(lab.code, { unit: lab.unit, range: lab.range });
+                    });
+                });
+                const rows = [];
+                Array.from(days.keys()).reverse().forEach((day) => {
+                    const labs = days.get(day);
+                    rows.push($('<tr class="lab-date">').append(
+                        $('<th scope="colgroup" colspan="4">').text(readableDate(labs[0].date) || 'No date').attr('title', labs[0].date)
+                    ));
+                    labs.forEach((lab) => {
+                        const value = $('<td>').text(lab.value);
+                        if (lab.flag) {
+                            value.addClass('value-abnormal').append(
+                                $('<span class="value-flag">').append(
+                                    $('<span aria-hidden="true">').text(lab.flag === 'High' ? ' \u2191' : ' \u2193'),
+                                    $('<span class="value-flag-text">').text(' ' + lab.flag)
+                                )
+                            );
+                        }
+                        rows.push($('<tr>').append($('<td>').text(lab.name), value, $('<td>').text(lab.unit), $('<td>').text(rangeText(lab.range))));
+                    });
                 });
                 cardLoaded('laboratory', result.first.total || 0);
                 $("#laboratoryTable tbody").append(rows);
