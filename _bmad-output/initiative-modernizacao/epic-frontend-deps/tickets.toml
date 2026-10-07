@@ -1,0 +1,75 @@
+# Breakdown of epic-frontend-deps, in build order (approved under autonomy, 2026-10-06, after the set check)
+# The manifest, its lockfile and the copy script live in vendor/ at the repository root, never inside fhirUI/
+# (module.xml copies all of fhirUI/ into the IPM package, and Docker serves it).
+
+[[entry]]
+id = 1
+type = "story"
+title = "Tracer: manifesto npm, cópia para o fhirUI e check no CI, com o jQuery 3.7.1"
+description = "Cria vendor/ na raiz (package.json, lockfile e um script que copia do node_modules para o fhirUI/assets/vendor só os arquivos listados, com um modo --check) e um passo de CI que roda npm ci e o --check; o jQuery 3.7.1 é a única biblioteca nesse caminho por enquanto, e sai a cópia antiga dele."
+verify = "O CI roda o --check e fica verde; editar à mão o jQuery vendorizado faz o check falhar; as páginas servem o jQuery 3.7.1 e o smoke e o e2e passam."
+covers = ["F1", "F2", "F3"]
+after = ["3.9", "4.5"]            # a lógica de tela estabilizada no sweep do epic-robustez-fhir; o ci.yml da 4.5
+hitl = false
+risk = "medium"
+uncertainty = "Se o --check compara por hash do conteúdo ou pela versão no lockfile; o mais simples que detecta edição à mão serve."
+
+[[entry]]
+id = 2
+type = "story"
+title = "Chart.js 4 no gráfico de exames"
+description = "Passa o Chart.js para a 4.x pelo manifesto (build UMD mais um adaptador de datas UMD), adapta o labresult.js à API nova (scales.x do tipo time, plugins, destroy) e remove o Chart.bundle e o utils.js de exemplo, que o código não usa."
+verify = "O e2e do gráfico (lab-chart) passa com o Chart.js 4; o gráfico mostra datas no eixo x e um ponto por resultado numérico."
+covers = ["F3"]
+after = [1]
+hitl = false
+risk = "medium"
+uncertainty = "Qual adaptador de datas funciona sem bundler e quanto o eixo time da 4.x muda o formato dos rótulos."
+
+[[entry]]
+id = 3
+type = "story"
+title = "Bootstrap 4.6 e o inventário das bibliotecas fora do npm"
+description = "Passa o Bootstrap JS 4.6.x e o popper para o manifesto e remove o CSS do Bootstrap que nenhuma página carrega (o tema traz o Bootstrap compilado no theme.min.css); cria o inventário (vendor/INVENTORY.md) com origem e versão do tema, do stacked-menu e de cada biblioteca do manifesto."
+verify = "O inventário lista toda biblioteca que as páginas carregam; as páginas servem o Bootstrap 4.6.x; o smoke e o e2e passam, com o modal, o acordeão e o menu funcionando."
+covers = ["F1", "F3"]
+after = [2]                       # o mesmo package.json, lockfile e lista do script de cópia
+hitl = false
+risk = "medium"
+uncertainty = "O theme.min.css foi compilado com um Bootstrap 4 mais antigo; o JS 4.6 pode depender de classes que ele não tem."
+
+[[entry]]
+id = 4
+type = "story"
+title = "Demais bibliotecas no manifesto e npm audit no CI"
+description = "Passa flatpickr (com o monthSelect e sem os locales), toastr, perfect-scrollbar, pace, Font Awesome, open-iconic e o fhir.js (o build jQuery) para o manifesto; move as cópias de fora do assets/vendor (toastr em assets/javascript e assets/stylesheets, jqFhir.js na raiz do fhirUI) para lá, acerta as tags e apaga as cópias antigas; e acrescenta ao CI o npm audit --audit-level=moderate do vendor/ (o e2e/ é ferramenta de teste e fica fora)."
+verify = "O npm audit do CI não encontra nada e fica verde; nenhuma página carrega arquivo de fora do manifesto ou do inventário; o smoke e o e2e passam."
+covers = ["F1", "F3", "F4"]
+after = [3]                       # o mesmo package.json, lockfile e lista do script de cópia
+hitl = false
+risk = "medium"
+uncertainty = "Se o fhir.js do npm traz o jqFhir.js igual ao versionado (se não trouxer, vai para o inventário); se a última versão compatível do Font Awesome é a 5.x ou a 6.x, que muda as webfonts e alguns nomes de ícone."
+
+[[entry]]
+id = 5
+type = "story"
+title = "Acessibilidade básica: lista por teclado e alternativa em texto do gráfico"
+description = "A lista de pacientes passa a ser navegável por teclado (foco, Enter e setas), e o gráfico de exames ganha uma tabela com os mesmos valores, visível aos leitores de tela."
+verify = "Um teste e2e seleciona um paciente só pelo teclado e lê os valores do gráfico na tabela alternativa."
+covers = ["F5"]
+after = [2, 4]                    # o labresult.js da 2; o patientlist.html e o labresult.html da 4
+hitl = false
+risk = "low"
+uncertainty = "O que o tema já oferece de foco visível na lista."
+
+[[entry]]
+id = 6
+type = "story"
+title = "Refactor sweep"
+description = "Limpeza deixada para depois pelas entradas 1 a 5, com escopo definido ao começar, a partir dos planos e das revisões; só limpeza."
+verify = "O CI segue verde e cada item de limpeza do plano está resolvido ou explicitamente adiado."
+covers = ["F1", "F2", "F3", "F4", "F5"]
+after = [1, 2, 3, 4, 5]
+hitl = false
+risk = "low"
+uncertainty = "O escopo só é conhecido ao fim das entradas anteriores."

@@ -18,6 +18,26 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  vendor:
+    name: Vendored frontend libraries
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: vendor/package-lock.json
+
+      # The files in fhirUI/assets/vendor must be the npm packages of vendor/package-lock.json, byte for byte
+      - name: Vendor check
+        working-directory: vendor
+        run: |
+          npm ci
+          node sync.mjs --check
+
   build:
     # docker: the project's image (Dockerfile + iris.script); ipm: a clean IRIS for Health with the fhir-server
     # package (the iris-fhir-template) and this checkout's module.xml, the way IPM users install the portal

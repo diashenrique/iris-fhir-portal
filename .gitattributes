@@ -4,3 +4,5 @@
 *.int text eol=lf
 Dockerfil* text eol=lf
 *.script text eol=lf
+# Vendored libraries are copied byte for byte from npm (vendor/sync.mjs --check compares them)
+fhirUI/assets/vendor/** -text
