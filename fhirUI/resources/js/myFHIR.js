@@ -226,6 +226,8 @@ $(document).ready(function () {
         allergy: { table: '#allergyTable', badge: '#badgeAllergy', columns: 4 },
         condition: { table: '#conditionTable', badge: '#badgeCondition', columns: 4 },
         medication: { table: '#medicationTable', badge: '#badgeMedication', columns: 4 },
+        encounter: { table: '#encounterTable', badge: '#badgeEncounter', columns: 3 },
+        careplan: { table: '#carePlanTable', badge: '#badgeCarePlan', columns: 4 },
         vitalsigns: { table: '#vitalSignsTable', badge: '#badgeVitalSigns', columns: 4 },
         laboratory: { table: '#laboratoryTable', badge: '#badgeLaboratory', columns: 4 },
         immunization: { table: '#immunizationTable', badge: '#badgeImmunization', columns: 2 }
@@ -493,6 +495,8 @@ $(document).ready(function () {
                     allergy(patient.resource.id);
                     condition(patient.resource.id);
                     medication(patient.resource.id);
+                    encounter(patient.resource.id);
+                    careplan(patient.resource.id);
                     vitalsigns(patient.resource.id);
                     laboratory(patient.resource.id);
                     immunization(patient.resource.id);
@@ -779,6 +783,81 @@ $(document).ready(function () {
             })
             .catch((err) => {
                 if (isSelected(patientId)) cardError('medication', patientId, err);
+            });
+    };
+
+    // A period as people read it: its start, and its end when it is another day ("Sep 1, 2019 – Sep 3, 2019")
+    function periodText(period) {
+        const start = (period && period.start) || '';
+        const end = (period && period.end) || '';
+        if (!start) return end ? readableDate(end) : '';
+        return end && end.slice(0, 10) !== start.slice(0, 10) ? readableDate(start) + ' \u2013 ' + readableDate(end) : readableDate(start);
+    }
+
+    // A code shown through the dictionary (prefix.code), or as the server sends it when the dictionary does not know it
+    function codeText(prefix, code, fallback) {
+        const text = t(prefix + code);
+        return text === prefix + code ? (fallback || code || '') : text;
+    }
+
+    // Encounters: the five most recent in view, the rest behind Show all
+    const RECENT_ENCOUNTERS = 5;
+
+    window.encounter = function (patientId) {
+        cardLoading('encounter');
+        searchAll({
+                type: 'Encounter',
+                query: {
+                    patient: patientId
+                }
+            }).then((result) => {
+                if (!isSelected(patientId)) return;
+                appendBundles(result.bundles);
+                const encounters = result.entries.map((e) => e.resource)
+                    .sort((a, b) => ((b.period && b.period.start) || '').localeCompare((a.period && a.period.start) || ''));
+                const rows = encounters.map((r, i) => {
+                    const row = textRow([
+                        conceptText((r.type || [])[0]) || '',
+                        r.class ? codeText('class.', r.class.code, r.class.display) : '',
+                        periodText(r.period)
+                    ]).toggleClass('card-history d-none', i >= RECENT_ENCOUNTERS);
+                    if (r.period && r.period.start) row.children().eq(2).attr('title', [r.period.start, r.period.end].filter((d) => d).join(' / '));
+                    return row;
+                });
+                cardLoaded('encounter', result.first.total || 0);
+                $("#encounterTable tbody").append(rows);
+                setShowAll('#encountersShowAll', encounters.length, Math.max(0, encounters.length - RECENT_ENCOUNTERS));
+            })
+            .catch((err) => {
+                if (isSelected(patientId)) cardError('encounter', patientId, err);
+            });
+    };
+
+    // Care plans: active first, then latest first; their activities by name
+    window.careplan = function (patientId) {
+        cardLoading('careplan');
+        searchAll({
+                type: 'CarePlan',
+                query: {
+                    patient: patientId
+                }
+            }).then((result) => {
+                if (!isSelected(patientId)) return;
+                appendBundles(result.bundles);
+                const plans = result.entries.map((e) => e.resource)
+                    .sort((a, b) => ((b.status === 'active') - (a.status === 'active'))
+                        || ((b.period && b.period.start) || '').localeCompare((a.period && a.period.start) || ''));
+                const rows = plans.map((r) => textRow([
+                    conceptText((r.category || [])[0]) || r.title || '',
+                    codeText('cpStatus.', r.status),
+                    periodText(r.period),
+                    (r.activity || []).map((a) => conceptText((a.detail || {}).code)).filter((name) => name).join(', ')
+                ]));
+                cardLoaded('careplan', result.first.total || 0);
+                $("#carePlanTable tbody").append(rows);
+            })
+            .catch((err) => {
+                if (isSelected(patientId)) cardError('careplan', patientId, err);
             });
     };
 
