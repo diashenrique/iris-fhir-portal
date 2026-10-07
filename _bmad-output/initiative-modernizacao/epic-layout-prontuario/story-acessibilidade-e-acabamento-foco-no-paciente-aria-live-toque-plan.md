@@ -3,7 +3,7 @@ title: 'Acessibilidade e acabamento: foco no paciente, aria-live, toques de 44px
 type: 'feature'
 ticket: '7'
 created: '2026-10-06'
-status: 'built'
+status: done
 baseline_revision: '1a7bb8fe489be9744ad7d53c7576bc4914ffa13a'
 route: 'oneshot'
 route_source: 'auto'

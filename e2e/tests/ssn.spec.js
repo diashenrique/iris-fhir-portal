@@ -28,7 +28,7 @@ test('the SSN is masked, revealed on request, and the mask is never saved', asyn
     await expect(ssn).toHaveValue(masked);
     await expect(ssn).toHaveAttribute('readonly', '');
     await expect(reveal).toBeEnabled();
-    // The FHIR Data Source modal masks it too
+    // The FHIR JSON panel masks it too
     await expect.poll(() => page.locator('#fhirdatasource').inputValue()).toContain(`"value": "${masked}"`);
     expect(await page.locator('#fhirdatasource').inputValue()).not.toContain(realSSN);
 

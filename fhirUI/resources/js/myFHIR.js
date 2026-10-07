@@ -91,17 +91,6 @@ $(document).ready(function () {
         }
     });
 
-    function Toast(type, css, msg) {
-        this.type = type;
-        this.css = css;
-        this.msg = msg;
-    }
-
-    var toasts = [
-        new Toast('success', 'toast-bottom-center', 'Saved.'),
-        new Toast('error', 'toast-bottom-center', "Couldn't save the patient. Try again.")
-    ];
-
     // An error toast, also said by screen readers through the live region of the page
     function toastError(message) {
         toastr.error(message);
@@ -114,11 +103,16 @@ $(document).ready(function () {
     toastr.options.fadeOut = 250;
     toastr.options.fadeIn = 250;
 
-    function showToast(i) {
-        var t = toasts[i];
-        toastr.options.positionClass = t.css;
-        toastr[t.type](t.msg);
-        if (t.type === 'error') $("#liveStatus").text(t.msg);
+    // The result of a save, at the bottom of the screen (only for this toast: the others stay on top)
+    function saveToast(saved) {
+        const options = { positionClass: 'toast-bottom-center' };
+        if (saved) {
+            toastr.success('Saved.', '', options);
+        } else {
+            const message = "Couldn't save the patient. Try again.";
+            toastr.error(message, '', options);
+            $("#liveStatus").text(message);
+        }
     }
 
     $("#updateData").click(function () {
@@ -289,7 +283,7 @@ $(document).ready(function () {
         return client.search(params).then(collect);
     }
 
-    // Append the JSON of every page to the FHIR Data Source modal
+    // Append the JSON of every page to the FHIR JSON panel
     function appendBundles(bundles) {
         bundles.forEach((bundle) => {
             $('#fhirdatasource').val($('#fhirdatasource').val() + JSON.stringify(bundle, undefined, 4));
@@ -978,7 +972,7 @@ $(document).ready(function () {
             id: parseInt(patientId),
             resource: r
         }).then(function (res) {
-            showToast(0);
+            saveToast(true);
             showMaskedSSN();
             $("#updateData").prop('disabled', false).text('Save');
             // The server's copy (a new meta.versionId) feeds the summary and the FHIR JSON panel
@@ -990,7 +984,7 @@ $(document).ready(function () {
             $("#editModal").modal('hide');
         }, function () {
             // The modal stays open with what was typed, and says what happened
-            showToast(1);
+            saveToast(false);
             $("#editError").removeClass('d-none').text("Couldn't save the patient. Try again.");
             $("#updateData").prop('disabled', false).text('Save');
         });

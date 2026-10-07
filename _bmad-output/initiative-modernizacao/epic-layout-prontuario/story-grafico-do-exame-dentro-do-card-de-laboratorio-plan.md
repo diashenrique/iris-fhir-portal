@@ -3,7 +3,7 @@ title: 'Gráfico do exame dentro do card de laboratório'
 type: 'feature'
 ticket: '6'
 created: '2026-10-06'
-status: 'built'
+status: done
 baseline_revision: '4c35d92528d80f74b0a7f1e6bd5c0a9eb3b917de'
 route: 'oneshot'
 route_source: 'auto'

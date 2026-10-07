@@ -98,7 +98,7 @@ test('FHIR data is shown as text in the list, details, tables, modal and chart o
     await expect(page.locator('#fhirId')).toHaveValue(String(patientId));
     await expect(page.locator('#firstName')).toHaveValue(NAME_PAYLOAD);
 
-    // Laboratory table and the FHIR Data Source modal
+    // Laboratory table and the FHIR JSON panel
     await expect(page.locator('#badgeLaboratory')).toHaveText('1');
     await expect(page.locator('#laboratoryTable tbody tr td').first()).toHaveText(LAB_PAYLOAD);
     // The other tables: each payload is the literal text of one cell

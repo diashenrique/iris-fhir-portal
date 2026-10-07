@@ -163,7 +163,7 @@ test('the clinical tables follow link[next]: rows match the badge, in date order
     await expect(page.locator('#vitalSignsTable tbody tr')).toHaveCount(vitalDays.length);
     expect(await names('#vitalSignsTable')).toEqual([1, 2, 3, 4, 5, 6].map((d) => `Vital ${d}`));
 
-    // The FHIR Data Source modal holds the JSON of every page: the patient and two pages of each
+    // The FHIR JSON panel holds the JSON of every page: the patient and two pages of each
     const source = await page.locator('#fhirdatasource').inputValue();
     for (let day = 1; day <= 7; day++) expect(source, `Lab ${day} in the modal`).toContain(`"Lab ${day}"`);
 
