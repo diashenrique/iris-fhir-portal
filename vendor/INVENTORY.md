@@ -26,4 +26,10 @@ Fonts: the pages also load Fira Sans from Google Fonts (`fonts.googleapis.com`).
 
 ## Looper theme license
 
-Looper is a paid template. Whoever maintains this repository should confirm that its license allows the files to be redistributed in a public repository and in the IPM package. Only `theme.min.css` and `theme.min.js` are used.
+Looper is a paid template. The maintainer of this repository bought it on 2019-10-18 on the Bootstrap Themes marketplace (themes.getbootstrap.com), with a **Standard License**. Only `theme.min.css` and `theme.min.js` are used.
+
+- **What the Standard License allows, as far as public summaries show:** the theme in one end product, which may be distributed for free in unlimited copies, modified or combined with other work. The portal is that product: free, in this repository and in the `fhir-portal` IPM package.
+- **What could not be confirmed:** whether the license allows the theme files themselves to be publicly downloadable, as they are in a public repository.
+- **Why:** Bootstrap Themes closed in 2025, its license and terms pages now point to a [sunsetting FAQ](https://glow-limpet-524.notion.site/Sunsetting-Bootstrap-Themes-Customer-FAQ-1c54f54098ac804e9d69d4b2d7c14bd5), and no copy of the license text was kept with the purchase.
+
+If that turns out not to be allowed, the theme can be replaced by a free one. Its Bootstrap 4 classes are used throughout `fhirUI`, so that is a redesign of its own (see `ux-layout-prontuario/DESIGN.md`, which is built on the Looper tokens).
