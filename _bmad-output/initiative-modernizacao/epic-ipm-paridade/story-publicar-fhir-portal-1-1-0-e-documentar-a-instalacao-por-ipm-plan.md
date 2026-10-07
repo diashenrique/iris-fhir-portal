@@ -30,6 +30,8 @@ context: []
 1. Depois do merge, publicar a 1.1.0 a partir do `master`, pelo Open Exchange (atualizar o app para a release nova) ou com `zpm "publish"` e as credenciais do registro.
 2. Rodar o CI manualmente com `portal_source: registry`: Actions → CI → Run workflow. A perna "Install through IPM" instala a versão publicada; verde fecha o Done when 4 do épico.
 
+3. Com o CI verde no passo 2, fechar a issue #6 ("The second page with lab results doesn't work"), dizendo que a 1.1.0 empacota o `User.SQLvar`, que faltava na 1.0.3 e deixava a página de exames vazia.
+
 ## Implementation Notes
 
 - Antes da publicação, `PORTAL_SOURCE=registry` falha de propósito: a 1.0.3 não escreve "fhir-portal: configured".
