@@ -92,3 +92,4 @@ Ficam de fora:
   5. **MET.** O CI do PR do épico fecha o "verde em `master`".
 
   As 5 entradas estão `done`. Ficam com o usuário: publicar o rascunho do artigo e a 1.1.0 no registro IPM (4.6). Adiado: o botão "Reveal" no celular (`deferred-work.md`).
+- Publicado (informado pelo usuário em 2026-10-09): o artigo saiu na Developer Community, https://community.intersystems.com/post/iris-fhir-portal-six-years-later-iris-health-2026-2-login-and-real-patient-chart. O README e o README-JP passam a apontar para ele.
