@@ -161,4 +161,4 @@ http://localhost:32783/fhir/portal/diashenrique.fhir.portal.Home.cls を開き�
 3. [Updating Patient resource using fhir.js](https://community.intersystems.com/post/updating-patient-resource-using-fhir-js)
 4. [Getting FHIR information using SQL](https://community.intersystems.com/post/getting-fhir-information-using-sql)
 
-記事は 2020 年のポータルを説明しています。その後、IRIS for Health 2026.2 と JsonAdvSQL スキーマ（`HSFHIR_X0001_*`）に移行し、ログイン、読み取り専用の `/fhir/api`、IPM モジュール、上記のレイアウトが加わりました。現在の SQL は[ポータルが FHIR データを読む方法](#ポータルが-fhir-データを読む方法)にあります。
+記事は 2020 年のポータルを説明しています。その後の変更点と 4 本の記事それぞれの訂正は、[iris-fhir-portal, six years later](https://community.intersystems.com/post/iris-fhir-portal-six-years-later-iris-health-2026-2-login-and-real-patient-chart)（英語）にまとめています。その後、IRIS for Health 2026.2 と JsonAdvSQL スキーマ（`HSFHIR_X0001_*`）に移行し、ログイン、読み取り専用の `/fhir/api`、IPM モジュール、上記のレイアウトが加わりました。現在の SQL は[ポータルが FHIR データを読む方法](#ポータルが-fhir-データを読む方法)にあります。

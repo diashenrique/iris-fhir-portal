@@ -1,4 +1,6 @@
-<!-- Draft for the InterSystems Developer Community. Not published: the author publishes it.
+<!-- Draft of the article published on the InterSystems Developer Community:
+     https://community.intersystems.com/post/iris-fhir-portal-six-years-later-iris-health-2026-2-login-and-real-patient-chart
+     The published version is the reference; this draft stays for history.
      Links point to the repository on GitHub, so they work from the Community too. -->
 
 # iris-fhir-portal, six years later: IRIS for Health 2026.2, a login and a real patient chart

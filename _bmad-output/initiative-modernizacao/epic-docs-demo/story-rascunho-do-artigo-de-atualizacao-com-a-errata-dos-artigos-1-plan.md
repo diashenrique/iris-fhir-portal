@@ -41,3 +41,7 @@ A instalação pelo registro fica condicional à publicação da 1.1.0 (4.6). A 
 ## Review Triage Log
 
 Revisão `quick` do implementador: 0 achados.
+
+## Publicação
+
+- O usuário publicou o artigo (informado em 2026-10-09): https://community.intersystems.com/post/iris-fhir-portal-six-years-later-iris-health-2026-2-login-and-real-patient-chart.

@@ -160,4 +160,6 @@ The portal was written for the 2020 FHIR contest and explained in four articles 
 3. [Updating Patient resource using fhir.js](https://community.intersystems.com/post/updating-patient-resource-using-fhir-js)
 4. [Getting FHIR information using SQL](https://community.intersystems.com/post/getting-fhir-information-using-sql)
 
-They describe the portal of 2020. Since then it moved to IRIS for Health 2026.2 and the JsonAdvSQL schemas (`HSFHIR_X0001_*`), gained a login, a read-only `/fhir/api`, an IPM module and the layout above. [How the portal reads FHIR data](#how-the-portal-reads-fhir-data) has the current SQL.
+They describe the portal of 2020. [iris-fhir-portal, six years later](https://community.intersystems.com/post/iris-fhir-portal-six-years-later-iris-health-2026-2-login-and-real-patient-chart) tells what changed since then, with errata for each of the four articles.
+
+In short, since then it moved to IRIS for Health 2026.2 and the JsonAdvSQL schemas (`HSFHIR_X0001_*`), gained a login, a read-only `/fhir/api`, an IPM module and the layout above. [How the portal reads FHIR data](#how-the-portal-reads-fhir-data) has the current SQL.
